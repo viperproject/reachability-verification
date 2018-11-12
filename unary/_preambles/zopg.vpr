@@ -1,0 +1,103 @@
+
+method unlink_ZOPG_next(g_0: Set[Ref], node: Ref)
+  requires (node in g_0)
+  requires !((null in g_0)) && ((node in g_0) && (acc(node.next, write) && (forall n: Ref :: { n.next } (n in g_0) && n != node ==> acc(n.next, 1 / 2))))
+  ensures !((null in g_0)) && ((node in g_0) && (acc(node.next, write) && (forall n: Ref :: { n.next } (n in g_0) && n != node ==> acc(n.next, 1 / 2))))
+  ensures node.next == null
+  ensures old(node.next) == null ==> $$(g_0) == old($$(g_0))
+  ensures old(node.next) != null ==> (forall v1: Ref, v2: Ref :: { edge($$(g_0), v1, v2) } { exists_path($$(g_0), v1, v2) } edge($$(g_0), v1, v2) == (edge(old($$(g_0)), v1, v2) && !(v1 == node && v2 == old(node.next))))
+  ensures old(node.next) != null ==> (forall v1: Ref, v2: Ref :: { exists_path($$(g_0), v1, v2) } !exists_path(old($$(g_0)), v1, v2) ==> !exists_path($$(g_0), v1, v2))
+  ensures old(node.next) != null ==> (forall x_0: Ref, y_0: Ref, u: Ref, v: Ref :: { DEP($$(g_0), x_0, y_0, u, v) } { DEP(old($$(g_0)), x_0, y_0, u, v) } DEP(old($$(g_0)), x_0, y_0, u, v) && !DEP(old($$(g_0)), x_0, y_0, node, old(node.next)) ==> DEP($$(g_0), x_0, y_0, u, v))
+
+
+method link_ZOPG_next(g_0: Set[Ref], from: Ref, to: Ref)
+  requires (from in g_0)
+  requires to != null ==> (to in g_0)
+  requires !((null in g_0)) && ((from in g_0) && (acc(from.next, write) && (forall n: Ref :: { n.next } (n in g_0) && n != from ==> acc(n.next, 1 / 2)))) && from.next == null
+  ensures !((null in g_0)) && ((from in g_0) && (acc(from.next, write) && (forall n: Ref :: { n.next } (n in g_0) && n != from ==> acc(n.next, 1 / 2))))
+  ensures from.next == to
+  ensures to == null ==> $$(g_0) == old($$(g_0))
+  ensures to != null ==> (forall v1: Ref, v2: Ref :: { edge($$(g_0), v1, v2) } { exists_path($$(g_0), v1, v2) } edge($$(g_0), v1, v2) == (edge(old($$(g_0)), v1, v2) || v1 == from && v2 == to))
+  ensures to != null ==> (forall x_0: Ref, y_0: Ref, u: Ref, v: Ref :: { DEP($$(g_0), x_0, y_0, u, v) } { DEP(old($$(g_0)), x_0, y_0, u, v) } from != to && (u != v && x_0 != y_0) ==> DEP(old($$(g_0)), x_0, y_0, u, v) || (x_0 == from && (u == from && (y_0 == to && v == to)) || ((exists w: Ref, z: Ref :: (forall u_: Ref, v_: Ref :: { DEP(old($$(g_0)), x_0, y_0, u_, v_) } !DEP(old($$(g_0)), x_0, y_0, u_, v_)) && ((DEP(old($$(g_0)), x_0, from, u, v) && x_0 != from || x_0 == u && (u == from && v == to)) && (DEP(old($$(g_0)), to, y_0, w, z) && to != y_0 || from == w && (to == z && z == y_0)))) || ((exists U: Ref, V: Ref :: (forall u_$0: Ref, v_$0: Ref :: { DEP(old($$(g_0)), x_0, y_0, u_$0, v_$0) } !DEP(old($$(g_0)), x_0, y_0, u_$0, v_$0)) && ((DEP(old($$(g_0)), x_0, from, U, V) && x_0 != from || x_0 == U && (U == from && V == to)) && (DEP(old($$(g_0)), to, y_0, u, v) && to != y_0 || from == u && (to == v && v == y_0)))) || u == from && (v == to && (exists U: Ref, V: Ref, w: Ref, z: Ref :: (forall u_$1: Ref, v_$1: Ref :: { DEP(old($$(g_0)), x_0, y_0, u_$1, v_$1) } !DEP(old($$(g_0)), x_0, y_0, u_$1, v_$1)) && ((DEP(old($$(g_0)), x_0, from, U, V) && x_0 != from || x_0 == U && (U == from && V == to)) && (DEP(old($$(g_0)), to, y_0, w, z) && to != y_0 || from == w && (to == z && z == y_0)))))))) ==> DEP($$(g_0), x_0, y_0, u, v))
+  ensures to != null ==> (forall x_0: Ref, y_0: Ref, u: Ref, v: Ref :: { DEP($$(g_0), x_0, y_0, u, v) } { DEP(old($$(g_0)), x_0, y_0, u, v) } DEP($$(g_0), x_0, y_0, u, v) && !DEP($$(g_0), x_0, y_0, from, to) ==> DEP(old($$(g_0)), x_0, y_0, u, v))
+  ensures to != null ==> (forall n: Ref :: { exists_path($$(g_0), to, n) } { exists_path($$(g_0), from, n) } (n in g_0) && n != from ==> __learn_trigger__(DEP($$(g_0), from, n, from, from.next)))
+  ensures to != null ==> (forall n: Ref :: { exists_path($$(g_0), to, n) } { exists_path($$(g_0), from, n) } (n in g_0) && n != to ==> __learn_trigger__(DEP($$(g_0), to, n, to, to.next)))
+  ensures to != null ==> (forall n: Ref :: { exists_path($$(g_0), n, to) } { exists_path($$(g_0), n, from) } (n in g_0) && n != from ==> __learn_trigger__(DEP($$(g_0), n, from, n, n.next)))
+  ensures to != null ==> (forall n: Ref :: { DEP($$(g_0), to, n, to, to.next) } { DEP($$(g_0), from, n, from, from.next) } (n in g_0) ==> __learn_trigger__(exists_path($$(g_0), to, n)) && __learn_trigger__(exists_path(old($$(g_0)), to, n)))
+  ensures (forall n: Ref, m: Ref :: { exists_path($$(g_0), n, m) } (n in g_0) && (m in g_0) ==> __learn_trigger__(exists_path($$(g_0), n, from)) && __learn_trigger__(exists_path($$(g_0), from, m)))
+
+
+// method unlink_ZOPG_$field$(g:Set[Ref], node:Ref)
+//     requires node in g
+//     requires PROTECTED_GRAPH(g,node, $field$)
+//     ensures PROTECTED_GRAPH(g,node, $field$)
+//     ensures node.$field$ == null
+//     ensures old(node.$field$) == null ==> $$(g) == old($$(g))
+//     ensures old(node.$field$) != null ==> forall v1:Ref, v2:Ref ::
+//         { edge($$(g),v1,v2) }
+//         { exists_path($$(g),v1,v2) }
+//             edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==node && v2==old(node.$field$))
+//     ensures old(node.$field$) != null ==> forall v1: Ref, v2: Ref ::
+//         {exists_path($$(g), v1, v2)}
+//             !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+//     ensures old(node.$field$) != null ==>
+//             forall x:Ref, y:Ref, u:Ref, v:Ref ::
+//                 { DEP($$(g), x, y, u, v) }
+//                 { DEP(old($$(g)), x, y, u, v) }
+//                     (
+//                         DEP(old($$(g)), x, y, u, v) && !DEP(old($$(g)), x, y, node, old(node.$field$)) ==> DEP($$(g), x, y, u, v)
+//                     )
+
+// function update_ZOPG_invariant(g:Set[Ref], from:Ref, to:Ref): Bool
+//     requires PROTECTED_GRAPH(g)
+// {
+//   func_graph($$(g)) || unshared_graph($$(g)) || (forall u: Ref, v:Ref ::
+//                     {exists_path($$(g),u,from), exists_path($$(g), to, v)} //TODO multipattern
+//                         u in g && v in g && u != v && exists_path($$(g), u, v) ==>
+//                             !(exists_path($$(g), u, from)) ||
+//                                 !(exists_path($$(g), to, v)))
+// }
+
+// method link_ZOPG_$field$(g:Set[Ref], from:Ref, to:Ref)
+//     requires from in g
+//     requires to != null ==> to in g
+//     requires PROTECTED_GRAPH(g,from, $field$) && from.$field$ == null
+//     ensures PROTECTED_GRAPH(g,from, $field$)
+//     ensures from.$field$ == to
+//     ensures to == null ==> $$(g) == old($$(g))
+//     ensures to != null ==> forall v1:Ref, v2:Ref ::
+//         { edge($$(g),v1,v2) }
+//         { exists_path($$(g),v1,v2) }
+//             edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==from && v2==to)
+//     ensures to != null ==>
+//             forall x:Ref, y:Ref, u:Ref, v:Ref ::
+//                 { DEP($$(g), x, y, u, v) }
+//                 { DEP(old($$(g)), x, y, u, v) }
+//                     (from != to && u != v && x != y) ==> (
+//                         DEP(old($$(g)), x, y, u, v)
+//                         || (x==from && u==from && y==to && v==to)
+//                         || ( exists w:Ref, z:Ref :: __psi__(old($$(g)), from,to, x,y, u,v, w,z) )
+//                         || ( exists U:Ref, V:Ref :: __psi__(old($$(g)), from,to, x,y, U,V, u,v) )
+//                         || u==from && v==to && ( exists U:Ref, V:Ref, w:Ref, z:Ref :: __psi__(old($$(g)), from,to, x,y, U,V, w,z) )
+
+//                             ==> DEP($$(g), x, y, u, v) )
+//     ensures to != null ==>
+//         forall x:Ref, y:Ref, u:Ref, v:Ref ::
+//             { DEP($$(g), x, y, u, v) }
+//             { DEP(old($$(g)), x, y, u, v) }
+//                     DEP($$(g), x, y, u, v) && !DEP($$(g), x, y, from, to) ==> DEP(old($$(g)), x, y, u, v)
+
+//     ensures to != null ==> forall n:Ref :: { exists_path($$(g), to, n) }{ exists_path($$(g), from, n) } n in g && n != from ==> __learn_trigger__(DEP($$(g), from, n, from, from.$field$))
+//     ensures to != null ==> forall n:Ref :: { exists_path($$(g), to, n) }{ exists_path($$(g), from, n) } n in g && n != to   ==> __learn_trigger__(DEP($$(g),   to, n,   to,   to.$field$))
+//     ensures to != null ==> forall n:Ref :: { exists_path($$(g), n, to) }{ exists_path($$(g), n, from) } n in g && n != from ==> __learn_trigger__(DEP($$(g), n, from, n, n.$field$))
+//     ensures to != null ==> forall n:Ref :: { DEP($$(g), to, n, to, to.$field$) }{ DEP($$(g), from, n, from, from.$field$) } n in g ==> __learn_trigger__(exists_path($$(g), to, n))   && __learn_trigger__(exists_path(old($$(g)), to, n))
+//     ensures forall n:Ref, m:Ref :: { exists_path($$(g), n, m) } n in g && m in g ==> __learn_trigger__( exists_path($$(g), n, from) ) && __learn_trigger__( exists_path($$(g), from, m) )
+
+
+define __psi__(EG, alpha,beta, x,y,u,v,w,z) (
+    ( forall u_:Ref, v_:Ref :: { DEP(EG,x,y,u_,v_) } !DEP(EG,x,y,u_,v_) ) &&
+    ( DEP(EG,x,alpha,u,v) && x!=alpha || (x==u && u==alpha && v==beta) ) &&
+    ( DEP(EG,beta,y,w,z)  && beta!=y  || (alpha==w && beta==z && z==y) )
+)
+
+// method update_ZOPG_$field$(g:Set[Ref], x:Ref, y:Ref)

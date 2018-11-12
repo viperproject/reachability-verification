@@ -1,0 +1,25 @@
+field next: Ref
+
+function $$(nodes: Set[Ref]): Set[Edge]
+  requires (forall n: Ref :: { n.next } (n in nodes) ==> acc(n.next, 1 / 2))
+  ensures (forall p: Ref, s: Ref :: { create_edge(p, s) } ((p in nodes) && (s in nodes) && p.next == s) == (create_edge(p, s) in result))
+  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (p in nodes) && exists_path(result, p, s) ==> (s in nodes))
+  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (s in nodes) && exists_path(result, p, s) ==> (p in nodes))
+
+define GRAPH(nodes)
+    !(null in nodes)
+    && ( forall n:Ref :: {n.next} n in nodes ==> acc(n.next,1/1) )
+    && ( forall n:Ref ::
+        { n.next in nodes }
+        { n in nodes, n.next }
+            n in nodes && n.next != null ==> n.next in nodes )
+
+define PROTECTED_GRAPH(nodes, mutable_node)
+  !(null in nodes)
+  && ( mutable_node in nodes )
+  && acc(mutable_node.next, write)
+  && ( forall n:Ref :: {n.next} n in nodes && n != mutable_node ==> acc(n.next,1/2) )
+  && ( forall n:Ref ::
+      { n.next in nodes }
+      { n in nodes, n.next }
+          n in nodes && n.next != null ==> n.next in nodes )
