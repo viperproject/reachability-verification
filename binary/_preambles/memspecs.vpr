@@ -1,0 +1,66 @@
+field left: Ref
+field right: Ref
+
+function $$(nodes: Set[Ref]): Set[Edge]
+  requires NODES(nodes, 1/2)
+  ensures (forall p: Ref, s: Ref :: { create_edge(p, s) } ((p in nodes) && (s in nodes) && (p.left == s || p.right == s)) == (create_edge(p, s) in result))
+  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (p in nodes) && exists_path(result, p, s) ==> (s in nodes))
+  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (s in nodes) && exists_path(result, p, s) ==> (p in nodes))
+
+define NODES_left(nodes, p)
+    ( forall n:Ref :: {n.left} n in nodes ==> acc(n.left, p) )
+
+define NODES_right(nodes, p)
+    ( forall n:Ref :: {n.right} n in nodes ==> acc(n.right, p) )
+
+define PROTECTED_NODES_left(nodes, mutable_node, p)
+    (mutable_node in nodes)
+    && acc(mutable_node.left, write)
+    && ( forall n:Ref :: { n.left } n in nodes && n != mutable_node ==> acc(n.left, p) )
+
+define PROTECTED_NODES_right(nodes, mutable_node, p)
+    (mutable_node in nodes)
+    && acc(mutable_node.right, write)
+    && ( forall n:Ref :: { n.right } n in nodes && n != mutable_node ==> acc(n.right, p) )
+
+define NODES(nodes, p)
+    NODES_left(nodes, p)
+    && NODES_right(nodes, p)
+
+define CLOSED_left(nodes)  
+    ( forall n:Ref ::
+        { n.left in nodes }
+        { n in nodes, n.left }
+            n in nodes && n.left != null ==> n.left in nodes )
+
+define CLOSED_right(nodes)
+    ( forall n:Ref ::
+        { n.right in nodes }
+        { n in nodes, n.right }
+            n in nodes && n.right != null ==> n.right in nodes )
+
+define CLOSED(nodes)
+    CLOSED_left(nodes)
+    && CLOSED_right(nodes)
+
+define GRAPH(nodes)
+    !(null in nodes)
+    && NODES(nodes, write)
+    && CLOSED(nodes)
+
+define READONLY_GRAPH(nodes)
+    !(null in nodes)
+    && NODES(nodes, 1/2)
+    && CLOSED(nodes)
+
+define PROTECTED_GRAPH_left(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_left(nodes, mutable_node, 1/2)
+    && NODES_right(nodes, 1/2)
+    && CLOSED(nodes)
+
+define PROTECTED_GRAPH_right(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_right(nodes, mutable_node, 1/2)
+    && NODES_left(nodes, 1/2)
+    && CLOSED(nodes)

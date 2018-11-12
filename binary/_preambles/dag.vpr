@@ -1,0 +1,80 @@
+method unlink_DAG_left(g: Set[Ref], x:Ref)
+    requires x in g
+    requires PROTECTED_GRAPH_left(g,x)
+    ensures PROTECTED_GRAPH_left(g,x)
+    ensures x.left == null
+    ensures old(x.left) == null ==> $$(g) == old($$(g))
+    ensures old(x.left) != null ==> forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==x && v2==old(x.left))
+    ensures old(x.left) != null ==> forall v1: Ref, v2: Ref ::
+        {exists_path($$(g), v1, v2)}
+            !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+    ensures old(x.left) != null ==> forall v1:Ref, v2:Ref ::
+        { exists_path($$(g),v1,v2) }
+             exists_path($$(g),v1,v2) <==> (v1==v2) ||
+                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
+                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
+                      !exists_path(old($$(g)),n,old(x.left)) && !exists_path(old($$(g)),old(x.left),n) )
+                )
+                ||
+                ( exists n:Ref :: n != x && n != old(x.left) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.left)) )
+                ||
+                ( exists u:Ref, v:Ref :: (u != x || v != old(x.left)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
+                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.left),v) &&
+                                                                            exists_path(old($$(g)),v,v2) )
+
+method unlink_DAG_right(g: Set[Ref], x:Ref)
+    requires x in g
+    requires PROTECTED_GRAPH_right(g,x)
+    ensures PROTECTED_GRAPH_right(g,x)
+    ensures x.right == null
+    ensures old(x.right) == null ==> $$(g) == old($$(g))
+    ensures old(x.right) != null ==> forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==x && v2==old(x.right))
+    ensures old(x.right) != null ==> forall v1: Ref, v2: Ref ::
+        {exists_path($$(g), v1, v2)}
+            !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+    ensures old(x.right) != null ==> forall v1:Ref, v2:Ref ::
+        { exists_path($$(g),v1,v2) }
+             exists_path($$(g),v1,v2) <==> (v1==v2) ||
+                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
+                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
+                      !exists_path(old($$(g)),n,old(x.right)) && !exists_path(old($$(g)),old(x.right),n) )
+                )
+                ||
+                ( exists n:Ref :: n != x && n != old(x.right) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.right)) )
+                ||
+                ( exists u:Ref, v:Ref :: (u != x || v != old(x.right)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
+                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.right),v) &&
+                                                                            exists_path(old($$(g)),v,v2) )
+                                                                            
+method link_DAG_left(g:Set[Ref], x:Ref, y:Ref)
+    requires x in g
+    requires y != null ==> y in g && y != x
+    requires PROTECTED_GRAPH_left(g,x)
+    ensures PROTECTED_GRAPH_left(g,x)
+    ensures x.left == y
+    ensures y == null ==> $$(g) == old($$(g))
+    ensures y != null ==> forall v1:Ref, v2:Ref ::
+        { edge(old($$(g)),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==x && v2==y)
+    ensures y != null ==> forall v1:Ref, v2:Ref ::
+        { exists_path($$(g),v1,v2) }
+            exists_path($$(g),v1,v2) <==> exists_path(old($$(g)),v1,v2) || (exists_path(old($$(g)),v1,x) && exists_path(old($$(g)),y,v2))
+
+
+method link_DAG_right(g:Set[Ref], x:Ref, y:Ref)
+    requires x in g
+    requires y != null ==> y in g && y != x
+    requires PROTECTED_GRAPH_right(g,x)
+    ensures PROTECTED_GRAPH_right(g,x)
+    ensures x.right == y
+    ensures y == null ==> $$(g) == old($$(g))
+    ensures y != null ==> forall v1:Ref, v2:Ref ::
+        { edge(old($$(g)),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==x && v2==y)
+    ensures y != null ==> forall v1:Ref, v2:Ref ::
+        { exists_path($$(g),v1,v2) }
+            exists_path($$(g),v1,v2) <==> exists_path(old($$(g)),v1,v2) || (exists_path(old($$(g)),v1,x) && exists_path(old($$(g)),y,v2))
