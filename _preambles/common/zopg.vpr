@@ -1,0 +1,57 @@
+define __psi__(EG, alpha,beta, x,y,u,v,w,z)  
+    ((forall u_:Ref, v_:Ref :: 
+        { DEP(EG,x,y,u_,v_) } 
+            ! DEP(EG,x,y,u_,v_)) 
+    && ( DEP(EG,x,alpha,u,v) && (x != alpha) || ((x == u)     && (u == alpha) && (v == beta)) ) 
+    && ( DEP(EG,beta,y,w,z)  && (beta != y)  || ((alpha == w) && (beta == z)  && (z == y))    ))
+
+define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to) 
+    (forall x:Ref, y:Ref, u:Ref, v:Ref ::
+        { DEP(smaller_EG, x, y, u, v) }
+        { DEP(larger_EG, x, y, u, v) }
+            DEP(larger_EG, x, y, u, v) && !DEP(larger_EG, x, y, from, to) <==> DEP(smaller_EG, x, y, u, v))
+
+define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
+    // The trivial case also comes from the definition of exists_path. 
+    (from == to) ==> exists_path(smaller_EG, from, to) && exists_path(larger_EG, from, to) &&
+    (from != to) ==> 
+        (forall x:Ref, y:Ref, u:Ref, v:Ref ::
+            { DEP(larger_EG, x, y, u, v) }
+            { DEP(smaller_EG, x, y, u, v) }
+                (u != v && x != y) ==> (
+                    (DEP(smaller_EG, x, y, u, v)
+                    || (x==from && u==from && y==to && v==to)
+                    || ( exists w:Ref, z:Ref :: __psi__(smaller_EG, from,to, x,y, u,v, w,z) )
+                    || ( exists U:Ref, V:Ref :: __psi__(smaller_EG, from,to, x,y, U,V, u,v) )
+                    || (u==from) && (v==to) 
+                        && ( exists U:Ref, V:Ref, w:Ref, z:Ref :: __psi__(smaller_EG, from,to, x,y, U,V, w,z) ))
+                    <==> 
+                        DEP(larger_EG, x, y, u, v) ))
+
+define ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+    DEP_G_PLUS_DELTA(old($$(g)), $$(g), from, to) 
+    && DEP_G_MINUS_DELTA(old($$(g)), $$(g), from, to)
+    // The imprecise formula for exists_path may decrease performance in some cases. 
+    // && (forall v1: Ref, v2: Ref ::
+    //     { exists_path($$(g), v1, v2) }
+    //         exists_path(old($$(g)), v1, v2) ==> exists_path($$(g), v1, v2))
+
+define ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+    DEP_G_PLUS_DELTA($$(g), old($$(g)), from, to)
+    && DEP_G_MINUS_DELTA($$(g), old($$(g)), from, to)
+    // The imprecise formula for exists_path may decrease performance in some cases. 
+    // && (forall v1: Ref, v2: Ref ::
+    //     { exists_path($$(g), v1, v2) }
+    //         !exists_path(old($$(g)), v1, v2) ==> !exists_path($$(g), v1, v2))
+
+define ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    (forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+        { exists_path($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==from && v2==to))
+
+define ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    (forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+        { exists_path($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==from && v2==to))

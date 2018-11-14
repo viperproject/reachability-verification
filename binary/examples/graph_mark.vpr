@@ -1,0 +1,68 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../_preambles/memspecs.vpr"
+
+function get(s: Set[Ref]): Ref
+    requires |s| > 0
+    ensures result in s
+
+method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
+    requires |roots| > 0
+    requires GRAPH(g)
+    requires roots subset g
+    ensures roots subset marked
+    ensures marked subset g
+    ensures GRAPH(g)
+    ensures forall v:Ref :: {v in marked}{exists_spath($$(g),roots,v)} v in g ==> ( v in marked ==> exists_spath($$(g),roots,v) )
+    ensures forall v:Ref :: {v in marked}{exists_spath($$(g),roots,v)} v in g ==> ( exists_spath($$(g),roots,v) ==> v in marked )
+{
+    var x:Ref := get(roots)
+    var pending:Set[Ref] := roots
+    marked := Set()
+
+    while ( |pending| > 0 )
+        // Taking lefte of permissions.
+        invariant GRAPH(g)
+
+        // Maintaining the graph.
+        invariant x in g
+        invariant pending subset g
+        invariant marked subset g
+
+        invariant exists_spath($$(g),roots,x)
+        && ( x.right != null ==> edge($$(g),x,x.right) && exists_path($$(g),x.right,x.right) ==> exists_path($$(g),x,x.right) )
+        && ( x.left != null ==> edge($$(g),x,x.left) && exists_path($$(g),x.left,x.left) ==> exists_path($$(g),x,x.left) )
+
+        invariant
+        ( forall n:Ref :: {n in pending}{n in roots} n in roots <==> n in pending ) &&                                                                   /// (5.22)
+        ( forall n:Ref :: {n in marked} n in g ==> !(n in marked) )                                                                                      /// (5.23)
+        ||
+        ( forall n:Ref :: {n in pending}{n in marked} n in roots ==> n in marked || n in pending ) &&                                                    /// (5.24)
+        ( forall n:Ref :: {n in pending} n in g ==> !(n in marked && n in pending) ) &&                                                                  /// (5.25)
+        ( forall n:Ref :: {exists_spath($$(g),roots,n)} n in pending || n in marked ==> exists_spath($$(g),roots,n) ) &&                                 /// (5.26)
+        ( forall n1:Ref, n2:Ref :: {n1 in marked, n2 in marked} n1 in marked && n2 in g && !(n2 in marked) && !(n2 in pending) ==> !edge($$(g),n1,n2) )  /// (5.27)
+    {
+        // x <- pop(pending)
+        x := get(pending)
+        pending := pending setminus Set(x)
+
+        // mark x
+        marked := marked union Set(x)
+
+        if ( x.left != null && !(x.left in marked) ) {
+            pending := pending union Set(x.left)
+        }
+        if ( x.right != null && !(x.right in marked) ) {
+            pending := pending union Set(x.right)
+        }
+    }
+
+    // The color axiom. This is one way to dynamically instantiate axioms.
+    // Instantiation: NoExit[marked, f]
+    // Signature: apply_noExit(EG:Set[Edge], U:Set[Ref], M:Set[Ref]): Bool
+    assume apply_noExit($$(g), g, marked)
+
+    // assert false
+}
+ 

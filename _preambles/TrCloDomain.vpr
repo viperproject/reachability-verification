@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+domain TriggerWisdoms {
+    function __learn_trigger__(b: Bool): Bool
+    function __trigger_ref__(r: Ref): Bool
+}
+
 domain Edge {
     function edge_pred(e:Edge): Ref
     function edge_succ(e:Edge): Ref

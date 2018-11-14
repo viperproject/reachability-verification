@@ -2,11 +2,8 @@ field first: Ref
 field second: Ref
 field third: Ref 
 
-function $$(nodes: Set[Ref]): Set[Edge]
-  requires NODES(nodes, 1/2) 
-  ensures (forall p: Ref, s: Ref :: { create_edge(p, s) } ((p in nodes) && (s in nodes) && (p.first == s || p.second == s || p.third == s)) == (create_edge(p, s) in result))
-  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (p in nodes) && exists_path(result, p, s) ==> (s in nodes))
-  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (s in nodes) && exists_path(result, p, s) ==> (p in nodes))
+define HEAP_PARTIAL_ORDER(p, s)
+    (p.first == s || p.second == s || p.third == s)
 
 define NODES_first(nodes, p)
     ( forall n:Ref :: {n.first} n in nodes ==> acc(n.first, p) )
@@ -36,6 +33,31 @@ define NODES(nodes, p)
     NODES_first(nodes, p)
     && NODES_second(nodes, p)
     && NODES_third(nodes, p)
+
+define READONLY_NODES(nodes)
+    NODES(nodes, 1/2)
+
+define COMPLETE_first(nodes)  
+    ( forall n:Ref ::
+        { n.first in nodes }
+        { n in nodes, n.first }
+            n in nodes ==> n.first in nodes )
+
+define COMPLETE_second(nodes)
+    ( forall n:Ref ::
+        { n.second in nodes }
+        { n in nodes, n.second }
+            n in nodes ==> n.second in nodes )
+
+define COMPLETE_third(nodes)
+    ( forall n:Ref ::
+        { n.third in nodes }
+        { n in nodes, n.third }
+            n in nodes ==> n.third in nodes )
+
+define COMPLETE(nodes)
+    COMPLETE_first(nodes)
+    && COMPLETE_second(nodes)
 
 define CLOSED_first(nodes)  
     ( forall n:Ref ::
@@ -90,3 +112,29 @@ define PROTECTED_GRAPH_third(nodes, mutable_node)
     && NODES_second(nodes, 1/2)
     && PROTECTED_NODES_third(nodes, mutable_node, 1/2)
     && CLOSED(nodes)
+
+define RING(nodes)
+    !(null in nodes)
+    && NODES(nodes, write)
+    && COMPLETE(nodes)
+
+define PROTECTED_RING_first(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_first(nodes, mutable_node, 1/2)
+    && NODES_second(nodes, 1/2)
+    && NODES_third(nodes, 1/2)
+    && COMPLETE(nodes)
+
+define PROTECTED_RING_second(nodes, mutable_node)
+    !(null in nodes)
+    && NODES_first(nodes, 1/2)
+    && PROTECTED_NODES_second(nodes, mutable_node, 1/2)
+    && NODES_third(nodes, 1/2)
+    && COMPLETE(nodes)
+
+define PROTECTED_RING_third(nodes, mutable_node)
+    !(null in nodes)
+    && NODES_first(nodes, 1/2)
+    && NODES_second(nodes, 1/2)
+    && PROTECTED_NODES_third(nodes, mutable_node, 1/2)
+    && COMPLETE(nodes)

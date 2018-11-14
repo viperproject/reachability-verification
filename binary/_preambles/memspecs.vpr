@@ -1,11 +1,8 @@
 field left: Ref
 field right: Ref
 
-function $$(nodes: Set[Ref]): Set[Edge]
-  requires NODES(nodes, 1/2)
-  ensures (forall p: Ref, s: Ref :: { create_edge(p, s) } ((p in nodes) && (s in nodes) && (p.left == s || p.right == s)) == (create_edge(p, s) in result))
-  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (p in nodes) && exists_path(result, p, s) ==> (s in nodes))
-  ensures (forall p: Ref, s: Ref :: { (p in nodes),(s in nodes),exists_path(result, p, s) } (s in nodes) && exists_path(result, p, s) ==> (p in nodes))
+define HEAP_PARTIAL_ORDER(p, s)
+    (p.left == s || p.right == s)
 
 define NODES_left(nodes, p)
     ( forall n:Ref :: {n.left} n in nodes ==> acc(n.left, p) )
@@ -26,6 +23,25 @@ define PROTECTED_NODES_right(nodes, mutable_node, p)
 define NODES(nodes, p)
     NODES_left(nodes, p)
     && NODES_right(nodes, p)
+
+define READONLY_NODES(nodes)
+    NODES(nodes, 1/2)
+
+define COMPLETE_left(nodes)  
+    ( forall n:Ref ::
+        { n.left in nodes }
+        { n in nodes, n.left }
+            n in nodes ==> n.left in nodes )
+
+define COMPLETE_right(nodes)
+    ( forall n:Ref ::
+        { n.right in nodes }
+        { n in nodes, n.right }
+            n in nodes ==> n.right in nodes )
+
+define COMPLETE(nodes)
+    COMPLETE_left(nodes)
+    && COMPLETE_right(nodes)
 
 define CLOSED_left(nodes)  
     ( forall n:Ref ::
@@ -50,7 +66,7 @@ define GRAPH(nodes)
 
 define READONLY_GRAPH(nodes)
     !(null in nodes)
-    && NODES(nodes, 1/2)
+    && READONLY_NODES(nodes)
     && CLOSED(nodes)
 
 define PROTECTED_GRAPH_left(nodes, mutable_node)
@@ -64,3 +80,20 @@ define PROTECTED_GRAPH_right(nodes, mutable_node)
     && PROTECTED_NODES_right(nodes, mutable_node, 1/2)
     && NODES_left(nodes, 1/2)
     && CLOSED(nodes)
+
+define RING(nodes)
+    !(null in nodes)
+    && NODES(nodes, write)
+    && COMPLETE(nodes)
+
+define PROTECTED_RING_left(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_left(nodes, mutable_node, 1/2)
+    && NODES_right(nodes, 1/2)
+    && COMPLETE(nodes)
+
+define PROTECTED_RING_right(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_right(nodes, mutable_node, 1/2)
+    && NODES_left(nodes, 1/2)
+    && COMPLETE(nodes)

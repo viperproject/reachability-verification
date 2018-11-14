@@ -1,9 +1,3 @@
-domain TriggerWisdoms {
-
-    function __learn_trigger__(bla: Bool): Bool
-    function __trigger_ref__(r: Ref): Bool
-}
-
 domain ZeroOnePathGraphTCs {
 
     function DEP(EG:Set[Edge], x:Ref, y:Ref, u:Ref, v:Ref): Bool

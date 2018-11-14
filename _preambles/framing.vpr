@@ -1,0 +1,14 @@
+function apply_TCFraming(g0:Set[Ref], g1:Set[Ref]): Bool
+    requires READONLY_NODES(g0)
+    requires READONLY_NODES(g1)
+
+    requires g1 intersection g0 == Set()
+
+    // needed for triggering
+    ensures g0 union g1 == g1 union g0
+
+    // FIXME: Triggers in the following formulas are under question.
+    ensures forall u:Ref, v:Ref :: { exists_path($$(g0),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g0 && v in g0 && exists_path($$(g0),u,v) ==> exists_path($$(g0 union g1),u,v)
+    ensures forall u:Ref, v:Ref :: { exists_path($$(g1),u,v) }{ exists_path($$(g1 union g0),u,v) } u in g1 && v in g1 && exists_path($$(g1),u,v) ==> exists_path($$(g1 union g0),u,v)
+    ensures forall u:Ref, v:Ref :: { exists_path($$(g0),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g0 && v in g0 && !exists_path($$(g0),u,v) ==> !exists_path($$(g0 union g1),u,v)
+    ensures forall u:Ref, v:Ref :: { exists_path($$(g1),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g1 && v in g1 && !exists_path($$(g1),u,v) ==> !exists_path($$(g1 union g0),u,v)
