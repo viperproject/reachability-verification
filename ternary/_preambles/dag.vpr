@@ -9,21 +9,23 @@ method unlink_DAG_first(g: Set[Ref], x:Ref)
             edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==x && v2==old(x.first))
     ensures old(x.first) != null ==> forall v1: Ref, v2: Ref ::
         {exists_path($$(g), v1, v2)}
-            !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+            !(exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.first), v2)) ==> 
+                (exists_path(old($$(g)), v1, v2) <==> exists_path($$(g), v1, v2))
     ensures old(x.first) != null ==> forall v1:Ref, v2:Ref ::
         { exists_path($$(g),v1,v2) }
-             exists_path($$(g),v1,v2) <==> (v1==v2) ||
-                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
+            exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.first), v2) ==>
+                exists_path($$(g),v1,v2) <==> (v1==v2) ||
+                    ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
 
-                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
-                      !exists_path(old($$(g)),n,old(x.first)) && !exists_path(old($$(g)),old(x.first),n) )
-                )
-                ||
-                ( exists n:Ref :: n != x && n != old(x.first) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.first)) )
-                ||
-                ( exists u:Ref, v:Ref :: (u != x || v != old(x.first)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
-                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.first),v) &&
-                                                                            exists_path(old($$(g)),v,v2) )
+                        ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
+                        !exists_path(old($$(g)),n,old(x.first)) && !exists_path(old($$(g)),old(x.first),n) )
+                    )
+                    ||
+                    ( exists n:Ref :: n != x && n != old(x.first) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.first)) )
+                    ||
+                    ( exists u:Ref, v:Ref :: (u != x || v != old(x.first)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
+                                                                                exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.first),v) &&
+                                                                                exists_path(old($$(g)),v,v2) )
 
 method unlink_DAG_second(g: Set[Ref], x:Ref)
     requires x in g
@@ -36,21 +38,23 @@ method unlink_DAG_second(g: Set[Ref], x:Ref)
             edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==x && v2==old(x.second))
     ensures old(x.second) != null ==> forall v1: Ref, v2: Ref ::
         {exists_path($$(g), v1, v2)}
-            !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+            !(exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.second), v2)) ==> 
+                (exists_path(old($$(g)), v1, v2) <==> exists_path($$(g), v1, v2))
     ensures old(x.second) != null ==> forall v1:Ref, v2:Ref ::
         { exists_path($$(g),v1,v2) }
-             exists_path($$(g),v1,v2) <==> (v1==v2) ||
-                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
+            exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.second), v2) ==> 
+                exists_path($$(g),v1,v2) <==> (v1==v2) ||
+                    ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
 
-                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
-                      !exists_path(old($$(g)),n,old(x.second)) && !exists_path(old($$(g)),old(x.second),n) )
-                )
-                ||
-                ( exists n:Ref :: n != x && n != old(x.second) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.second)) )
-                ||
-                ( exists u:Ref, v:Ref :: (u != x || v != old(x.second)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
-                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.second),v) &&
-                                                                            exists_path(old($$(g)),v,v2) )
+                        ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
+                        !exists_path(old($$(g)),n,old(x.second)) && !exists_path(old($$(g)),old(x.second),n) )
+                    )
+                    ||
+                    ( exists n:Ref :: n != x && n != old(x.second) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.second)) )
+                    ||
+                    ( exists u:Ref, v:Ref :: (u != x || v != old(x.second)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
+                                                                                exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.second),v) &&
+                                                                                exists_path(old($$(g)),v,v2) )
 method unlink_DAG_third(g: Set[Ref], x:Ref)
     requires x in g
     requires PROTECTED_GRAPH_third(g,x)
@@ -62,21 +66,23 @@ method unlink_DAG_third(g: Set[Ref], x:Ref)
             edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==x && v2==old(x.third))
     ensures old(x.third) != null ==> forall v1: Ref, v2: Ref ::
         {exists_path($$(g), v1, v2)}
-            !exists_path(old($$(g)), v1, v2)  ==> !exists_path($$(g), v1, v2)
+            !(exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.third), v2)) ==> 
+                (exists_path(old($$(g)), v1, v2) <==> exists_path($$(g), v1, v2))
     ensures old(x.third) != null ==> forall v1:Ref, v2:Ref ::
         { exists_path($$(g),v1,v2) }
-             exists_path($$(g),v1,v2) <==> (v1==v2) ||
-                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
+            exists_path(old($$(g)), v1, x) && exists_path(old($$(g)), old(x.third), v2) ==> 
+                exists_path($$(g),v1,v2) <==> (v1==v2) ||
+                    ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
 
-                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
-                      !exists_path(old($$(g)),n,old(x.third)) && !exists_path(old($$(g)),old(x.third),n) )
-                )
-                ||
-                ( exists n:Ref :: n != x && n != old(x.third) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.third)) )
-                ||
-                ( exists u:Ref, v:Ref :: (u != x || v != old(x.third)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
-                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.third),v) &&
-                                                                            exists_path(old($$(g)),v,v2) )
+                        ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
+                        !exists_path(old($$(g)),n,old(x.third)) && !exists_path(old($$(g)),old(x.third),n) )
+                    )
+                    ||
+                    ( exists n:Ref :: n != x && n != old(x.third) && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,old(x.third)) )
+                    ||
+                    ( exists u:Ref, v:Ref :: (u != x || v != old(x.third)) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
+                                                                                exists_path(old($$(g)),u,x) && exists_path(old($$(g)),old(x.third),v) &&
+                                                                                exists_path(old($$(g)),v,v2) )
 
 method link_DAG_first(g:Set[Ref], x:Ref, y:Ref)
     requires x in g
