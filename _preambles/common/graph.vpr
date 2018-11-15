@@ -1,0 +1,11 @@
+define LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    (forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+        { exists_path($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==from && v2==to))
+
+define UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    (forall v1:Ref, v2:Ref ::
+        { edge($$(g),v1,v2) }
+        { exists_path($$(g),v1,v2) }
+            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==from && v2==to))

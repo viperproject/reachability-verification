@@ -43,7 +43,7 @@ method unlink_ZOPG_first(g:Set[Ref], node:Ref)
     ensures PROTECTED_GRAPH_first(g,node)
     ensures node.first == null
     ensures old(node.first) == null ==> $$(g) == old($$(g))
-    ensures old(node.first) != null ==> ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.first))
+    ensures old(node.first) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.first))
     ensures old(node.first) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.first))
 
 method link_ZOPG_first(g:Set[Ref], from:Ref, to:Ref)
@@ -53,7 +53,7 @@ method link_ZOPG_first(g:Set[Ref], from:Ref, to:Ref)
     ensures PROTECTED_GRAPH_first(g,from)
     ensures from.first == to
     ensures to == null ==> $$(g) == old($$(g))
-    ensures (to != null) ==> ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
     // TODO: Automatic reasoning support
 
@@ -63,7 +63,7 @@ method unlink_ZOPG_second(g:Set[Ref], node:Ref)
     ensures PROTECTED_GRAPH_second(g,node)
     ensures node.second == null
     ensures old(node.second) == null ==> $$(g) == old($$(g))
-    ensures old(node.second) != null ==> ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.second))
+    ensures old(node.second) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.second))
     ensures old(node.second) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.second))
 
 method link_ZOPG_second(g:Set[Ref], from:Ref, to:Ref)
@@ -73,7 +73,7 @@ method link_ZOPG_second(g:Set[Ref], from:Ref, to:Ref)
     ensures PROTECTED_GRAPH_second(g,from)
     ensures from.second == to
     ensures to == null ==> $$(g) == old($$(g))
-    ensures (to != null) ==> ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
     // TODO: Automatic reasoning support
 
@@ -83,7 +83,7 @@ method unlink_ZOPG_third(g:Set[Ref], node:Ref)
     ensures PROTECTED_GRAPH_third(g,node)
     ensures node.third == null
     ensures old(node.third) == null ==> $$(g) == old($$(g))
-    ensures old(node.third) != null ==> ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.third))
+    ensures old(node.third) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.third))
     ensures old(node.third) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.third))
 
 method link_ZOPG_third(g:Set[Ref], from:Ref, to:Ref)
@@ -93,6 +93,6 @@ method link_ZOPG_third(g:Set[Ref], from:Ref, to:Ref)
     ensures PROTECTED_GRAPH_third(g,from)
     ensures from.third == to
     ensures to == null ==> $$(g) == old($$(g))
-    ensures (to != null) ==> ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
     // TODO: Automatic reasoning support

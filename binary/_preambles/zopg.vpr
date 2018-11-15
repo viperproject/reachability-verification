@@ -1,5 +1,3 @@
-import "../../_preambles/common/zopg.vpr"
-
 // Should be applied together with framing
 function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
     requires READONLY_NODES(g0)
@@ -35,7 +33,7 @@ method unlink_ZOPG_left(g:Set[Ref], node:Ref)
     ensures PROTECTED_GRAPH_left(g,node)
     ensures node.left == null
     ensures old(node.left) == null ==> $$(g) == old($$(g))
-    ensures old(node.left) != null ==> ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.left))
+    ensures old(node.left) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.left))
     ensures old(node.left) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.left))
 
 method link_ZOPG_left(g:Set[Ref], from:Ref, to:Ref)
@@ -45,7 +43,7 @@ method link_ZOPG_left(g:Set[Ref], from:Ref, to:Ref)
     ensures PROTECTED_GRAPH_left(g,from)
     ensures from.left == to
     ensures to == null ==> $$(g) == old($$(g))
-    ensures to != null ==> ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures to != null ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures to != null ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     // TODO: Automatic reasoning support
 
@@ -55,7 +53,7 @@ method unlink_ZOPG_right(g:Set[Ref], node:Ref)
     ensures PROTECTED_GRAPH_right(g,node)
     ensures node.right == null
     ensures old(node.right) == null ==> $$(g) == old($$(g))
-    ensures old(node.right) != null ==> ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.right))
+    ensures old(node.right) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.right))
     ensures old(node.right) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.right))
 
 method link_ZOPG_right(g:Set[Ref], from:Ref, to:Ref)
@@ -65,6 +63,6 @@ method link_ZOPG_right(g:Set[Ref], from:Ref, to:Ref)
     ensures PROTECTED_GRAPH_right(g,from)
     ensures from.right == to
     ensures (to == null) ==> $$(g) == old($$(g))
-    ensures (to != null) ==> ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
     // TODO: Automatic reasoning support

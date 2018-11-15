@@ -3,8 +3,9 @@ import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
 import "../../_preambles/framing.vpr"
 import "../_preambles/memspecs.vpr"
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/zopg.vpr"
 import "../_preambles/zopg.vpr"
-import "../_preambles/dag.vpr"
 
 field val: Int 
 

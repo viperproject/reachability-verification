@@ -1,3 +1,5 @@
+// --- This file contains the common parts of the encoding of Update Formulas for 0-1-path graphs. --- 
+
 define __psi__(EG, alpha,beta, x,y,u,v,w,z)  
     ((forall u_:Ref, v_:Ref :: 
         { DEP(EG,x,y,u_,v_) } 
@@ -43,15 +45,3 @@ define ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     // && (forall v1: Ref, v2: Ref ::
     //     { exists_path($$(g), v1, v2) }
     //         !exists_path(old($$(g)), v1, v2) ==> !exists_path($$(g), v1, v2))
-
-define ZOPG_LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { edge($$(g),v1,v2) }
-        { exists_path($$(g),v1,v2) }
-            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==from && v2==to))
-
-define ZOPG_UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { edge($$(g),v1,v2) }
-        { exists_path($$(g),v1,v2) }
-            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==from && v2==to))
