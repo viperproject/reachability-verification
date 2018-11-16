@@ -64,7 +64,7 @@ method append(g:Set[Ref], x:Ref, y:Ref) returns (res:Ref, last:Ref)
         link_DAG_next(g,last,y)
 
         // Negated definition of TC[f] and the follow-up lemma 
-        // assert forall u:Ref, v:Ref :: !exists_path($$(g),u,v) ==> u != v && forall w:Ref :: !edge($$(g),u,w) || !exists_path($$(g),w,v)
+        assert forall u:Ref, v:Ref :: !exists_path($$(g),u,v) ==> u != v && forall w:Ref :: !edge($$(g),u,w) || !exists_path($$(g),w,v)
         assert forall u:Ref, v:Ref :: { edge($$(g),u,v) } !exists_path($$(g),u,v) ==> !edge($$(g),u,v)
     }
     res := x

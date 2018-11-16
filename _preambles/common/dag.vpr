@@ -1,36 +1,41 @@
 // --- This file contains the common parts of the encoding of Update Formulas for acyclic graphs. --- 
 
-define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { exists_path($$(g),v1,v2) }
-            exists_path($$(g),v1,v2) <==> exists_path(old($$(g)),v1,v2) || (exists_path(old($$(g)),v1,x) && exists_path(old($$(g)),y,v2)))
+define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
+    (forall x:Ref, y:Ref ::
+        { exists_path($$(g),x,y) }
+            exists_path($$(g),x,y) <==> exists_path(old($$(g)),x,y) || (exists_path(old($$(g)),x,alpha) && exists_path(old($$(g)),beta,y)))
     // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall v1: Ref, v2: Ref ::
-    //     { exists_path($$(g), v1, v2) }
-    //         exists_path(old($$(g)), v1, v2) ==> exists_path($$(g), v1, v2))
+    // && (forall x: Ref, y: Ref ::
+    //     { exists_path($$(g), x, y) }
+    //         exists_path(old($$(g)), x, y) ==> exists_path($$(g), x, y))
 
-define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { exists_path($$(g),v1,v2) }
-             exists_path($$(g),v1,v2) <==> (v1==v2) ||
-//                !( forall n:Ref :: !(exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) && //TODO triggers
-                ( exists n:Ref :: exists_path(old($$(g)),v1,n) && exists_path(old($$(g)),n,v2) &&
-
-                    ( !exists_path(old($$(g)),n,x) && !exists_path(old($$(g)),x,n) ||
-//                      !exists_path(old($$(g)),n,to) && !exists_path(old($$(g)),to,n) ))
-                      !exists_path(old($$(g)),n,to) && !exists_path(old($$(g)),to,n) )
-                )
-                ||
-//                !( forall n:Ref :: !(n != x && n != to && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,to) ))
-                ( exists n:Ref :: n != x && n != to && exists_path(old($$(g)),x,n) && exists_path(old($$(g)),n,to) )
-                ||
-//                !( forall u:Ref, v:Ref :: !((u != x || v != to) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
-//                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),to,v) &&
-//                                                                            exists_path(old($$(g)),v,v2) ))
-                ( exists u:Ref, v:Ref :: (u != x || v != to) && edge(old($$(g)),u,v) && exists_path(old($$(g)),v1,u) &&
-                                                                            exists_path(old($$(g)),u,x) && exists_path(old($$(g)),to,v) &&
-                                                                            exists_path(old($$(g)),v,v2) ))
+define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta) 
+    (forall x:Ref, y:Ref ::
+        { exists_path($$(g),x,y) }
+            // TODO: check LHS
+            !(x != alpha && y != beta && exists_path(old($$(g)), x, alpha) && exists_path(old($$(g)), beta, y))
+                ==> 
+                (exists_path(old($$(g)), x, y) <==> exists_path($$(g), x, y)))
+    && 
+    (forall x:Ref, y:Ref ::
+        { exists_path($$(g),x,y) }
+            (x != alpha && (y != beta) && exists_path(old($$(g)), x, alpha) && exists_path(old($$(g)), beta, y)) 
+                ==> 
+                (exists_path($$(g), x, y) <==> (x == y) ||
+                    ( exists u:Ref :: 
+                        exists_path(old($$(g)), x, u) && exists_path(old($$(g)), u, y) &&
+                        (!exists_path(old($$(g)), u, beta) && !exists_path(old($$(g)), beta, u) 
+                        || !exists_path(old($$(g)), u, alpha) && !exists_path(old($$(g)), alpha, u)))
+                    ||
+                    ( exists u:Ref :: 
+                        u != alpha && u != beta && exists_path(old($$(g)), alpha, u) && exists_path(old($$(g)), u, beta))
+                    ||
+                    ( exists u:Ref, v:Ref :: 
+                        (u != alpha || v != beta) && edge(old($$(g)),u,v) 
+                        && exists_path(old($$(g)),x,u) && exists_path(old($$(g)),u,alpha) 
+                        && exists_path(old($$(g)),beta,v) && exists_path(old($$(g)),v,y))))
     // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall v1: Ref, v2: Ref ::
-    //     { exists_path($$(g), v1, v2) }
-    //         !exists_path(old($$(g)), v1, v2) ==> !exists_path($$(g), v1, v2))
+    // && 
+    // (forall x: Ref, y: Ref ::
+    //     { exists_path($$(g), x, y) }
+    //         !exists_path(old($$(g)), x, y) ==> !exists_path($$(g), x, y))
