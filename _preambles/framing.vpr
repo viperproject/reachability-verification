@@ -8,7 +8,7 @@ function apply_TCFraming(g0:Set[Ref], g1:Set[Ref]): Bool
     ensures g0 union g1 == g1 union g0
 
     // FIXME: Triggers in the following formulas are under question.
-    ensures forall u:Ref, v:Ref :: { exists_path($$(g0),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g0 && v in g0 && exists_path($$(g0),u,v) ==> exists_path($$(g0 union g1),u,v)
-    ensures forall u:Ref, v:Ref :: { exists_path($$(g1),u,v) }{ exists_path($$(g1 union g0),u,v) } u in g1 && v in g1 && exists_path($$(g1),u,v) ==> exists_path($$(g1 union g0),u,v)
-    ensures forall u:Ref, v:Ref :: { exists_path($$(g0),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g0 && v in g0 && !exists_path($$(g0),u,v) ==> !exists_path($$(g0 union g1),u,v)
-    ensures forall u:Ref, v:Ref :: { exists_path($$(g1),u,v) }{ exists_path($$(g0 union g1),u,v) } u in g1 && v in g1 && !exists_path($$(g1),u,v) ==> !exists_path($$(g1 union g0),u,v)
+    ensures forall u0:Ref, v0:Ref :: { exists_path($$(g0),u0,v0) }{ exists_path($$(g0 union g1),u0,v0) } u0 in g0 && v0 in g0 && exists_path($$(g0),u0,v0) ==> exists_path($$(g0 union g1),u0,v0)
+    ensures forall u0:Ref, v0:Ref :: { exists_path($$(g1),u0,v0) }{ exists_path($$(g1 union g0),u0,v0) } u0 in g1 && v0 in g1 && exists_path($$(g1),u0,v0) ==> exists_path($$(g1 union g0),u0,v0)
+    ensures forall u0:Ref, v0:Ref :: { exists_path($$(g0),u0,v0) }{ exists_path($$(g0 union g1),u0,v0) } u0 in g0 && v0 in g0 && !exists_path($$(g0),u0,v0) ==> !exists_path($$(g0 union g1),u0,v0)
+    ensures forall u0:Ref, v0:Ref :: { exists_path($$(g1),u0,v0) }{ exists_path($$(g0 union g1),u0,v0) } u0 in g1 && v0 in g1 && !exists_path($$(g1),u0,v0) ==> !exists_path($$(g1 union g0),u0,v0)

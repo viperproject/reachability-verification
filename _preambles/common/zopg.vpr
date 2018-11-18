@@ -1,47 +1,47 @@
 // --- This file contains the common parts of the encoding of Update Formulas for 0-1-path graphs. --- 
 
-define __psi__(EG, alpha,beta, x,y,u,v,w,z)  
+define __psi__(EG, alpha,beta, x0,y0,u0,v0,w0,z0)  
     ((forall u_:Ref, v_:Ref :: 
-        { DEP(EG,x,y,u_,v_) } 
-            ! DEP(EG,x,y,u_,v_)) 
-    && ( DEP(EG,x,alpha,u,v) && (x != alpha) || ((x == u)     && (u == alpha) && (v == beta)) ) 
-    && ( DEP(EG,beta,y,w,z)  && (beta != y)  || ((alpha == w) && (beta == z)  && (z == y))    ))
+        { DEP(EG,x0,y0,u_,v_) } 
+            ! DEP(EG,x0,y0,u_,v_)) 
+    && ( DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
+    && ( DEP(EG,beta,y0,w0,z0)    && (beta != y0)  || ((alpha == w0) && (beta == z0)   && (z0 == y0))    ))
 
 define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to) 
-    (forall x:Ref, y:Ref, u:Ref, v:Ref ::
-        { DEP(smaller_EG, x, y, u, v) }
-        { DEP(larger_EG, x, y, u, v) }
-            DEP(larger_EG, x, y, u, v) && !DEP(larger_EG, x, y, from, to) <==> DEP(smaller_EG, x, y, u, v))
+    (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+        { DEP(smaller_EG, x0, y0, u0, v0) }
+        { DEP(larger_EG, x0, y0, u0, v0) }
+            DEP(larger_EG, x0, y0, u0, v0) && !DEP(larger_EG, x0, y0, from, to) <==> DEP(smaller_EG, x0, y0, u0, v0))
 
 define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
     // The trivial case also comes from the definition of exists_path. 
     (from == to) ==> exists_path(smaller_EG, from, to) && exists_path(larger_EG, from, to) &&
     (from != to) ==> 
-        (forall x:Ref, y:Ref, u:Ref, v:Ref ::
-            { DEP(larger_EG, x, y, u, v) }
-            { DEP(smaller_EG, x, y, u, v) }
-                (u != v && x != y) ==> (
-                    (DEP(smaller_EG, x, y, u, v)
-                    || (x==from && u==from && y==to && v==to)
-                    || ( exists w:Ref, z:Ref :: __psi__(smaller_EG, from,to, x,y, u,v, w,z) )
-                    || ( exists U:Ref, V:Ref :: __psi__(smaller_EG, from,to, x,y, U,V, u,v) )
-                    || (u==from) && (v==to) 
-                        && ( exists U:Ref, V:Ref, w:Ref, z:Ref :: __psi__(smaller_EG, from,to, x,y, U,V, w,z) ))
+        (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+            { DEP(larger_EG, x0, y0, u0, v0) }
+            { DEP(smaller_EG, x0, y0, u0, v0) }
+                (u0 != v0 && x0 != y0) ==> (
+                    (DEP(smaller_EG, x0, y0, u0, v0)
+                    || (x0==from && u0==from && y0==to && v0==to)
+                    || ( exists w0:Ref, z0:Ref :: __psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
+                    || ( exists U0:Ref, V0:Ref :: __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
+                    || (u0==from) && (v0==to) 
+                        && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
                     <==> 
-                        DEP(larger_EG, x, y, u, v) ))
+                        DEP(larger_EG, x0, y0, u0, v0) ))
 
 define ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     DEP_G_PLUS_DELTA(old($$(g)), $$(g), from, to) 
     && DEP_G_MINUS_DELTA(old($$(g)), $$(g), from, to)
     // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall v1: Ref, v2: Ref ::
-    //     { exists_path($$(g), v1, v2) }
-    //         exists_path(old($$(g)), v1, v2) ==> exists_path($$(g), v1, v2))
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path($$(g), x0, y0) }
+    //         exists_path(old($$(g)), x0, y0) ==> exists_path($$(g), x0, y0))
 
 define ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     DEP_G_PLUS_DELTA($$(g), old($$(g)), from, to)
     && DEP_G_MINUS_DELTA($$(g), old($$(g)), from, to)
     // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall v1: Ref, v2: Ref ::
-    //     { exists_path($$(g), v1, v2) }
-    //         !exists_path(old($$(g)), v1, v2) ==> !exists_path($$(g), v1, v2))
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path($$(g), x0, y0) }
+    //         !exists_path(old($$(g)), x0, y0) ==> !exists_path($$(g), x0, y0))

@@ -1,11 +1,11 @@
-define LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { edge($$(g),v1,v2) }
-        // { exists_path($$(g),v1,v2) } //-- this should come from a different place
-            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) || (v1==from && v2==to))
+define LINK__PRECISE_EDGE_UPDATE_FORMULA(g, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { edge($$(g),x0,y0) }
+        // { exists_path($$(g),x0,y0) } //-- this should come alpha a different place
+            edge($$(g),x0,y0) <==> edge(old($$(g)),x0,y0) || (x0==alpha && y0==beta))
 
-define UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    (forall v1:Ref, v2:Ref ::
-        { edge($$(g),v1,v2) }
-        // { exists_path($$(g),v1,v2) } //-- this should come from a different place
-            edge($$(g),v1,v2) <==> edge(old($$(g)),v1,v2) && !(v1==from && v2==to))
+define UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { edge($$(g),x0,y0) }
+        // { exists_path($$(g),x0,y0) } //-- this should come alpha a different place
+            edge($$(g),x0,y0) <==> edge(old($$(g)),x0,y0) && !(x0==alpha && y0==beta))
