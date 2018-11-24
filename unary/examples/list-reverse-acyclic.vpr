@@ -6,58 +6,37 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
-
-define access_next(g)
-    (forall n: Ref :: { n.next } n in g ==> acc(n.next, write))
-
-define read_access(g)
-    (forall n: Ref :: { n.next } n in g ==> acc(n.next, 1/2))
     
-define closed(g)
-    (!(null in g) && forall n: Ref :: { n.next in g } n in g && n.next != null ==> n.next in g)
-
 define unshared(g)
-    (forall v1:Ref, v2:Ref, v:Ref :: { E(g,v1,v), E(g,v2,v) } E(g,v1,v) && E(g,v2,v) ==> v1 == v2)
+    unshared_graph($$(g))
 
 define acyclic(g)
-    (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ exists_path($$(g),v2,v1) } !E(g,v1,v2) || !P(g,v2,v1))
-
-define edge_graph(g)
-  ( $$(g) )
+    acyclic_graph($$(g))
 
 define E(g, p, s) 
-    // edge($$(g), p, s)
-    (create_edge(p,s) in $$(g))
+    edge($$(g), p, s)
 
-define P(g, s, p)
-    (exists_path($$(g), s, p))
+define P(g, p, s)
+    (exists_path($$(g), p, s))
 
-define P0(g, s, p)
-    (exists_path(old[l0]($$(g)), s, p))
-
-define P1(g, s, p)
-    (exists_path(old[l1]($$(g)), s, p))
-
-define old_E(g, p, s)
-    // edge(old($$(g)), p, s)
-    (create_edge(p,s) in old($$(g)))
+define E0(g, p, s)
+    old(E(g, p, s))
 
 method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
     requires xe in g
     requires GRAPH(g)
     requires unshared(g)
     requires acyclic(g)
-    // requires forall e: Edge :: { e in edge_graph(g) } e in edge_graph(g) ==> edge_pred(e) != edge_succ(e) // probably not needed
     requires forall n:Ref :: { E(g,n,xe) } n in g ==> !E(g,n,xe) // xe doesn't have a predecessor
-
-    requires (forall n: Ref :: { P(g, xe, n) } (n in g) ==> P(g, xe, n))
-
+    requires forall n: Ref :: { P(g, xe, n) } (n in g) ==> P(g, xe, n)
 
     ensures GRAPH(g)
     ensures unshared(g)
     ensures mrk subset g
-    ensures forall v1:Ref, v2:Ref :: { old_E(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk && v1 != y ==> ( old_E(g,v1,v2) ==>     E(g,v2,v1) ) 
-    ensures forall v1:Ref, v2:Ref :: { old_E(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk            ==> (     E(g,v2,v1) ==> old_E(g,v1,v2) ) 
+    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk && v1 != y ==> ( E0(g,v1,v2) ==>  E(g,v2,v1) ) 
+    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk            ==> (  E(g,v2,v1) ==> E0(g,v1,v2) ) 
+    ensures y != null ==> forall n:Ref :: { P(g,y,n) }  n in g ==> P(g,y,n)
+    ensures y != null ==> (forall n: Ref :: { P(g, y, n) } (n in mrk) <==> P(g, y, n)) 
     // ensures xe.next == null || mrk == g //-- not easy to prove
 {
     var t: Ref := null
@@ -74,8 +53,7 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
 
         invariant x != null ==> x in g
         // invariant y != null ==> y in g
-        invariant access_next(g)
-        invariant closed(g)
+        invariant GRAPH(g)
         invariant unshared(g)
 
         invariant mrk subset g
@@ -95,138 +73,51 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
         invariant y != null ==> forall n:Ref :: { E(g,n,y) } n in g ==> !E(g,n,y)
         
         // In a non-trivial graph (x != y), an old edge goes from y to x (starting from the second iteration, once y is assigned).
-        invariant y != null && x != null && x != y ==> old_E(g,y,x)
+        invariant y != null && x != null && x != y ==> E0(g,y,x)
 
         // encoding the edges that haven't been flipped yet
-        invariant forall v1:Ref, v2:Ref :: { old_E(g,v1,v2) }{ E(g,v1,v2) } !(v1 in mrk) ==> ( old_E(g,v1,v2) <==> E(g,v1,v2) )
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v1,v2) } !(v1 in mrk) ==> ( E0(g,v1,v2) <==> E(g,v1,v2) )
         
         // encoding the destroyed edge
-        invariant forall v1:Ref, v2:Ref :: { old_E(g,v1,v2) }{ E(g,v1,v2) } v1 in mrk && !(v2 in mrk) ==> ( old_E(g,v1,v2) ==> !E(g,v1,v2) && !E(g,v2,v1) )
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v1,v2) } v1 in mrk && !(v2 in mrk) ==> ( E0(g,v1,v2) ==> !E(g,v1,v2) && !E(g,v2,v1) )
 
         // we observe flipped edges after the second iteration  
-        invariant forall v1:Ref, v2:Ref :: { old_E(g,v1,v2) }{ E(g,v2,v1) } v1 in mrk && v2 in mrk && v1 != y ==> ( old_E(g,v1,v2) <==> E(g,v2,v1) ) 
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v1 in mrk && v2 in mrk && v1 != y ==> ( E0(g,v1,v2) <==> E(g,v2,v1) ) 
 
         
         // needed for triggering 
         invariant x != null ==> __learn_trigger__(E(g, x, x.next)) 
 
 
-        // invariant y != null ==> (forall n: Ref :: { P(g, y, n) } (n in mrk) ==> P(g, y, n)) 
+        // reachability properties
         invariant y != null ==> !P(g, y, x)
         invariant y != null && y.next != null ==> P(g, y, y.next)
         invariant forall n:Ref :: { P(g,x,n) }{ P(g,y,n) } n in g ==> ( P(g,x,n) ||  P(g,y,n))
         invariant forall n:Ref :: { P(g,x,n) }{ P(g,y,n) } n in g ==> (!P(g,x,n) || !P(g,y,n))
 
+        // the relation between mrk and P. 
+
+        invariant y != null ==> (forall n: Ref :: { P(g, y, n) } (n in mrk) <==> P(g, y, n)) 
+
         invariant acyclic(g)
     {
-        assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) ==> !P(g,v2,v1))
+        // assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) ==> !P(g,v2,v1))
 
         mrk := mrk union Set(x)
         // assert x.next != null && x != x.next ==> E(g, x, x.next)
         t := x.next
-        // x.next := y
 
 
-
-label l0
-
-        assert t != null ==> P(g, x, t)
-        assert y != null ==> !P(g, y, t)
-
-        assert y != null ==> !P(g, y, x)
-        assert y != null ==> !P(g, t, x)
-
-        // assert y != null ==> 
-
-        assert forall n:Ref :: { P(g,x,n) }{ P(g,y,n) } n in g && P(g,x,n) ==> !P(g,y,n)
-        assert forall u0:Ref :: { P(g, x, u0) } u0 == y && u0 != x && u0 != t && u0 in g ==> !P(g, x, u0) || !P(g, u0, t)
-        // assert forall u0:Ref :: { P(g, x, u0) } u0 != x && u0 != t && u0 in g ==> !P(g, x, u0) || !P(g, u0, t)
-
-        assert y != null ==> !P(g, x, y) || !P(g, y, t)
-
+        // Encoding x.next := y
         unlink_DAG_next(g, x)
 
-        assert forall n:Ref :: { P(g, t, n) } P(g, t, n) <==> P0(g, t, n)
-        assert forall n:Ref :: { P(g, y, n) } P(g, y, n) <==> P0(g, y, n)
-        assert !P(g, x, y)
-
-        // assert forall x0:Ref, y0:Ref ::
-        //     { P(g,x0,y0) }
-        //         ((x0 != x) && (y0 != old[l0](x.next)) && exists_path(old[l0]($$(g)), x0, x) && exists_path(old[l0]($$(g)), old[l0](x.next), y0))
-        //             ==> 
-        //                 !( exists u0:Ref :: 
-        //                         exists_path(old[l0]($$(g)), x0, u0) && exists_path(old[l0]($$(g)), u0, y0) &&
-        //                         (!exists_path(old[l0]($$(g)), u0, old[l0](x.next)) && !exists_path(old[l0]($$(g)), old[l0](x.next), u0) 
-        //                         || !exists_path(old[l0]($$(g)), u0, x) && !exists_path(old[l0]($$(g)), x, u0)))
-
-        assume acyclic(g)
-        assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) ==> !P(g,v2,v1))
-
-        // Found the missing bit: 
+        // Found the missing bit (needed for acyclicity): 
         assume apply_noExit($$(g), g, g setminus Set(x))
-        assert forall n:Ref :: { P(g,n,x) } n in g && n != x ==> !E(g,n,x) 
-        assert forall n:Ref :: { P(g,n,x) } n in g && n != x ==> !P(g,n,x) 
-
-        assert y != null ==> !P(g, y, x)
-
-        // assert ( forall u0:Ref :: { P0(g, x, u0) } u0 == x || u0 == t || !P0(g, x, u0) || !P0(g, u0, t))
-        assert y != null ==> !P(g, y, t)
-label l1
-        assert !P(g, x, t)
 
         link_DAG_next(g, x, y)
-        // unlinkPreserving__closed_unshared(g, x)        
-        // linkPreserving__closed_unshared(g, x, y)
+        
 
-
-        assert y != null ==> !P(g, y, x)
-
-
-
-
-
-        assert y != null ==> E(g, x, y) && !E(g, y, x)
-        assert y != null ==> P(g, x, y) 
-        assert y != null ==> forall v1:Ref, v2:Ref :: { P(g, v1, v2) } P(g, v1, v2) <==> P1(g, v1, v2) || (P1(g, v1, x) && P1(g, y, v2))
-        assert y != null ==> forall v1:Ref, v2:Ref :: { P(g, v1, v2) } !P(g, v1, v2) <==> !P1(g, v1, v2) && (!P1(g, v1, x) || !P1(g, y, v2))
-        assert y != null ==> forall v1:Ref, v2:Ref :: { P(g, v1, v2) } !P1(g, v1, v2) && (!P1(g, v1, x) || !P1(g, y, v2)) ==> !P(g, v1, v2)
-        assert y != null ==> forall v1:Ref, v2:Ref :: { P(g, v1, v2) } !P1(g, v1, v2) && (!P1(g, v1, x)) ==> !P(g, v1, v2)
-
-        // assert y != null ==> forall v1:Ref, v2:Ref :: { P(g, v1, v2) } !P1(g, v1, v2) && (!P1(g, v1, x) || !P1(g, y, v2)) ==> !P(g, v1, v2)
-
-
-
-
-        assert y!=null ==> (forall x0:Ref, y0:Ref :: { edge($$(g),x0,y0) } edge($$(g),x0,y0) <==> edge(old[l1]($$(g)),x0,y0) || (x0==x && y0==y))
-        assert y!=null ==> (forall x0:Ref, y0:Ref :: { edge($$(g),x0,y0) } E(g,x0,y0) <==> old[l1](E(g,x0,y0)) || (x0==x && y0==y))
-        assert y!=null ==> (forall v1:Ref, v2:Ref :: { edge($$(g),v1,v2) } E(g,v1,v2) <==> old[l1](E(g,v1,v2)) || (v1==x && v2==y))
-
-        assert y!=null ==> (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) && v1!=x ==> !old[l1]( P(g,v2,v1)) )
-        // assert y!=null ==> (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) && v1!=x ==> !P1(g,v2,x) || !P1(g,y,v1))
-        // assert y!=null ==> (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } !(P1(g,v2,v1)) ==> !P1(g,v1,x) || !P1(g,y,v2))
-        assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) && v1 != x && v2 != x && v1 != y && v2 != y ==> !P1(g,v2,v1) ) 
-
-        assert y != null  && E(g,x,y) ==> !exists_path( $$(g), y, x )
-        assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) && v1 == x && v2 == y ==> !P1(g,v2,v1) ) 
-
-        assert y != null ==> (forall v1:Ref, v2:Ref :: { P(g, v1, v2) }             !P1(g,v1,v2) && !P1(g,v1,x) ==> !P(g,v1,v2) )
-        assert y != null ==> (forall v1:Ref, v2:Ref :: { P(g, v2, v1) }             !P1(g,v2,v1) && !P1(g,v2,x) ==> !P(g,v2,v1) )
-        // assert y != null ==> (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) && v1 != x && v2 != y ==> !P(g,v2,v1) ) 
-
-        // assert y !=null ==> acyclic(g)
-
-        assert old[l0](x.next == t)
-        assert y != null ==> !P1(g, y, t)
-        assert x != t && y != t ==> !P(g, x, t)
         y := x
-        assert !P(g, y, t)
         x := t
-        // assert false
-
-        assert !P(g, y, x)
-
-
-        // assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) ==> !P(g,v2,v1))
-        // assert false
     }
 }
