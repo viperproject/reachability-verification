@@ -7,6 +7,12 @@
 domain TriggerWisdoms {
     function __learn_trigger__(b: Bool): Bool
     function __trigger_ref__(r: Ref): Bool
+
+    axiom ax_Dummy {
+        forall b:Bool :: 
+            { __learn_trigger__(b) } 
+                __learn_trigger__(b)
+    }
 }
 
 domain Edge {
