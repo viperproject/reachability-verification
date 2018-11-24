@@ -10,30 +10,46 @@ define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
     //         exists_path(old($$(g)), x0, y0) ==> exists_path($$(g), x0, y0))
 
 define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta) 
+    /**
+        Notes. 
+
+        1) If x0 == alpha, then there is a path (x0, alpha), which contradicts the requirement in LHS. 
+        2) Similarly, for y0 == beta. 
+        3) This formula is particularly useful for recovering graph segments for which reachability is the 
+            same before and after the unlink operation. For example, in list-reverse-acyclic.vpr we have 
+                
+                // null <-- [ ] <-- ... <-- [y]     [x] --> [t] --> [ ] --> ... --> [ ] --> null 
+                unlink_DAG_next(g, x)
+                // null <-- [ ] <-- ... <-- [y]     [x]     [t] --> [ ] --> ... --> [ ] --> null
+                assert forall n:Ref :: { P(g, t, n) } P(g, t, n) <==> P0(g, t, n)
+                assert forall n:Ref :: { P(g, y, n) } P(g, y, n) <==> P0(g, y, n)
+     */
     (forall x0:Ref, y0:Ref ::
         { exists_path($$(g),x0,y0) }
-            // TODO: check LHS
-            !(x0 != alpha && y0 != beta && exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0))
+            !(exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0))
                 ==> 
                 (exists_path(old($$(g)), x0, y0) <==> exists_path($$(g), x0, y0)))
-    && 
-    (forall x0:Ref, y0:Ref ::
-        { exists_path($$(g),x0,y0) }
-            (x0 != alpha && (y0 != beta) && exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0)) 
-                ==> 
-                (exists_path($$(g), x0, y0) <==> (x0 == y0) ||
-                    ( exists u0:Ref :: 
-                        exists_path(old($$(g)), x0, u0) && exists_path(old($$(g)), u0, y0) &&
-                        (!exists_path(old($$(g)), u0, beta) && !exists_path(old($$(g)), beta, u0) 
-                        || !exists_path(old($$(g)), u0, alpha) && !exists_path(old($$(g)), alpha, u0)))
-                    ||
-                    ( exists u0:Ref :: 
-                        u0 != alpha && u0 != beta && exists_path(old($$(g)), alpha, u0) && exists_path(old($$(g)), u0, beta))
-                    ||
-                    ( exists u0:Ref, v0:Ref :: 
-                        (u0 != alpha || v0 != beta) && edge(old($$(g)),u0,v0) 
-                        && exists_path(old($$(g)),x0,u0) && exists_path(old($$(g)),u0,alpha) 
-                        && exists_path(old($$(g)),beta,v0) && exists_path(old($$(g)),v0,y0))))
+    /**
+        We currently do not have evidence that the precise update formula is ever needed. 
+     */
+    // && 
+    // (forall x0:Ref, y0:Ref ::
+    //     { exists_path($$(g),x0,y0) }
+    //         ((x0 != alpha) && (y0 != beta) && exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0)) 
+    //             ==> 
+    //             (exists_path($$(g), x0, y0) <==> (x0 == y0) ||
+    //                 ( exists u0:Ref :: 
+    //                     exists_path(old($$(g)), x0, u0) && exists_path(old($$(g)), u0, y0) &&
+    //                     (!exists_path(old($$(g)), u0, beta) && !exists_path(old($$(g)), beta, u0) 
+    //                     || !exists_path(old($$(g)), u0, alpha) && !exists_path(old($$(g)), alpha, u0)))
+    //                 ||
+    //                 ( exists u0:Ref :: 
+    //                     u0 != alpha && u0 != beta && exists_path(old($$(g)), alpha, u0) && exists_path(old($$(g)), u0, beta))
+    //                 ||
+    //                 ( exists u0:Ref, v0:Ref :: 
+    //                     (u0 != alpha || v0 != beta) && edge(old($$(g)),u0,v0) 
+    //                     && exists_path(old($$(g)),x0,u0) && exists_path(old($$(g)),u0,alpha) 
+    //                     && exists_path(old($$(g)),beta,v0) && exists_path(old($$(g)),v0,y0))))
     // The imprecise formula for exists_path may decrease performance in some cases. 
     // && 
     // (forall x0: Ref, y0: Ref ::
