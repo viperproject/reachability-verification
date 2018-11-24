@@ -6,6 +6,8 @@ method unlink_DAG_left(g: Set[Ref], node:Ref)
     ensures (old(node.left) == null) ==> $$(g) == old($$(g))
     ensures (old(node.left) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.left))
     ensures (old(node.left) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.left))
+    // TODO: find the best way to express acyclicity here. 
+    // ensures acyclic(g)
 
 method unlink_DAG_right(g: Set[Ref], node:Ref)
     requires node in g
@@ -15,6 +17,8 @@ method unlink_DAG_right(g: Set[Ref], node:Ref)
     ensures (old(node.right) == null) ==> $$(g) == old($$(g))
     ensures (old(node.right) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.right))
     ensures (old(node.right) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.right))
+    // TODO: find the best way to express acyclicity here. 
+    // ensures acyclic(g)
     
 method link_DAG_left(g:Set[Ref], from:Ref, to:Ref)
     requires from in g

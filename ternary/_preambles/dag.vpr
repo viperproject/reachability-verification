@@ -6,7 +6,9 @@ method unlink_DAG_first(g: Set[Ref], node:Ref)
     ensures (old(node.first) == null) ==> $$(g) == old($$(g))
     ensures (old(node.first) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.first))
     ensures (old(node.first) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.first))
-
+    // TODO: find the best way to express acyclicity here. 
+    // ensures acyclic(g)
+    
 method unlink_DAG_second(g: Set[Ref], node:Ref)
     requires node in g
     requires PROTECTED_GRAPH_second(g,node)
@@ -15,7 +17,9 @@ method unlink_DAG_second(g: Set[Ref], node:Ref)
     ensures (old(node.second) == null) ==> $$(g) == old($$(g))
     ensures (old(node.second) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.second))
     ensures (old(node.second) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.second))
-    
+    // TODO: find the best way to express acyclicity here. 
+    // ensures acyclic(g)
+
 method unlink_DAG_third(g: Set[Ref], node:Ref)
     requires node in g
     requires PROTECTED_GRAPH_third(g,node)
@@ -24,6 +28,8 @@ method unlink_DAG_third(g: Set[Ref], node:Ref)
     ensures (old(node.third) == null) ==> $$(g) == old($$(g))
     ensures (old(node.third) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.third))
     ensures (old(node.third) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.third))
+    // TODO: find the best way to express acyclicity here. 
+    // ensures acyclic(g)
 
 method link_DAG_first(g:Set[Ref], from:Ref, to:Ref)
     requires from in g
