@@ -1,0 +1,107 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
+
+    
+define unshared(g)
+    unshared_graph($$(g))
+
+define acyclic(g)
+    acyclic_graph($$(g))
+
+define E(g, p, s) 
+    edge($$(g), p, s)
+
+define P(g, p, s)
+    (exists_path($$(g), p, s))
+
+define E0(g, p, s)
+    old(E(g, p, s))
+
+define P0(g, p, s)
+    old[l0](P(g, p, s))
+
+method find(g: Set[Ref], x: Ref, root: Ref) returns (retval: Ref)
+    requires GRAPH(g)
+    requires x in g
+    // requires exists root: Ref :: { P(g, n, root) } n in P(g, n, root)
+    requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+
+    ensures GRAPH(g)
+    ensures retval in g
+    ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+    ensures retval == root
+{
+    var i:Ref := x.next; 
+
+    // assume i != null
+    if (i != null) {
+        
+        
+        i := find(g, i, root);
+
+        assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
+        var x1: Ref := x.next
+label l0
+        // x.next := i;
+        unlink_DAG_next(g, x)
+        
+        assert x1 != null ==> (forall a:Ref, b:Ref ::
+            { P(g, a, b) }
+                !P0(g, a, x) || !P0(g, x1, b)
+                    ==> 
+                    (P0(g, a, b) <==> P(g, a, b)))
+
+        assert x1 != null ==> (forall n:Ref ::
+            { P(g, n, i) }
+                !P0(g, n, x) || !P0(g, x1, i)
+                    ==> 
+                    (P0(g, n, i) <==> P(g, n, i)))
+
+        assert x1 != null ==> (forall n:Ref ::
+            { P(g, n, i) }
+                !P0(g, n, x)
+                    ==> 
+                    (P0(g, n, i) <==> P(g, n, i)))
+
+        assert x1 != null ==> (forall n:Ref ::
+            { P(g, n, i) }
+                !P0(g, n, x) && P0(g, n, i) ==> P(g, n, i))
+
+        assert forall n:Ref :: { P(g, n, i) } n in g ==> P0(g, n, i)
+
+        assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P0(g, n, x) ==> P(g, n, i)
+        assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P(g, n, x) ==> P(g, n, i)
+
+        link_DAG_next(g, x, i)
+
+        assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
+
+        assert P(g, x, root)
+
+        // assert false
+    }
+    else {
+    
+        assert forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+        // assert forall n:Ref :: { P(g, n, root) } n in g && n != root ==> !P(g, root, n)
+        assert forall n:Ref :: { P(g, x, n) } n in g && n != x ==> !P(g, x, n)
+        assert P(g, x, root)
+        assert forall n:Ref :: { P(g, n, x) } n in g ==> P(g, n, x)
+
+        i := x; 
+
+        // assert forall n:Ref :: { E(g, x, n) } n in g && n != x ==> !E(g, x, n)
+        // assume apply_noExit($$(g), g, Set(x))
+    }
+    
+    assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
+    
+    retval := i; 
+
+    assert forall n:Ref :: { P(g, n, retval) } n in g ==> P(g, n, retval)
+}

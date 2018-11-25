@@ -1,15 +1,6 @@
 // --- This file contains the common parts of the encoding of Update Formulas for acylic graphs. --- 
 
-define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
-    (forall x0:Ref, y0:Ref ::
-        { exists_path($$(g),x0,y0) }
-            exists_path($$(g),x0,y0) <==> exists_path(old($$(g)),x0,y0) || (exists_path(old($$(g)),x0,alpha) && exists_path(old($$(g)),beta,y0)))
-    // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path($$(g), x0, y0) }
-    //         exists_path(old($$(g)), x0, y0) ==> exists_path($$(g), x0, y0))
-
-define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta) 
+define TC_G_MINUS_DELTA(smaller_EG, larger_EG, alpha, beta)
     /**
         Notes. 
 
@@ -25,33 +16,49 @@ define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
                 assert forall n:Ref :: { P(g, y, n) } P(g, y, n) <==> P0(g, y, n)
      */
     (forall x0:Ref, y0:Ref ::
-        { exists_path($$(g),x0,y0) }
-            !(exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0))
+        { exists_path(smaller_EG,x0,y0) }
+            !(exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0))
                 ==> 
-                (exists_path(old($$(g)), x0, y0) <==> exists_path($$(g), x0, y0)))
+                (exists_path(larger_EG, x0, y0) <==> exists_path(smaller_EG, x0, y0)))
     /**
         We currently do not have evidence that the precise update formula is ever needed. 
      */
-    // && 
-    // (forall x0:Ref, y0:Ref ::
-    //     { exists_path($$(g),x0,y0) }
-    //         ((x0 != alpha) && (y0 != beta) && exists_path(old($$(g)), x0, alpha) && exists_path(old($$(g)), beta, y0)) 
-    //             ==> 
-    //             (exists_path($$(g), x0, y0) <==> (x0 == y0) ||
-    //                 ( exists u0:Ref :: 
-    //                     exists_path(old($$(g)), x0, u0) && exists_path(old($$(g)), u0, y0) &&
-    //                     (!exists_path(old($$(g)), u0, beta) && !exists_path(old($$(g)), beta, u0) 
-    //                     || !exists_path(old($$(g)), u0, alpha) && !exists_path(old($$(g)), alpha, u0)))
-    //                 ||
-    //                 ( exists u0:Ref :: 
-    //                     u0 != alpha && u0 != beta && exists_path(old($$(g)), alpha, u0) && exists_path(old($$(g)), u0, beta))
-    //                 ||
-    //                 ( exists u0:Ref, v0:Ref :: 
-    //                     (u0 != alpha || v0 != beta) && edge(old($$(g)),u0,v0) 
-    //                     && exists_path(old($$(g)),x0,u0) && exists_path(old($$(g)),u0,alpha) 
-    //                     && exists_path(old($$(g)),beta,v0) && exists_path(old($$(g)),v0,y0))))
+    && 
+    (forall x0:Ref, y0:Ref ::
+        { exists_path(smaller_EG,x0,y0) }
+            ((x0 != alpha) && (y0 != beta) && exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0)) 
+                ==> 
+                (exists_path(smaller_EG, x0, y0) <==> (x0 == y0) ||
+                    ( exists u0:Ref :: 
+                        exists_path(larger_EG, x0, u0) && exists_path(larger_EG, u0, y0) &&
+                        (!exists_path(larger_EG, u0, beta) && !exists_path(larger_EG, beta, u0) 
+                        || !exists_path(larger_EG, u0, alpha) && !exists_path(larger_EG, alpha, u0)))
+                    ||
+                    ( exists u0:Ref :: 
+                        u0 != alpha && u0 != beta && exists_path(larger_EG, alpha, u0) && exists_path(larger_EG, u0, beta))
+                    ||
+                    ( exists u0:Ref, v0:Ref :: 
+                        (u0 != alpha || v0 != beta) && edge(larger_EG,u0,v0) 
+                        && exists_path(larger_EG,x0,u0) && exists_path(larger_EG,u0,alpha) 
+                        && exists_path(larger_EG,beta,v0) && exists_path(larger_EG,v0,y0))))
     // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && 
-    // (forall x0: Ref, y0: Ref ::
-    //     { exists_path($$(g), x0, y0) }
-    //         !exists_path(old($$(g)), x0, y0) ==> !exists_path($$(g), x0, y0))
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path(smaller_EG, x0, y0) }
+    //         !exists_path(larger_EG, x0, y0) ==> !exists_path(smaller_EG, x0, y0))
+
+define TC_G_PLUS_DELTA(smaller_EG, larger_EG, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { exists_path(larger_EG,x0,y0) }
+            exists_path(larger_EG,x0,y0) <==> exists_path(smaller_EG,x0,y0) || (exists_path(smaller_EG,x0,alpha) && exists_path(smaller_EG,beta,y0)))
+    // The imprecise formula for exists_path may decrease performance in some cases. 
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path(larger_EG, x0, y0) }
+    //         exists_path(smaller_EG, x0, y0) ==> exists_path(larger_EG, x0, y0))
+
+define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
+    TC_G_PLUS_DELTA(old($$(g)), $$(g), alpha, beta)
+    && TC_G_MINUS_DELTA(old($$(g)), $$(g), alpha, beta)
+
+define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta) 
+    TC_G_PLUS_DELTA($$(g), old($$(g)), alpha, beta)
+    && TC_G_MINUS_DELTA($$(g), old($$(g)), alpha, beta)
