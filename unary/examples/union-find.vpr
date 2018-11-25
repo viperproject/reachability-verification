@@ -23,85 +23,104 @@ define E0(g, p, s)
     old(E(g, p, s))
 
 define P0(g, p, s)
-    old[l0](P(g, p, s))
+    old(P(g, p, s))
 
-method find(g: Set[Ref], x: Ref, root: Ref) returns (retval: Ref)
+
+function interval(g:Set[Ref], a:Ref, b:Ref): Set[Ref]
+    requires READONLY_NODES(g)
+    requires a in g && b in g
+    ensures forall n:Ref :: 
+        { n in result } 
+            n in g ==> (P(g, a, n) && P(g, n, b) <==> n in result)
+
+// function tailInterval(g:Set[Ref], a:Ref): Set[Ref]
+//     requires GRAPH(g)
+//     requires a in g && b in g
+//     ensures forall n:Ref :: 
+//         { n in result } 
+//             P(g, a, n) && P(g, n, b) <==> n in result
+
+//TODO
+// method lemmaUReachIsIdempotent(g: Set[Ref], x: Ref)
+//     requires GRAPH(g)
+//     // requires g == inst_uReach($$(g), x)
+//     requires x in g
+
+//     ensures GRAPH(g)
+// {
+//     assert inst_uReach($$(g), x) == inst_uReach($$( inst_uReach($$(g), x) ), x)
+// }
+
+
+method mFind(g: Set[Ref], modif:Set[Ref], x: Ref, 
+            root: Ref) // ghost parameter
+    
+    returns (retval: Ref)
     requires GRAPH(g)
-    requires x in g
-    // requires exists root: Ref :: { P(g, n, root) } n in P(g, n, root)
+    requires modif subset g
+    requires x in modif && root in modif
+    requires modif == interval(g, x, root)
     requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
 
     ensures GRAPH(g)
     ensures retval in g
     ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
     ensures retval == root
+    ensures forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            P(g, x, a) && P(g, x, b) ==> ( P(g, a, b) <==> a == b || b == root )
 {
     var i:Ref := x.next; 
 
-    // assume i != null
     if (i != null) {
-        
-        
-        i := find(g, i, root);
+        // assume i != null
 
-        assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
+        assume (interval(g, i, root) subset g)
+
+        i := mFind(g, interval(g, i, root), i, root);
+        
         var x1: Ref := x.next
-label l0
-        // x.next := i;
+
+        // Encoding x.next := i;
         unlink_DAG_next(g, x)
-        
-        assert x1 != null ==> (forall a:Ref, b:Ref ::
-            { P(g, a, b) }
-                !P0(g, a, x) || !P0(g, x1, b)
-                    ==> 
-                    (P0(g, a, b) <==> P(g, a, b)))
-
-        assert x1 != null ==> (forall n:Ref ::
-            { P(g, n, i) }
-                !P0(g, n, x) || !P0(g, x1, i)
-                    ==> 
-                    (P0(g, n, i) <==> P(g, n, i)))
-
-        assert x1 != null ==> (forall n:Ref ::
-            { P(g, n, i) }
-                !P0(g, n, x)
-                    ==> 
-                    (P0(g, n, i) <==> P(g, n, i)))
-
-        assert x1 != null ==> (forall n:Ref ::
-            { P(g, n, i) }
-                !P0(g, n, x) && P0(g, n, i) ==> P(g, n, i))
-
-        assert forall n:Ref :: { P(g, n, i) } n in g ==> P0(g, n, i)
-
-        assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P0(g, n, x) ==> P(g, n, i)
-        assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P(g, n, x) ==> P(g, n, i)
-
         link_DAG_next(g, x, i)
 
-        assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
-
-        assert P(g, x, root)
-
-        // assert false
+        // Needed semantic assertion
+        assert x1 != null ==> P(g, x1, root)
     }
     else {
-    
-        assert forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
-        // assert forall n:Ref :: { P(g, n, root) } n in g && n != root ==> !P(g, root, n)
-        assert forall n:Ref :: { P(g, x, n) } n in g && n != x ==> !P(g, x, n)
-        assert P(g, x, root)
-        assert forall n:Ref :: { P(g, n, x) } n in g ==> P(g, n, x)
-
         i := x; 
-
-        // assert forall n:Ref :: { E(g, x, n) } n in g && n != x ==> !E(g, x, n)
-        // assume apply_noExit($$(g), g, Set(x))
     }
     
-    assert forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i)
+    // Needed syntactic assertion
+    assert __learn_trigger__( P(g, x, root) )
     
     retval := i; 
-
-    assert forall n:Ref :: { P(g, n, retval) } n in g ==> P(g, n, retval)
 }
+
+// method mUnion(g: Set[Ref], x: Ref, y: Ref,
+//               root_x: Ref, root_y: Ref) // ghost parameter
+//     requires GRAPH(g)
+//     requires x in g && y in g
+//     requires x != null && y != null
+//     requires forall n:Ref :: { P(g, n, root_x) } n in g ==> P(g, n, root_x)
+//     requires forall n:Ref :: { P(g, n, root_y) } n in g ==> P(g, n, root_y)
+
+//     ensures GRAPH(g)
+//     ensures forall a:Ref, b:Ref :: 
+//         {}
+//             (P(g, x, a) || P(g, y, a)) && 
+//             (P(g, x, b) || P(g, y, b)) 
+//                 && P0(g, x, a) ==> 
+// {
+//     var t: Ref
+//     t := mFind(g, x, root_x)
+//     var s: Ref 
+//     assume forall n:Ref :: { P(g, n, root_y) } n in g ==> P(g, n, root_y)
+//     s := mFind(g, y, root_y)
+
+//     if ( t != s ) {
+//         t.next := s; 
+//     }
+// }
