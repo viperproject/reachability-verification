@@ -1,4 +1,4 @@
-Convention for wrinting Chuckwalla proofs
+Convention for writing Chuckwalla proofs
 =========================================
 
 1. Reserved names. 
