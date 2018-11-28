@@ -1,5 +1,6 @@
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/purification.vpr"
+import "../../_preambles/framing.vpr"
 import "../_preambles/memspecs.vpr"
 
 import "../../_preambles/common/graph.vpr"
@@ -22,16 +23,175 @@ define P(g, p, s)
 define E0(g, p, s)
     old(E(g, p, s))
 
-define P0(g, p, s)
-    old(P(g, p, s))
+// define P0(g, p, s)
+//     old(P(g, p, s))
 
+define P0(g, p, s)
+    old[l0](P(g, p, s))
+
+define P1(g, p, s)
+    old[l1](P(g, p, s))
+
+// function interval(g:Set[Ref], a:Ref, b:Ref): Set[Ref]
+//     requires READONLY_NODES(g)
+//     requires a in g && b in g
+//     ensures a in result && b in result
+//     ensures !(null in result)
+//     ensures result == g
+//     // ensures CLOSED(result)
+//     ensures forall n:Ref :: 
+//         { n in result } 
+//         // { P(g, a, n) }
+//         // { P(g, b, n) }
+//             n in g ==> (P(g, a, n) && P(g, n, b))
+
+// function interval(g:Set[Ref], a:Ref, b:Ref): Set[Ref]
+//     requires READONLY_NODES(g) // can be an open graph
+//     requires !(null in g)
+//     requires a in g && b in g
+//     requires P(g, a, b)
+
+//     ensures result subset g
+//     ensures a in result && b in result
+
+//     ensures forall v1:Ref, v2:Ref :: 
+//         { P(result, v1, v2) }
+//             P(g, v1, v2) && v1 in result && v2 in result ==> P(result, v1, v2)
+
+//     ensures forall v1:Ref, v2:Ref :: 
+//         { P(g, v1, v2) }
+//             P(result, v1, v2) && v1 in result && v2 in result ==> P(g, v1, v2)
+
+//     ensures result == interval(result, a, b)
+//     ensures acyclic_graph($$(result))
+
+//     ensures forall n:Ref :: 
+//         // { n in result } 
+//         { P(g, a, n) }
+//         { P(g, n, b) }
+//             n in result <==> (P(g, a, n) && P(g, n, b))
+
+//     ensures a == b ==> result == Set(b)
+// {
+//     a == b ? Set(b) : interval(g, a.next, b) union Set(a)
+// }
+
+// function rootInterval(g:Set[Ref], a:Ref, root:Ref): Set[Ref]
+//     requires READONLY_NODES(g) // can be an open graph
+//     requires !(null in g)
+//     requires a in g && root in g
+//     requires P(g, a, root) 
+//     requires root.next == null 
+//     requires forall n:Ref :: { P(g, root, n) } n in g && n != root ==> !P(g, root, n)
+
+//     ensures result subset g
+//     ensures a in result && root in result
+
+//     ensures forall v1:Ref, v2:Ref :: 
+//         { P(result, v1, v2) }
+//         { P(g, v1, v2) }
+//             v1 in result && v2 in result ==> ( P(result, v1, v2) <==> P(g, v1, v2) )
+
+//     ensures result == interval(result, a, root)
+//     ensures acyclic_graph($$(result))
+//     ensures CLOSED(result)
+
+//     ensures forall n:Ref :: 
+//         // { n in result } 
+//         { P(g, a, n) }
+//         { P(g, n, root) }
+//             n in result ==> (P(g, a, n) && P(g, n, root))
+// {
+//     a == b ? Set(b) : interval(g, a.next, b) union Set(a)
+// }
 
 function interval(g:Set[Ref], a:Ref, b:Ref): Set[Ref]
-    requires READONLY_NODES(g)
+    requires READONLY_NODES(g) // can be an open graph
+    requires !(null in g)
     requires a in g && b in g
-    ensures forall n:Ref :: 
-        { n in result } 
-            n in g ==> (P(g, a, n) && P(g, n, b) <==> n in result)
+    requires P(g, a, b)
+
+    ensures result subset g
+    ensures INTERVAL(result, a, b)
+    ensures CLOSED(result)
+    ensures result == interval(result, a, b)
+    // ensures g == result union Set(a) && !(a in result)
+
+function subInterval(s:Set[Ref], a:Ref, b:Ref): Set[Ref]
+    requires READONLY_NODES(s)
+    requires INTERVAL(s, a, b)
+
+    ensures s == result union Set(a)
+    ensures !(a in result)
+    // ensures result subset s
+    ensures a != b ==> INTERVAL(result, a.next, b)
+    ensures a == b ==> result == Set()
+    ensures CLOSED(result)
+
+// {
+//     a == b ? Set() : interval(s, a.next, b)
+// }
+
+method lemma_IdempotentIntervals(g: Set[Ref], x:Ref, y:Ref)
+    requires GRAPH(g)
+    requires x in g && y in g
+    requires P(g, x, y)
+{
+    var s: Set[Ref] := interval(g, x, y)
+
+    assert interval(s, x, y) == s
+}
+
+// method lemma_ClosedIntervals(g: Set[Ref], x:Ref, root:Ref)
+//     requires GRAPH(g)
+//     requires acyclic_graph($$(g))
+//     requires x in g && root in g && root.next == null
+//     requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+// {
+//     var s: Set[Ref] := rootInterval(g, x, root)
+
+//     assume root.next == null
+//     assert __learn_trigger__( P(g, root.next, root) )
+
+//     assert CLOSED(s)
+// }
+
+method lemma_NextOfRootIsNull(g: Set[Ref], root:Ref)
+    requires GRAPH(g) && root in g
+    requires acyclic_graph($$(g))
+    requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+{
+    // // CLOSED(g)
+    // assert ( forall n:Ref ::
+    //     { n.next in g }
+    //     { n in g, n.next }
+    //         n in g && n.next != null ==> n.next in g )
+    // assert root in g && (root.next == null || root.next in g)
+    // assert root.next in g ==> P(g, root.next, root)
+    // assert !E(g, root.next, root)
+
+    assert __learn_trigger__( P(g, root.next, root) )
+
+    assert root.next == null
+}
+
+method lemma_NoPathFromRoot(g: Set[Ref], root:Ref)
+    requires GRAPH(g) && root in g
+    requires acyclic_graph($$(g))
+    requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+{
+    // CLOSED(g)
+    // assert ( forall n:Ref ::
+    //     { n.next in g }
+    //     { n in g, n.next }
+    //         n in g && n.next != null ==> n.next in g )
+    // assert root in g && (root.next == null || root.next in g)
+    // assert root.next in g ==> P(g, root.next, root)
+    // assert !E(g, root.next, root)
+    // assert root.next == null
+
+    assert forall n:Ref :: { P(g,root,n) } n in g && n != root ==> !P(g, root, n)
+}
 
 // function tailInterval(g:Set[Ref], a:Ref): Set[Ref]
 //     requires GRAPH(g)
@@ -51,53 +211,624 @@ function interval(g:Set[Ref], a:Ref, b:Ref): Set[Ref]
 //     assert inst_uReach($$(g), x) == inst_uReach($$( inst_uReach($$(g), x) ), x)
 // }
 
+method lemma_NoNullOnPath(g:Set[Ref], x:Ref)
+    requires x in g
+    requires GRAPH(g)
+{
+    assert forall n:Ref :: { P(g, x, n) } P(g, x, n) ==> n != null
+}
 
-method mFind(g: Set[Ref], modif:Set[Ref], x: Ref, 
+method lemma_PathStaysInGraph(g:Set[Ref], x:Ref)
+    requires x in g
+    requires GRAPH(g)
+{
+    assert forall n:Ref :: { P(g, x, n) } P(g, x, n) ==> n in g
+}
+
+define ROOT(g, r)
+    (r in g)
+    && (r.next == null)
+    && (forall n:Ref :: { P(g, n, r) } n in g           ==> P(g, n, r) )
+    // && (forall m:Ref :: { P(g, r, m) } m in g && m != r ==> !P(g, r, m) )
+
+define SOURCE(g, s)
+    (s in g)
+    && (forall n:Ref :: { P(g, s, n) } n in g ==> P(g, s, n) )
+    && (forall m:Ref :: { P(g, m, s) } m in g && m != s ==> !P(g, m, s))
+
+define INTERVAL(graph, a, b)
+    !(null in graph)
+    && acyclic_graph($$(graph))
+    && SOURCE(graph, a)
+    && ROOT(graph, b)
+    && P(graph, a, b)
+    && (forall n:Ref :: 
+        { P(graph, a, n) }
+        { P(graph, n, b) }
+            n in graph ==> P(graph, a, n) && P(graph, n, b))
+    // // Automation triggers: 
+    // && (forall n:Ref :: 
+    //     { P(graph, a, n) } 
+    //         n in graph ==> P(graph, a, n))
+    // && (forall m:Ref :: 
+    //     { P(graph, m, b) } 
+    //         m in graph ==> P(graph, m, b))
+
+// define ROOT_INTERVAL(g, a)
+//     !(null in g)
+//     && (a in g) 
+//     && (forall n:Ref :: 
+//         { P(g, a, n) }
+//             n in g ==> P(g, a, n))
+//     && CLOSED(g)
+
+
+method mFind(g: Set[Ref], x: Ref, 
             root: Ref) // ghost parameter
     
     returns (retval: Ref)
+
     requires GRAPH(g)
-    requires modif subset g
-    requires x in modif && root in modif
-    requires modif == interval(g, x, root)
-    requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+    requires SOURCE(g, x) && ROOT(g, root)
+    requires INTERVAL(g, x, root)
+
 
     ensures GRAPH(g)
-    ensures retval in g
-    ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+
+    ensures acyclic_graph($$(g))
+    ensures retval in g 
+    ensures ROOT(g, retval)
     ensures retval == root
+    ensures (forall m:Ref :: { P(g, m, x) } m in g && m != x ==> !P(g, m, x))
     ensures forall a:Ref, b:Ref :: 
         { P(g, a, b) } 
         { P(g, x, a), P(g, x, b) }
-            P(g, x, a) && P(g, x, b) ==> ( P(g, a, b) <==> a == b || b == root )
+            a in g && b in g ==> ( P(g, a, b) <==> a == b || b == retval )
 {
     var i:Ref := x.next; 
 
     if (i != null) {
-        // assume i != null
+        var g1:Set[Ref] := subInterval(g, x, root)
 
-        assume (interval(g, i, root) subset g)
 
-        i := mFind(g, interval(g, i, root), i, root);
-        
+        // assume g1 subset g
+        // assume CLOSED(g1)
+        // assume INTERVAL(g1, i, root)
+
+        assert x != x.next
+
+        // assert forall n:Ref :: { P(g, i, n) } n in g1 ==> __learn_trigger__( P(g1, i, n) )
+
+        // assert __learn_trigger__( P(g, i, x) )
+
+        assert i in g1
+
+        // assume apply_TCFraming(g1, Set(x))
+
+        assert !(x in g1)
+
+        assert g == g1 union Set(x) 
+
+        assert i == x.next
+        i := mFind(g1, i, root);
+        assume apply_TCFraming(g1, Set(x))
+
+        assert i == root
+
         var x1: Ref := x.next
+label l0        
+
 
         // Encoding x.next := i;
-        unlink_DAG_next(g, x)
-        link_DAG_next(g, x, i)
 
+
+        assert (forall n:Ref :: { P(g1, n, i) } n in g1 ==> P(g1, n, i) )
+        // assume (forall n:Ref :: { P(g, n, i) } n in g1 ==> P(g, n, i) ) // #nested-framing
+        assert (forall n:Ref :: { P(g, n, i) } n in g && n != x ==> P(g, n, i) )
+
+
+
+        assert (forall n:Ref :: { P(g1, n, x) } n in g1 && n != x ==> !P(g1, n, x) )
+        // how can we get this??? #nested-framing
+        // assume (forall n:Ref :: { P(g, n, x) } n in g && n != x ==> !P(g, n, x) )
+        
+
+        // From apply_TCFraming(g1, Set(x))
+        assert (forall u0:Ref, v0:Ref :: 
+            { P(g1, u0, v0) }
+            { P(g, u0, v0) } 
+                !P(g1, u0, v0) 
+                && ( forall alpha:Ref, beta:Ref :: 
+                    { P(g1, u0, alpha), P(g1, beta, v0) }
+                    { P(g, alpha, beta) }
+                        (alpha in g1) && (beta in g1) ==>
+                            !P(g1, u0, alpha) || !P(g, alpha, beta) || !P(g1, beta, v0))                
+                ==> !P(g, u0, v0))
+
+        // assert (forall n:Ref :: 
+        //     { P(g1, n, x) }
+        //     { P(g, n, x) } 
+        //         !P(g1, n, x) 
+        //         && ( forall alpha:Ref, beta:Ref :: 
+        //             { P(g1, n, alpha), P(g1, beta, x) }
+        //             { P(g, alpha, beta) }
+        //                 (alpha in g1) && (beta in g1) ==>
+        //                     !P(g1, n, alpha) || !P(g, alpha, beta) || !P(g1, beta, x))                
+        //         ==> !P(g, n, x))
+
+        // assert (forall n:Ref :: { P(g, n, x) } n in g1 && n != x ==> 
+        //     ( forall alpha:Ref, beta:Ref :: 
+        //             { P(g1, n, alpha), P(g1, beta, x) }
+        //             { P(g, alpha, beta) }
+        //                 (alpha in g1) && (beta in g1) ==>
+        //                     !P(g1, n, alpha) || !P(g, alpha, beta) || !P(g1, beta, x) ) )
+
+        assert (forall n:Ref :: { P(g, n, x) } n in g1 && n != x ==> !P(g, n, x) )
+        assert (forall n:Ref :: { P(g, n, x) } n in g && n != x ==> !P(g, n, x) )
+
+
+
+        assert forall a:Ref, b:Ref :: 
+            { P(g1, a, b) } 
+            { P(g1, x.next, a), P(g1, x.next, b) }
+                a in g1 && b in g1 ==> ( P(g1, a, b) <==> a == b || b == root )
+
+
+        assert forall a:Ref, b:Ref :: 
+            { P(g1, a, b) } 
+                a in g1 && b in g1 && a != b && b != root ==> !P(g1, a, b) 
+
+
+        assert forall a:Ref, b:Ref :: 
+            { P(g1, a, b) } 
+                (a in g && b in g && a != x && b != x) && a != b && b != root ==> !P(g1, a, b) 
+        // how can we get this??? #nested-framing
+        // assume forall a:Ref, b:Ref :: 
+        //     { P(g, a, b) } 
+        //         (a in g && b in g && a != x && b != x) && a != b && b != root ==> !P(g, a, b) 
+
+
+        assert (forall a:Ref, b:Ref ::
+            { P(g1, a, x), P(g1, a, b) }
+            { P(g1, a, b) }
+                a != x && b != x && a in g && b in g && a != b && b != root ==> !P(g1, a, b))
+
+
+
+        // From apply_TCFraming(g1, Set(x))
+
+        assert (forall u0:Ref, v0:Ref :: 
+        { P(Set(x), u0, v0) }
+        { P(g, u0, v0) } 
+            !P(Set(x), u0, v0) 
+            && ( forall alpha:Ref, beta:Ref :: 
+                { P(Set(x), u0, alpha), P(Set(x), beta, v0) }
+                { P(g, alpha, beta) }
+                    (alpha in g1) && (beta in g1) ==> 
+                        !P(Set(x), u0, alpha) 
+                        || !P(g, alpha, beta) 
+                        || !P(Set(x), beta, v0))                
+            ==> !P(g, u0, v0))
+
+        
+
+
+        assert forall a:Ref, b:Ref :: 
+            { P(g1, a, b) } 
+                a in g1 && b in g1 && a != b && b != root ==> !P(g1, a, b) 
+
+        assert (forall a:Ref, b:Ref :: 
+            { P(g1, a, b) }
+            { P(g, a, b) } 
+                a != x && b != x && a in g && b in g && a != b && b != root ==> 
+                    ( forall alpha:Ref, beta:Ref :: 
+                        { P(g1, a, alpha), P(g1, beta, b) }
+                        { P(g, alpha, beta) }
+                            (alpha in Set(x)) && (beta in Set(x)) ==>
+                                !P(g1, a, alpha) || !P(g, alpha, beta) || !P(g1, beta, b)))
+
+        assert (forall a:Ref, b:Ref :: 
+            { P(g, a, x), P(g, a, b) }
+            { P(g, a, b) }
+                a != x && b != x && a in g && b in g && a != b && a != root && b != root ==> !P(g, a, b))
+
+        // assert (forall a:Ref, b:Ref ::
+        //     { P(g, a, x), P(g, a, b) }
+        //     { P(g, a, b) }
+        //         a in g && b in g && a != b && b != root ==> !P(g, a, x))
+
+
+        unlink_DAG_next(g, x)
+
+label l1
+
+        assert (forall n:Ref :: { P(g, n, i) } n in g && n != x ==> P(g, n, i) )
+
+        
+
+
+
+        assert (forall a:Ref, b:Ref ::
+            { P(g, a, x), P(g, a, b) }
+            { P(g, a, b) }
+                a in g && b in g && a != b && b != root ==> !P(g, a, b))
+
+        assert (forall a:Ref ::
+            { P(g, a, x) }
+                a in g && a != x ==> !P(g, a, x))
+
+        link_DAG_next(g, x, i)
+label l2
+
+        /**  
+        
+            EG_1 < EG_0
+            EG_1 < EG_2
+
+        */
+
+
+
+
+
+        assert i != null ==> (forall x0:Ref, y0:Ref ::
+            { P(g, x0, y0) }
+                P(g, x0, y0) <==> P1(g, x0, y0) || (P1(g, x0, x) && P1(g, i, y0)))
+
+
+
+        assert i != null ==> (forall x0:Ref, y0:Ref ::
+            { P(g, x0, y0) }
+                P(g, x0, y0) <==> P1(g, x0, y0) || (P1(g, x0, x) && P1(g, i, y0)))
+        
         // Needed semantic assertion
-        assert x1 != null ==> P(g, x1, root)
+        // assert x1 != null ==> P(g, x1, root)
+
+        assert (forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i) )
+
+
+        
+
+
+
+        assert i != null ==> forall a:Ref, b:Ref :: 
+            { P(g, a, b) } 
+            { P(g, x, a), P(g, x, b) }
+                a in g && b in g && a != b && b != root ==> !P(g, a, b)
+
+        assert forall a:Ref, b:Ref :: 
+            { P(g, a, b) } 
+            { P(g, x, a), P(g, x, b) }
+                a in g && b in g && a != b && b != root ==> !P(g, a, b)
     }
     else {
+        assert x.next == null
         i := x; 
+        assume g == Set(root)
+        assert forall a:Ref, b:Ref :: 
+            { P(g, a, b) } 
+            { P(g, x, a), P(g, x, b) }
+                a in g && b in g && a != b && b != retval ==> !P(g, a, b)
     }
-    
-    // Needed syntactic assertion
-    assert __learn_trigger__( P(g, x, root) )
-    
+
+    assert (forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, i) )
+
     retval := i; 
+
+    // Needed syntactic assertion
+    assert __learn_trigger__( P(g, retval, root) )
+
+
+
+    assert (retval in g)
+    assert (retval.next == null)
+    assert (forall n:Ref :: { P(g, n, retval) } n in g ==> P(g, n, retval) )
+
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g && a != b && b != retval ==> !P(g, a, b)
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g && a != b ==> ( !P(g, a, b) || b == retval )
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g && a != b ==> ( b == retval ==> P(g, a, b) )
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g && a != b ==> ( P(g, a, b) ==> b == retval )
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g && a != b ==> ( P(g, a, b) <==> b == retval )
+
+    assert forall a:Ref, b:Ref :: 
+        { P(g, a, b) } 
+        { P(g, x, a), P(g, x, b) }
+            a in g && b in g ==> ( P(g, a, b) <==> a == b || b == retval )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// method mFind(g: Set[Ref], x: Ref, 
+//             root: Ref) // ghost parameter
+    
+//     returns (retval: Ref)
+
+//     requires GRAPH(g)
+//     requires x in g && ROOT(g, root)
+//     requires g == interval(g, x, root)
+//     requires acyclic_graph($$(g))
+
+
+
+//     ensures GRAPH(g)
+
+//     ensures acyclic_graph($$(g))
+//     ensures retval in g && ROOT(g, root)
+//     ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+//     ensures retval == root
+//     ensures forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g ==> ( P(g, a, b) <==> a == b || b == root )
+// {
+//     var i:Ref := x.next; 
+
+
+//     assume i != null
+//     if (i != null) {
+//         var g1:Set[Ref] := interval(g, i, root)
+//         assert root.next == null
+//         assume CLOSED(g1)
+//         i := mFind(g1, i, root);
+
+//         assert forall a:Ref, b:Ref :: 
+//             { P(g1, a, b) } 
+//             { P(g1, x, a), P(g1, x, b) }
+//                 a in g1 && b in g1 ==> ( P(g1, a, b) <==> a == b || b == root )
+
+//         assume forall n:Ref :: { P(g,root,n) } n in g && n != root ==> !P(g, root, n)
+
+//         var x1: Ref := x.next
+// label l0        
+
+//         assert forall n:Ref :: { P(g, n, i) } n in g1 ==> n in g
+//         // assert forall n:Ref :: { P(g, n, i) } n in g1 ==> P(g, n, root)
+//         assume forall n:Ref :: { P(g, n, i) } n in g ==> P(g, n, root)
+
+
+//         // Encoding x.next := i;
+//         unlink_DAG_next(g, x)
+// label l1
+//         assert acyclic_graph($$(g))
+
+//         assume x != root ==> !P(g, root, x)
+
+
+//         assert x1 != null ==> (forall a:Ref, b:Ref ::
+//             { P(g, a, b) }
+//                 !P0(g, a, x) || !P0(g, x1, b)
+//                     ==> 
+//                     (P0(g, a, b) <==> P(g, a, b)))
+
+//         assert x1 != null ==> (forall n:Ref ::
+//             { P(g, n, i) }
+//                 !P0(g, n, x) || !P0(g, x1, i)
+//                     ==> 
+//                     (P0(g, n, i) <==> P(g, n, i)))
+
+//         assert x1 != null ==> (forall n:Ref ::
+//             { P(g, n, i) }
+//                 !P0(g, n, x)
+//                     ==> 
+//                     (P0(g, n, i) <==> P(g, n, i)))
+
+//         assert x1 != null ==> (forall n:Ref ::
+//             { P(g, n, i) }
+//                 !P0(g, n, x) && P0(g, n, i) ==> P(g, n, i))
+
+//         assert forall n:Ref :: { P(g, n, i) } n in g ==> P0(g, n, i)
+
+//         assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P0(g, n, x) ==> P(g, n, i)
+//         assert x1 != null ==> forall n:Ref :: { P(g, n, i) } n in g && !P(g, n, x) ==> P(g, n, i)
+
+
+
+//         link_DAG_next(g, x, i)
+
+//         assert forall a:Ref, b:Ref :: 
+//             { P(g, a, b) } 
+//             { P(g, x, a), P(g, x, b) }
+//                 a in g && b in g && a != b && b != root ==> !P(g, a, b)
+
+
+//         // assert forall v1:Ref, v2:Ref :: { E(g,v1,v2) } { P(g,v2,v1) } E(g,v1,v2) ==> !P1(g,v2,v1)
+//         // assert (forall x0:Ref, y0:Ref :: { P(g,x0,y0) } P(g,x0,y0) <==> P1(g,x0,y0) || (P1(g,x0,x) && P1(g,i,y0)))
+//         // assert (forall x0:Ref, y0:Ref :: { P(g,x0,y0) } !P(g,x0,y0) <==> !P1(g,x0,y0) && (!P1(g,x0,x) || !P1(g,i,y0)))
+//         // assert forall v1:Ref, v2:Ref :: { E(g,v1,v2) } { P(g,v2,v1) } !P1(g,v2,v1) && !P1(g,i,v1) ==> !P(g,v2,v1)
+        
+//         // assert forall v1:Ref, v2:Ref :: { E(g,v1,v2) } { P(g,v2,v1) } E(g,v1,v2) && v1 != x ==> !P(g,v2,v1)
+//         // assert acyclic_graph($$(g))
+    
+//         // // Needed semantic assertion
+//         assert x1 != null ==> P(g, x1, root)
+//     }
+//     else {
+//         i := x; 
+//         assert forall m:Ref :: { P(g, root, m) } m in g && m != root ==> !P(g, root, m) 
+//         assume g == Set(root)
+//         assert forall a:Ref, b:Ref :: 
+//             { P(g, a, b) } 
+//             { P(g, x, a), P(g, x, b) }
+//                 a in g && b in g && a != b && b != root ==> !P(g, a, b)
+
+
+//     }
+
+//     retval := i; 
+
+//     // Needed syntactic assertion
+//     assert __learn_trigger__( P(g, retval, root) )
+
+    
+//     assert root in g
+//     assert forall a:Ref :: 
+//         { P(g, a, root) } 
+//         { P(g, x, a) }
+//             a in g && a != root ==> ( P(g, a, root) )
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g && a != b ==> ( b == root ==> P(g, a, b) )
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g && a != b && b != root ==> !P(g, a, b)
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g && a != b ==> (!P(g, a, b) || b == root)
+
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g && a != b && P(g, a, b) ==> b == root 
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g && a != b ==> ( P(g, a, b) <==> b == root )
+
+//     assert forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             a in g && b in g ==> ( P(g, a, b) <==> a == b || b == root )
+
+//     // assert  forall a:Ref, b:Ref :: 
+//     //     { P(g, a, b) } 
+//     //     { P(g, x, a), P(g, x, b) }
+//     //         old(P(g, x, a)) && old(P(g, x, b)) ==> ( P(g, a, b) <==> a == b || b == root )
+
+//     assert  forall a:Ref, b:Ref :: 
+//         { P(g, a, b) } 
+//         { P(g, x, a), P(g, x, b) }
+//             P(g, x, a) && P(g, x, b) ==> ( P(g, a, b) <==> a == b || b == root )
+
+//     // assert false
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// method mFind(g: Set[Ref], modif:Set[Ref], x: Ref, 
+//             root: Ref) // ghost parameter
+    
+//     returns (retval: Ref)
+//     requires GRAPH(g)
+//     requires modif == g
+//     requires x in modif && root in modif
+//     requires modif == interval(g, x, root)
+//     requires forall n:Ref :: { P(modif, n, root) } n in modif ==> P(modif, n, root)
+
+//     ensures GRAPH(g)
+//     ensures retval in modif
+//     ensures forall n:Ref :: { P(modif, n, root) } n in modif ==> P(modif, n, root)
+//     ensures retval == root
+//     ensures forall a:Ref, b:Ref :: 
+//         { P(modif, a, b) } 
+//         { P(modif, x, a), P(modif, x, b) }
+//             P(modif, x, a) && P(modif, x, b) ==> ( P(modif, a, b) <==> a == b || b == root )
+// {
+//     var i:Ref := x.next; 
+
+//     if (i != null) {
+//         // assume i != null
+
+//         // Idea: try out: 
+//         // i := find(g setminus inst_uReach_rev($$(g), i) union Set(i), i, root);
+
+//         assume (rootInterval(g, i, root) subset g) 
+
+//         assume interval(g, i, root) intersection Set(x) == Set()
+//         assume apply_TCFraming( interval(g, i, root), Set(x) )
+
+//         assert interval(g, i, root) subset modif
+
+//         assume (forall n: Ref :: (n in interval(g, i, root)) ==> exists_path($$(interval(g, i, root)), n, root))
+
+//         assume interval(g, i, root) == interval(interval(g, i, root), i, root)
+
+//         assume (forall n$1: Ref :: (n$1 in interval(g, i, root)) && n$1.next != null ==> (n$1.next in interval(g, i, root)))
+
+//         i := mFind(interval(g, i, root), interval(g, i, root), i, root);
+        
+//         var x1: Ref := x.next
+
+//         // Encoding x.next := i;
+//         unlink_DAG_next(modif, x)
+//         link_DAG_next(modif, x, i)
+
+//         // Needed semantic assertion
+//         assert x1 != null ==> P(modif, x1, root)
+//     }
+//     else {
+//         i := x; 
+//     }
+    
+//     // Needed syntactic assertion
+//     assert __learn_trigger__( P(g, x, root) )
+    
+//     retval := i; 
+// }
 
 // method mUnion(g: Set[Ref], x: Ref, y: Ref,
 //               root_x: Ref, root_y: Ref) // ghost parameter
@@ -108,11 +839,11 @@ method mFind(g: Set[Ref], modif:Set[Ref], x: Ref,
 //     requires forall n:Ref :: { P(g, n, root_y) } n in g ==> P(g, n, root_y)
 
 //     ensures GRAPH(g)
-//     ensures forall a:Ref, b:Ref :: 
-//         {}
-//             (P(g, x, a) || P(g, y, a)) && 
-//             (P(g, x, b) || P(g, y, b)) 
-//                 && P0(g, x, a) ==> 
+//     // ensures forall a:Ref, b:Ref :: 
+//     //     {}
+//     //         (P(g, x, a) || P(g, y, a)) && 
+//     //         (P(g, x, b) || P(g, y, b)) 
+//     //             && P0(g, x, a) ==> 
 // {
 //     var t: Ref
 //     t := mFind(g, x, root_x)
