@@ -6,21 +6,7 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
-    
-define unshared(g)
-    unshared_graph($$(g))
-
-define acyclic(g)
-    acyclic_graph($$(g))
-
-define E(g, p, s) 
-    edge($$(g), p, s)
-
-define P(g, p, s)
-    (exists_path($$(g), p, s))
-
-define E0(g, p, s)
-    old(E(g, p, s))
+import "../../_preambles/macros.vpr"
 
 method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
     requires xe in g

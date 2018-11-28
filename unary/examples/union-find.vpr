@@ -7,21 +7,8 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
-    
-define unshared(g)
-    unshared_graph($$(g))
+import "../../_preambles/macros.vpr"
 
-define acyclic(g)
-    acyclic_graph($$(g))
-
-define E(g, p, s) 
-    edge($$(g), p, s)
-
-define P(g, p, s)
-    (exists_path($$(g), p, s))
-
-define E0(g, p, s)
-    old(E(g, p, s))
 
 // define P0(g, p, s)
 //     old(P(g, p, s))
@@ -144,7 +131,7 @@ method lemma_IdempotentIntervals(g: Set[Ref], x:Ref, y:Ref)
 
 // method lemma_ClosedIntervals(g: Set[Ref], x:Ref, root:Ref)
 //     requires GRAPH(g)
-//     requires acyclic_graph($$(g))
+//     requires acyclic(g)
 //     requires x in g && root in g && root.next == null
 //     requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
 // {
@@ -158,7 +145,7 @@ method lemma_IdempotentIntervals(g: Set[Ref], x:Ref, y:Ref)
 
 method lemma_NextOfRootIsNull(g: Set[Ref], root:Ref)
     requires GRAPH(g) && root in g
-    requires acyclic_graph($$(g))
+    requires acyclic(g)
     requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
 {
     // // CLOSED(g)
@@ -177,7 +164,7 @@ method lemma_NextOfRootIsNull(g: Set[Ref], root:Ref)
 
 method lemma_NoPathFromRoot(g: Set[Ref], root:Ref)
     requires GRAPH(g) && root in g
-    requires acyclic_graph($$(g))
+    requires acyclic(g)
     requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
 {
     // CLOSED(g)
@@ -275,7 +262,7 @@ method mFind(g: Set[Ref], x: Ref,
 
     ensures GRAPH(g)
 
-    ensures acyclic_graph($$(g))
+    ensures acyclic(g)
     ensures retval in g 
     ensures ROOT(g, retval)
     ensures retval == root
@@ -590,13 +577,13 @@ label l2
 //     requires GRAPH(g)
 //     requires x in g && ROOT(g, root)
 //     requires g == interval(g, x, root)
-//     requires acyclic_graph($$(g))
+//     requires acyclic(g)
 
 
 
 //     ensures GRAPH(g)
 
-//     ensures acyclic_graph($$(g))
+//     ensures acyclic(g)
 //     ensures retval in g && ROOT(g, root)
 //     ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
 //     ensures retval == root
@@ -633,7 +620,7 @@ label l2
 //         // Encoding x.next := i;
 //         unlink_DAG_next(g, x)
 // label l1
-//         assert acyclic_graph($$(g))
+//         assert acyclic(g)
 
 //         assume x != root ==> !P(g, root, x)
 
@@ -681,7 +668,7 @@ label l2
 //         // assert forall v1:Ref, v2:Ref :: { E(g,v1,v2) } { P(g,v2,v1) } !P1(g,v2,v1) && !P1(g,i,v1) ==> !P(g,v2,v1)
         
 //         // assert forall v1:Ref, v2:Ref :: { E(g,v1,v2) } { P(g,v2,v1) } E(g,v1,v2) && v1 != x ==> !P(g,v2,v1)
-//         // assert acyclic_graph($$(g))
+//         // assert acyclic(g)
     
 //         // // Needed semantic assertion
 //         assert x1 != null ==> P(g, x1, root)
