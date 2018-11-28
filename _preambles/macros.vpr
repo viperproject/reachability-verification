@@ -1,0 +1,20 @@
+define disjoint_sets(g0, g1)
+    ( forall r:Ref :: { r in g0, r in g1 } r in g0 ==> !(r in g1) ) &&
+    ( forall r:Ref :: { r in g0, r in g1 } r in g1 ==> !(r in g0) )
+
+define is_global_root(g,root)
+    forall n:Ref :: { exists_path($$(g),root,n) } n in g ==> exists_path($$(g),root,n)
+
+define is_global_sink(g,sink)
+    forall n:Ref :: { exists_path($$(g),n,sink) } n in g ==> exists_path($$(g),n,sink)
+    
+define acyclic_list_segment(g)
+    acyclic_graph($$(g)) &&
+    func_graph($$(g)) &&
+    unshared_graph($$(g))
+
+define P(g, x, y)
+    exists_path($$(g), x, y)
+
+define E(g, x, y)
+    edge($$(g), x, y)
