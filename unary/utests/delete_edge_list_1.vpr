@@ -1,0 +1,56 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../../_preambles/framing.vpr"
+import "../../_preambles/macros.vpr"
+import "../_preambles/memspecs.vpr"
+
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
+
+method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
+    requires disjoint_sets(g0,g1)
+    requires GRAPH(g0 union g1)
+
+    requires x0 in g0 && x1 in g1
+    requires is_global_sink(g0,x0)
+    requires is_global_root(g1,x1)
+
+    // The only edge between g0 and g1 is from x0 to x1:
+
+    requires forall n:Ref, m:Ref :: { n in g0, m in g1 } n in g0 && m in g1 ==> (E(g0 union g1,n,m) <==> n==x0 && m==x1)
+    requires forall n:Ref, m:Ref :: { n in g1, m in g0 } n in g1 && m in g0 ==> !E(g0 union g1,n,m)
+
+    //requires forall n:Ref :: n in g1 && n.next != null ==> n.next in g1
+
+    requires acyclic(g0 union g1)
+    requires x0.next == x1
+
+{
+    assume apply_TCFraming(g0,g1)
+    unlink_DAG_next(g0 union g1,x0)
+    assume apply_TCFraming(g0,g1)
+
+    assert !P(g0 union g1, x0, x1)
+    assert acyclic(g1)
+    assert acyclic(g0)
+    assert is_global_root(g1,x1)
+
+    //Postconditions
+    assert GRAPH(g0 union g1)
+    assert !P(g0 union g1, x0, x1)
+
+    assert GRAPH(g0)
+    assert GRAPH(g1)
+
+    assert acyclic(g1)
+    assert acyclic(g0)
+
+    assert is_global_root(g1,x1)
+    
+    //:: ExpectedOutput(assert.failed:assertion.false)
+    assert false
+}
