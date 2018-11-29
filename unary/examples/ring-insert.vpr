@@ -7,6 +7,8 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/zopg.vpr"
 import "../_preambles/zopg.vpr"
 
+import "../../_preambles/macros.vpr"
+
 field val: Int 
 
 define UNSHARED_CONNECTED(g)

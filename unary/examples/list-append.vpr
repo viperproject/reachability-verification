@@ -6,6 +6,8 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
+import "../../_preambles/macros.vpr"
+
 
 method append(g:Set[Ref], x:Ref, y:Ref) returns (res:Ref, last:Ref)
 
