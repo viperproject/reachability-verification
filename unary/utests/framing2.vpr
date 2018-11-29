@@ -16,7 +16,7 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     requires GRAPH(g0) && GRAPH(g1)
     requires x0 in g0
     requires x1 in g1
-    requires disjoint_sets(g0,g1)
+    requires disjoint(g0,g1)
     requires is_global_root(g0,x0)
     requires is_global_root(g1,x1)
 
@@ -46,7 +46,7 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     assert acyclic_list_segment(g0 union g1)
 
 
-    assert disjoint_sets(g0,g1)
+    assert disjoint(g0,g1)
 
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false

@@ -12,7 +12,7 @@ import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
 method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
-    requires disjoint_sets(g0,g1)
+    requires disjoint(g0,g1)
     requires GRAPH(g0 union g1)
 
     requires x0 in g0 && x1 in g1

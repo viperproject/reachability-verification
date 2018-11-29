@@ -17,7 +17,7 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
     requires GRAPH(g1)
     requires x1 in g1
 
-    requires disjoint_sets(g0,g1)
+    requires disjoint(g0,g1)
 
     requires acyclic_list_segment(g0)
     requires acyclic_list_segment(g1)
@@ -37,7 +37,7 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
         invariant GRAPH(g1)
         invariant x1 in g1
 
-        invariant disjoint_sets(g0,g1)
+        invariant disjoint(g0,g1)
 
         invariant acyclic_list_segment(g0)
         invariant acyclic_list_segment(g1)

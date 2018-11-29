@@ -27,14 +27,13 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
 
     requires x0.left == null || x0.right == null
 
-    requires disjoint_sets(g0,g1)
+    requires disjoint(g0,g1)
 
 {
     // The NoExit axiom applications can be inlined:
     // But now in Framing
     //assume forall u:Ref,v:Ref :: { exists_path($$(g0 union g1),u,v), u in g0, v in g0 } u in g0 && !(v in g0) ==> !exists_path($$(g0 union g1),u,v)
     //assume forall u:Ref,v:Ref :: { exists_path($$(g0 union g1),u,v), u in g1, v in g1 } u in g1 && !(v in g1) ==> !exists_path($$(g0 union g1),u,v)
-
     // do we really need both?
     assume apply_TCFraming(g0,g1)
     assume apply_TCFraming(g1,g0)

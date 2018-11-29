@@ -1,4 +1,4 @@
-define disjoint_sets(graph_A, graph_B)
+define disjoint(graph_A, graph_B)
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_A ==> !(r in graph_B) ) &&
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_B ==> !(r in graph_A) )
 
@@ -14,16 +14,19 @@ define is_global_sink(g,sink)
 define unshared(g)
     unshared_graph($$(g))
 
-define acyclic(g)
-    acyclic_graph($$(g))
-
 define functional(graph_A)
     func_graph($$(graph_A))
+
+define acyclic(g)
+    acyclic_graph($$(g))
 
 define acyclic_list_segment(graph_A)
     acyclic_graph($$(graph_A)) &&
     func_graph($$(graph_A)) &&
     unshared_graph($$(graph_A))
+
+define single_direction_paths(graph_A, graph_B)
+    (CLOSED(graph_A) || CLOSED(graph_B)) && disjoint(graph_A, graph_B)
 
 define P(g, x, y)
     exists_path($$(g), x, y)
