@@ -1,7 +1,3 @@
-/**
-    Framing formulas taken from https://people.cs.umass.edu/~immerman/pub/POPL2014.pdf
- */
-
 function apply_TCFraming(graph_A:Set[Ref], graph_B:Set[Ref]): Bool
     requires READONLY_NODES(graph_A)
     requires READONLY_NODES(graph_B)
@@ -21,29 +17,3 @@ function apply_TCFraming(graph_A:Set[Ref], graph_B:Set[Ref]): Bool
         { exists_path($$(graph_B), u0, v0) }
         { exists_path($$(graph_B union graph_A), u0, v0) } 
             u0 in graph_B && v0 in graph_B && exists_path($$(graph_B), u0, v0) ==> exists_path($$(graph_B union graph_A), u0, v0))
-    
-    ensures (forall u0:Ref, v0:Ref :: 
-        { exists_path($$(graph_A), u0, v0) }
-        { exists_path($$(graph_A union graph_B), u0, v0) } 
-            !exists_path($$(graph_A), u0, v0) 
-            && ( forall alpha:Ref, beta:Ref :: 
-                { exists_path($$(graph_A), u0, alpha), exists_path($$(graph_A), beta, v0) }
-                { exists_path($$(graph_A union graph_B), alpha, beta) }
-                    (alpha in graph_A) && (beta in graph_A) ==> 
-                        !exists_path($$(graph_A), u0, alpha) 
-                        || !exists_path($$(graph_A union graph_B), alpha, beta) 
-                        || !exists_path($$(graph_A), beta, v0))
-            ==> !exists_path($$(graph_A union graph_B), u0, v0))
-
-    ensures (forall u0:Ref, v0:Ref :: 
-        { exists_path($$(graph_B), u0, v0) }
-        { exists_path($$(graph_B union graph_A), u0, v0) } 
-            !exists_path($$(graph_B), u0, v0) 
-            && ( forall alpha:Ref, beta:Ref :: 
-                { exists_path($$(graph_B), u0, alpha), exists_path($$(graph_B), beta, v0) }
-                { exists_path($$(graph_B union graph_A), alpha, beta) }
-                    (alpha in graph_B) && (beta in graph_B) ==> 
-                        !exists_path($$(graph_B), u0, alpha) 
-                        || !exists_path($$(graph_B union graph_A), alpha, beta) 
-                        || !exists_path($$(graph_B), beta, v0))                
-            ==> !exists_path($$(graph_B union graph_A), u0, v0))
