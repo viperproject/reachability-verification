@@ -1,11 +1,11 @@
 function $$(nodes0: Set[Ref]): Set[Edge]
     requires READONLY_NODES(nodes0)
-    ensures (forall x0: Ref, s: Ref :: 
-        { create_edge(x0, s) } 
-            ((x0 in nodes0) && (s in nodes0) && HEAP_PARTIAL_ORDER(x0,s)) <==> (create_edge(x0, s) in result))
-    ensures (forall x0: Ref, s: Ref :: 
-        { (x0 in nodes0),(s in nodes0),exists_path(result, x0, s) }
-            (x0 in nodes0) && exists_path(result, x0, s) ==> (s in nodes0))
-    ensures (forall x0: Ref, s: Ref :: 
-        { (x0 in nodes0),(s in nodes0),exists_path(result, x0, s) } 
-            (s in nodes0) && exists_path(result, x0, s) ==> (x0 in nodes0))
+    ensures (forall x0: Ref, y0: Ref :: 
+        { create_edge(x0, y0) } 
+            ((x0 in nodes0) && (y0 in nodes0) && HEAP_PARTIAL_ORDER(x0,y0)) <==> (create_edge(x0, y0) in result))
+    ensures (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0),exists_path(result, x0, y0) }
+            (x0 in nodes0) && exists_path(result, x0, y0) ==> (y0 in nodes0))
+    ensures (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0),exists_path(result, x0, y0) } 
+            (y0 in nodes0) && exists_path(result, x0, y0) ==> (x0 in nodes0))
