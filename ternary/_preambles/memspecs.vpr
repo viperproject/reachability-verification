@@ -6,28 +6,40 @@ define HEAP_PARTIAL_ORDER(p, s)
     (p.first == s || p.second == s || p.third == s)
 
 define NODES_first(nodes, p)
-    ( forall n:Ref :: {n.first} n in nodes ==> acc(n.first, p) )
+    (forall n:Ref :: 
+        { n.first } 
+            n in nodes ==> acc(n.first, p))
 
 define NODES_second(nodes, p)
-    ( forall n:Ref :: {n.second} n in nodes ==> acc(n.second, p) )
+    (forall n:Ref :: 
+        { n.second } 
+            n in nodes ==> acc(n.second, p))
 
 define NODES_third(nodes, p)
-    ( forall n:Ref :: {n.third} n in nodes ==> acc(n.third, p) )
+    (forall n:Ref :: 
+        { n.third } 
+            n in nodes ==> acc(n.third, p))
 
 define PROTECTED_NODES_first(nodes, mutable_node, p)
     (mutable_node in nodes)
     && acc(mutable_node.first, write)
-    && ( forall n:Ref :: { n.first } n in nodes && n != mutable_node ==> acc(n.first, p) )
+    && (forall n:Ref :: 
+        { n.first } 
+            n in nodes && n != mutable_node ==> acc(n.first, p))
 
 define PROTECTED_NODES_second(nodes, mutable_node, p)
     (mutable_node in nodes)
     && acc(mutable_node.second, write)
-    && ( forall n:Ref :: { n.second } n in nodes && n != mutable_node ==> acc(n.second, p) )
+    && (forall n:Ref :: 
+        { n.second } 
+            n in nodes && n != mutable_node ==> acc(n.second, p))
 
 define PROTECTED_NODES_third(nodes, mutable_node, p)
     (mutable_node in nodes)
     && acc(mutable_node.third, write)
-    && ( forall n:Ref :: { n.third } n in nodes && n != mutable_node ==> acc(n.third, p) )
+    && (forall n:Ref :: 
+        { n.third } 
+            n in nodes && n != mutable_node ==> acc(n.third, p))
 
 define NODES(nodes, p)
     NODES_first(nodes, p)
@@ -38,44 +50,44 @@ define READONLY_NODES(nodes)
     NODES(nodes, 1/2)
 
 define COMPLETE_first(nodes)  
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.first in nodes }
         { n in nodes, n.first }
-            n in nodes ==> n.first in nodes )
+            n in nodes ==> n.first in nodes)
 
 define COMPLETE_second(nodes)
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.second in nodes }
         { n in nodes, n.second }
-            n in nodes ==> n.second in nodes )
+            n in nodes ==> n.second in nodes)
 
 define COMPLETE_third(nodes)
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.third in nodes }
         { n in nodes, n.third }
-            n in nodes ==> n.third in nodes )
+            n in nodes ==> n.third in nodes)
 
 define COMPLETE(nodes)
     COMPLETE_first(nodes)
     && COMPLETE_second(nodes)
 
 define CLOSED_first(nodes)  
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.first in nodes }
         { n in nodes, n.first }
-            n in nodes && n.first != null ==> n.first in nodes )
+            n in nodes && n.first != null ==> n.first in nodes)
 
 define CLOSED_second(nodes)
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.second in nodes }
         { n in nodes, n.second }
-            n in nodes && n.second != null ==> n.second in nodes )
+            n in nodes && n.second != null ==> n.second in nodes)
 
 define CLOSED_third(nodes)
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.third in nodes }
         { n in nodes, n.third }
-            n in nodes && n.third != null ==> n.third in nodes )
+            n in nodes && n.third != null ==> n.third in nodes)
 
 define CLOSED(nodes)
     CLOSED_first(nodes)
