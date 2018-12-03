@@ -19,16 +19,16 @@ define READONLY_NODES(nodes)
     NODES(nodes, 1/2)
 
 define COMPLETE(nodes)  
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.next in nodes }
         { n in nodes, n.next }
-            n in nodes ==> n.next in nodes )
+            n in nodes ==> n.next in nodes)
 
 define CLOSED(nodes)  
-    ( forall n:Ref ::
+    (forall n:Ref ::
         { n.next in nodes }
         { n in nodes, n.next }
-            n in nodes && n.next != null ==> n.next in nodes )
+            n in nodes && n.next != null ==> n.next in nodes)
 
 define GRAPH(nodes)
     !(null in nodes)
@@ -54,11 +54,3 @@ define PROTECTED_RING(nodes, mutable_node)
     !(null in nodes)
     && PROTECTED_NODES(nodes, mutable_node, 1/2)
     && COMPLETE(nodes)
-
-define UNSHARED(g) 
-    (forall v1:Ref, v2:Ref, v:Ref :: 
-        { v in g, v1.next, v2.next } 
-            v1 in g && v2 in g && v in g ==> (v1.next == v && v2.next == v ==> v1 == v2)) && 
-    (forall v:Ref :: 
-        { v.next } 
-            v in g ==> (v == v.next <==> g == Set(v)))

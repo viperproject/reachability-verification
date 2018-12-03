@@ -1,15 +1,21 @@
-define disjoint_sets(graph_A, graph_B)
+define disjoint(graph_A, graph_B)
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_A ==> !(r in graph_B) ) &&
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_B ==> !(r in graph_A) )
 
 define is_global_root(g,root)
     forall n:Ref :: { exists_path($$(g),root,n) } n in g ==> exists_path($$(g),root,n)
 
+define is_global_sroot(graph_A, roots)
+    forall n:Ref :: {exists_spath($$(graph_A), roots, n)} n in graph_A ==> exists_spath($$(graph_A),roots,n)
+
 define is_global_sink(g,sink)
     forall n:Ref :: { exists_path($$(g),n,sink) } n in g ==> exists_path($$(g),n,sink)
     
 define unshared(g)
     unshared_graph($$(g))
+
+define functional(graph_A)
+    func_graph($$(graph_A))
 
 define acyclic(g)
     acyclic_graph($$(g))
@@ -18,6 +24,9 @@ define acyclic_list_segment(graph_A)
     acyclic_graph($$(graph_A)) &&
     func_graph($$(graph_A)) &&
     unshared_graph($$(graph_A))
+
+define single_direction_paths(graph_A, graph_B)
+    (CLOSED(graph_A) || CLOSED(graph_B)) && disjoint(graph_A, graph_B)
 
 define P(g, x, y)
     exists_path($$(g), x, y)
