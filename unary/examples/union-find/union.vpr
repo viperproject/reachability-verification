@@ -1,0 +1,236 @@
+import "find-precise.vpr"
+
+define en_gx(bla)
+    en_mod(old[l1]($$(g)), gx, bla)
+
+define en_gy(bla)
+    en_mod(old[l2]($$(g)), gy, bla)
+    
+method mUnion(g: Set[Ref], x: Ref, y: Ref, 
+              root_x: Ref, root_y: Ref) // ghost parameters
+
+    returns (root: Ref)
+              
+    requires GRAPH(g)
+    requires x in g && y in g
+    requires TAIL(g, x, root_x)
+    requires TAIL(g, y, root_y)
+    requires g == interval(g, x, root_x) union interval(g, y, root_y)
+    requires x != null && y != null
+
+    ensures GRAPH(g)
+    ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root) 
+    ensures forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) ==> ( P(g,a,b) <==> b == a || b == root_x || b == root_y )
+    ensures forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,y,a) ==> ( P(g,a,b) <==> b == a || b == root_y )
+{
+    var gx: Set[Ref] := interval(g, x, root_x)
+    //assume gx subset g
+    
+
+    assert forall a:Ref :: { P0(g,x,a) } a in g && P0(g,x,a) ==> a in gx
+
+    assert interval(g, x, root_x) union interval(g, y, root_y) == g
+
+    // var root_x:Ref 
+    // assume TAIL(g, x, root_x)
+    // var gx: Set[Ref] := interval(g, x, root_x)
+
+label l1
+
+
+    assert (forall n:Ref :: { P(g, root_y, n) } n in gx ==> !P(g, root_y, n)) ==> en_gx(root_y) == null
+    assert (forall n:Ref :: { P(g, y, n) } n in gx ==> !P(g, y, n)) ==> en_gx(y) == null
+
+    var en_gx_y: Ref := en_gx(y)
+
+    var case1:Bool
+    var case2:Bool
+    
+    // Case 1: merging segments
+    if ( root_y == root_x ) {
+        case1 := true
+        case2 := false
+    }
+
+    // Case 2: disjoint segments
+    if ( root_y != root_x ) {
+        assume !(y in gx)
+        assume en_gx(y) == null 
+        // assume disjoint_sets(inst_uReach($$(g), x), inst_uReach($$(g), y))
+
+        case1 := false
+        case2 := true
+    }
+
+    // assume (root_y != root_x) && !(y in gx) && en_gx_y == null 
+    //         || (root_y == root_x)
+    assume case1 || case2
+
+
+
+    var t: Ref
+    t := mFind(gx, x, root_x)
+    assume apply_ConvexTCFraming(gx, $$(g), old[l1]($$(g)))
+label l2
+
+    assert forall a:Ref :: { P0(g,x,a) } a in g && P0(gx,x,a) ==> a in gx
+    
+    assert forall a:Ref :: { P0(g,x,a) } a in gx              && P0(g,x,a) ==> P0(gx,x,a)
+    assert forall a:Ref :: { P0(g,x,a) } a in g && !(a in gx) ==> !P(gx,x,a) && !P(g,x,a)
+
+
+
+    // assert forall a:Ref :: { P0(g,x,a) } a in g && P0(g,x,a) ==> P0(gx,x,a)
+
+    
+
+    assert en_gx_y == en_gx(y)
+    //assert en_gx_y != null ==> P(gx, en_gx_y, root_y)
+    //assert en_gx_y != null ==> P(g, en_gx_y, root_y)
+    
+    
+    // assert P(g, y, root_y)
+
+    // assert interval(g, y, root_y) == old(interval(g, y, root_y))
+    // assert gx union interval(g, y, root_y) == g
+
+
+
+
+
+
+    // assert root_x != root_y
+    var gy: Set[Ref] := interval(g, y, root_y)
+    //assume gy subset g
+
+
+    assert P(g, y, root_y)
+    assert P(gy, y, root_y)
+    
+    assert y in gx && gx == gy ==> root_y in gx
+
+    assert x in gx 
+    // assert INTERVAL(gx, x, root_x)
+    assert forall m:Ref :: { P(g, x, m) } m in interval(g, x, root_x) ==> P(interval(g, x, root_x), x, m)
+
+    assert forall n:Ref :: { P(g, n, root_x) } n in gx ==> P(g, n, root_x)
+
+
+    var s: Ref 
+    s := mFind(gy, y, root_y)
+    assume apply_ConvexTCFraming(gy, $$(g), old[l2]($$(g)))
+
+    // assert forall n:Ref :: { P(g, n, root_x) } n in gx &&  (n in gy) &&  (root_x in gy) ==> P2(g, n, root_x)
+    // assert forall n:Ref :: { P(g, n, root_x) } n in gx &&  (n in gy) &&  (root_x in gy) ==> P(g, n, root_x)
+    // assert forall n:Ref :: { P(g, n, root_x) } n in gx &&  (n in gy) && !(root_x in gy) ==> false // P(g, n, root_x)
+
+    //assume forall n:Ref :: { P(g, n, root_x) } n in gx && !(n in gy) && !(root_x in gy) ==> en_gy(n) == en_gy(root_x)
+    // assert forall n:Ref :: { P(g, n, root_x) } n in gx && !(n in gy) && !(root_x in gy) ==> P(g, n, root_x)
+    
+    // assert forall n:Ref :: { P(g, n, root_x) } n in gx && !(n in gy) &&  (root_x in gy) ==> P(g, n, root_x)
+
+
+    assert forall n:Ref :: { P(g, n, root_y) } n in gy ==> P(g, n, root_y)
+    
+    
+    assume gx union gy == g
+    //assume case2
+    
+    // Case 2
+    // assume !(root_x in gy)
+    // assume case1
+    // assert gx intersection gy == Set()
+    // assert disjoint_sets(gx, gy)
+    // assume case2 ==> forall n:Ref :: { P(g, n, root_x) } n in gx ==> !(n in gy)
+    
+    assert case1 ==> root_x in gy 
+    assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && n in gy ==> P(g, n, root_x)
+
+    
+    // assert case1 ==> forall n:Ref :: { en_gy(n) } n in gx && !(n in gy) ==> en_gy(n) == old[l2](en_gy(n))
+    
+    // assert case1 ==> forall n:Ref :: { en_gy(n) } n in g && en_mod(old[l2]($$(g)), gy, n) != null ==> en_mod(old[l2]($$(g)), gy, n) in gy
+    // assert case1 ==> forall n:Ref :: { en_gy(n) } n in g && en_mod(old[l2]($$(g)), gy, n) != null ==> exists_path($$(gy), en_mod(old[l2]($$(g)), gy, n), root_y)
+    // // assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && !(n in gy) ==> let en==(en_gy(n)) in P(gy, en, root_x)
+    // assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && !(n in gy) && en_mod(old[l2]($$(g)), gy, n) != null ==> P(g, n, root_x)
+    assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && en_mod(old[l2]($$(g)), gy, n) != null ==> P(g, n, root_x)
+    assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && en_mod(old[l2]($$(g)), gy, n) == null ==> forall m:Ref :: { P2(g, n, m) } m in gy ==> !P2(g, n, m)
+    assert case1 ==> forall n:Ref :: { P(g, n, root_x) } n in gx && en_mod(old[l2]($$(g)), gy, n) == null ==> P(g, n, root_x)
+
+    assert forall n:Ref :: { P(g, n, root_x) }{ P(g, n, root_y) } n in g ==> P(g, n, root_x) || P(g, n, root_y)
+
+
+    assert forall a:Ref :: { P(g,a,root_x) } a in g && P0(g,x,a) ==> a in gx
+    assert case1 ==> forall a:Ref :: { P(g,a,root_x) } a in g && P0(g,x,a) ==> P(g,a,root_x)
+
+    
+
+    assert case2 ==> forall a:Ref :: { P(g,a,root_x) } a in g && !(a in gy) && P0(g,x,a) ==> P(g,a,root_x)
+
+    assume case2 ==> !(root_x in gy)
+
+
+    assert case2 ==> forall a:Ref :: { P0(g,x,a) } a in g && P0(gx,x,a) ==> a in gx
+    assert case2 ==> forall a:Ref :: { P0(g,x,a) } a in gx              && P0(g,x,a) ==> P0(gx,x,a)
+    // assert case2 ==> forall a:Ref :: { P0(g,x,a) } a in g && !(a in gx) ==> !P(gx,x,a) && !P(g,x,a)
+    assume case2 ==> forall a:Ref :: { P0(g,x,a) } a in gx ==> !(a in gy)
+    assert case2 ==> forall a:Ref :: { P(g,a,root_x) } a in g && (a in gy) && P0(g,x,a) ==> P(g,a,root_x)
+
+
+
+
+
+
+    assert case2 ==> forall a:Ref :: { P(g,a,root_x) } a in g && P0(g,x,a) ==> P(g,a,root_x)
+    assert forall a:Ref :: { P(g,a,root_x) } a in g && P0(g,x,a) && root_x != a ==> P(g,a,root_x)
+
+    if ( t != s ) {
+        // Encoding t.next := s; ...
+        link_DAG_next(g, t, s)
+    }
+
+    root := s
+
+    assert P(g, y, s)
+    assert P(g, x, s)
+
+    assert forall n:Ref :: { P(g, n, root_y) } n in gy ==> P(g, n, root_y)
+    assert forall n:Ref :: { P(g, n, root_x) } n in gx ==> P2(g, n, root_x)
+    // assert forall n:Ref :: { P(g, n, root) } n in gx ==> P(g, n, root)
+
+    assert forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in gy && b in gy && P0(g,y,a) && a != b && b != root_y ==> ( !P(gy,a,b) )
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in gy && b in gy && P0(g,y,a) && a != b && b != root_y ==> ( !P(g,a,b) ) // in-in -- problematic
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in gy && b in g && !(b in gy) && P0(g,y,a) && a != b && b != root_y ==> ( !P(g,a,b) ) // in-out
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && !(a in gy) && b in g && !(b in gy) && P0(g,y,a) && a != b && b != root_y ==> ( !P(g,a,b) ) // out-out
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && !(a in gy) && b in gy && P0(g,y,a) && a != b && b != root_y ==> ( !P(g,a,b) ) // out-in
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,y,a) && a != b && b != root_y ==> ( !P(g,a,b) )
+
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,y,a) ==> ( P(g,a,b) <==> b == a || b == root_y )
+
+
+
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) && b != a && b != root_x  && b != root_y ==> ( !P(g,a,b) )
+
+    
+    
+    
+    assert forall a:Ref :: { P(g,a,root_x) } a in g && P0(g,x,a) && root_x != a ==> P(g,a,root_x)
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) && b != a && b == root_x ==> ( P(g,a,b) )    
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) && b != a && b == root_y ==> ( P(g,a,b) )
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) && b != a ==> ( P(g,a,b) <==> b == root_x || b == root_y )
+
+    assert forall a:Ref, b:Ref :: { P(g,a,b) } a in g && b in g && P0(g,x,a) ==> ( P(g,a,b) <==> b == a || b == root_x || b == root_y )
+    // /**
+    //         ∀α,β ∈ mod:
+    //              (old(x⟨f*⟩α) → (α⟨f*⟩β ↔ β = α ∨ β = rx ∨ β = ry))
+    //            ∧ (old(y⟨f*⟩α) → (α⟨f*⟩β ↔ β = α ∨ β = ry ))
+    // */
+
+}
