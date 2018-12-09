@@ -1,0 +1,38 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../../_preambles/framing.vpr"
+import "../../_preambles/macros.vpr"
+import "../_preambles/memspecs.vpr"
+
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/zopg.vpr"
+import "../_preambles/zopg.vpr"
+
+//
+//I think this shows that ax_tailTriangleImposable is unsound
+method tailTriangleImposable(g: Set[Ref], x: Ref, y: Ref, u: Ref)
+    requires GRAPH(g)
+    requires g == Set(x, y, u)
+    requires x.next == y && y.next == u && u.next == y
+    requires x != y && y != u && x != u
+{
+    assert  E(g, y, u) && P(g, x, y)
+
+
+    assert DEP($$(g), x, u, y, u)
+    assert DEP($$(g), x, y, u, y) //This seems to be unsound
+    assert !DEP($$(g), x, y, y, u) //This seems to be ok
+
+    unlink_ZOPG_next(g, y)
+
+
+    assert DEP($$(g), x, y, u, y)
+    assert P(g, x, u)
+    assert !P(g, y, u)
+
+    //:: ExpectedOutput(assert.failed:assertion.false)
+    assert false  
+}

@@ -10,11 +10,11 @@ domain ZeroOnePathGraphTCs {
                 DEP(EG,x,y,u,v) <==> DEP_(EG,x,y,u,v)
     }
 
-    // axiom ax_DEP_0 { -- somehow, it also causes unsoundness...
+    // axiom ax_DEP_0 { // somehow, it also causes unsoundness...
     //     forall EG:Set[Edge], x:Ref, y:Ref, u:Ref, v:Ref ::
     //         { DEP(EG,x,y,u,v) }
     //         { exists_path(EG,x,u), exists_path(EG,v,y) }
-    //             exists_path_(EG,x,u) && edge(EG,u,v) && exists_path_(EG,v,y) ==> DEP_(EG,x,y,u,v)
+    //             exists_path_(EG,x,u) && edge(EG,u,v) && exists_path_(EG,v,y) && u != v ==> DEP_(EG,x,y,u,v)
     // }
 
     //TODO: Rename quantified variables 
