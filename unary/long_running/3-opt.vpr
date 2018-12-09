@@ -1,0 +1,87 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../../_preambles/framing.vpr"
+import "../../_preambles/macros.vpr"
+import "../_preambles/memspecs.vpr"
+
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/zopg.vpr"
+import "../_preambles/zopg.vpr"
+
+define UNSHARED_CONNECTED(g)
+(
+    ( forall v1:Ref, v2:Ref, v:Ref :: 
+        { v in g, v1.next, v2.next } 
+        v1 in g && v2 in g && v in g ==> ( v1.next == v && v2.next == v ==> v1 == v2 ) )
+    && ( forall v:Ref :: 
+        { v.next } 
+        v in g ==> ( v == v.next <==> g == Set(v) ) )
+)
+
+method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
+    requires RING(g) //Access permissions + next in g
+    requires UNSHARED_CONNECTED(g)
+    requires u in g && x in g
+    requires u != x && u != x.next && u != x.next.next
+    requires u.next != x
+    requires u.next.next != x && u.next.next != u
+    requires x.next.next != x //Should follow from ring definition?
+    requires forall n:Ref, m:Ref ::
+        { P(g,n,m) }
+            n in g && m in g ==> P(g,n,m) && P(g,m,n)
+    ensures true
+{
+    /*assume forall n: Ref, m:Ref, a:Ref ::
+        {DEP($$(g), n, m, a, a.next)} {DEP($$(g), m, n, a, a.next)}
+        n in g && m in g && a in g && n != m ==> 
+            (DEP($$(g), n, m, a, a.next) || DEP($$(g), m, n, a, a.next))*/
+    
+    var v : Ref := u.next
+    var w : Ref := v.next
+    var y : Ref := x.next
+    var z : Ref := y.next
+    /*assert u != x && u != x.next && u != x.next.next
+    assert u.next != x && u.next != x.next && u.next != x.next.next
+    assert u.next.next != x && u.next.next != x.next && u.next.next != x.next.next
+    assert u != v && u != w && v != w
+    assert x != y && y != z && x != z*/
+
+    //Change from u-->v-->w to u-->y-->w
+    //and from    x-->y-->z to x-->v-->z
+
+    /*assert forall n: Ref ::
+        {P(g, v, n)}
+        n in g ==> P(g, v, n) && DEP($$(g), v, n, v, w)
+
+    assert forall n: Ref ::
+
+        n in g && n != v ==>
+                (!DEP($$(g), v, n, u, v))*/
+    unlink_ZOPG_next(g, u)
+    /*assert forall n: Ref ::
+        {DEP($$(g), v, n, u, v)}
+        n in g && n != v ==> !DEP($$(g), v, n, u, v)
+    assert forall n: Ref ::
+        {P(g, v, n)}
+        n in g ==> (P(g, v, n) || n == v)*/
+
+    link_ZOPG_next(g, u, y)
+
+    unlink_ZOPG_next(g, y)
+    link_ZOPG_next(g, y, w)
+
+    unlink_ZOPG_next(g, x)
+    link_ZOPG_next(g, x, v)
+
+    unlink_ZOPG_next(g, v)
+    /*assert
+*/
+    link_ZOPG_next(g, v, z)
+
+    assert forall n:Ref, m:Ref ::
+        { P(g,n,m) }
+            n in g && m in g ==> P(g,n,m) && P(g,m,n)
+}

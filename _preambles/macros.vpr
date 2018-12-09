@@ -2,23 +2,23 @@ define disjoint(graph_A, graph_B)
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_A ==> !(r in graph_B) ) &&
     ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_B ==> !(r in graph_A) )
 
-define is_global_root(g,root)
-    forall n:Ref :: { exists_path($$(g),root,n) } n in g ==> exists_path($$(g),root,n)
+define is_global_root(graph_A,root)
+    forall n:Ref :: { exists_path($$(graph_A),root,n) } n in graph_A ==> exists_path($$(graph_A),root,n)
 
 define is_global_sroot(graph_A, roots)
     forall n:Ref :: {exists_spath($$(graph_A), roots, n)} n in graph_A ==> exists_spath($$(graph_A),roots,n)
 
-define is_global_sink(g,sink)
-    forall n:Ref :: { exists_path($$(g),n,sink) } n in g ==> exists_path($$(g),n,sink)
+define is_global_sink(graph_A,sink)
+    forall n:Ref :: { exists_path($$(graph_A),n,sink) } n in graph_A ==> exists_path($$(graph_A),n,sink)
     
-define unshared(g)
-    unshared_graph($$(g))
+define unshared(graph_A)
+    unshared_graph($$(graph_A))
 
 define functional(graph_A)
     func_graph($$(graph_A))
 
-define acyclic(g)
-    acyclic_graph($$(g))
+define acyclic(graph_A)
+    acyclic_graph($$(graph_A))
 
 define acyclic_list_segment(graph_A)
     acyclic_graph($$(graph_A)) &&
@@ -28,62 +28,62 @@ define acyclic_list_segment(graph_A)
 define single_direction_paths(graph_A, graph_B)
     (CLOSED(graph_A) || CLOSED(graph_B)) && disjoint(graph_A, graph_B)
 
-define P(g, x, y)
-    exists_path($$(g), x, y)
+define P(graph_A, x, y)
+    exists_path($$(graph_A), x, y)
 
-define P0(g, x, y)
-    exists_path(old($$(g)), x, y)
+define P0(graph_A, x, y)
+    exists_path(old($$(graph_A)), x, y)
 
-define P1(g, x, y)
-    exists_path(old[l1]($$(g)), x, y)
+define P1(graph_A, x, y)
+    exists_path(old[l1]($$(graph_A)), x, y)
 
-define P2(g, x, y)
-    exists_path(old[l2]($$(g)), x, y)
+define P2(graph_A, x, y)
+    exists_path(old[l2]($$(graph_A)), x, y)
 
-define P3(g, x, y)
-    exists_path(old[l3]($$(g)), x, y)
+define P3(graph_A, x, y)
+    exists_path(old[l3]($$(graph_A)), x, y)
 
-define P4(g, x, y)
-    exists_path(old[l4]($$(g)), x, y)
+define P4(graph_A, x, y)
+    exists_path(old[l4]($$(graph_A)), x, y)
 
-define P5(g, x, y)
-    exists_path(old[l5]($$(g)), x, y)
+define P5(graph_A, x, y)
+    exists_path(old[l5]($$(graph_A)), x, y)
 
-define P6(g, x, y)
-    exists_path(old[l6]($$(g)), x, y)
+define P6(graph_A, x, y)
+    exists_path(old[l6]($$(graph_A)), x, y)
 
-define P7(g, x, y)
-    exists_path(old[l7]($$(g)), x, y)
+define P7(graph_A, x, y)
+    exists_path(old[l7]($$(graph_A)), x, y)
 
-define P8(g, x, y)
-    exists_path(old[l8]($$(g)), x, y)
+define P8(graph_A, x, y)
+    exists_path(old[l8]($$(graph_A)), x, y)
 
-define E(g, x, y)
-    edge($$(g), x, y)
+define E(graph_A, x, y)
+    edge($$(graph_A), x, y)
 
-define E0(g, x, y)
-    edge(old($$(g)), x, y)
+define E0(graph_A, x, y)
+    edge(old($$(graph_A)), x, y)
 
-define E1(g, x, y)
-    edge(old[l1]($$(g)), x, y)
+define E1(graph_A, x, y)
+    edge(old[l1]($$(graph_A)), x, y)
 
-define E2(g, x, y)
-    edge(old[l2]($$(g)), x, y)
+define E2(graph_A, x, y)
+    edge(old[l2]($$(graph_A)), x, y)
 
-define E3(g, x, y)
-    edge(old[l3]($$(g)), x, y)
+define E3(graph_A, x, y)
+    edge(old[l3]($$(graph_A)), x, y)
 
-define E4(g, x, y)
-    edge(old[l4]($$(g)), x, y)
+define E4(graph_A, x, y)
+    edge(old[l4]($$(graph_A)), x, y)
 
-define E5(g, x, y)
-    edge(old[l5]($$(g)), x, y)
+define E5(graph_A, x, y)
+    edge(old[l5]($$(graph_A)), x, y)
 
-define E6(g, x, y)
-    edge(old[l6]($$(g)), x, y)
+define E6(graph_A, x, y)
+    edge(old[l6]($$(graph_A)), x, y)
 
-define E7(g, x, y)
-    edge(old[l7]($$(g)), x, y)
+define E7(graph_A, x, y)
+    edge(old[l7]($$(graph_A)), x, y)
 
-define E8(g, x, y)
-    edge(old[l8]($$(g)), x, y)
+define E8(graph_A, x, y)
+    edge(old[l8]($$(graph_A)), x, y)
