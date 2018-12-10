@@ -21,8 +21,9 @@ method tailTriangleImposable(g: Set[Ref], x: Ref, y: Ref, u: Ref)
 {
     assert  E(g, y, u) && P(g, x, y)
 
-
+    //:: ExpectedOutput(assert.failed:assertion.false)
     assert DEP($$(g), x, u, y, u)
+    //:: ExpectedOutput(assert.failed:assertion.false)
     assert DEP($$(g), x, y, u, y) //This seems to be unsound
     assert !DEP($$(g), x, y, y, u) //This seems to be ok
 
@@ -33,6 +34,5 @@ method tailTriangleImposable(g: Set[Ref], x: Ref, y: Ref, u: Ref)
     assert P(g, x, u)
     assert !P(g, y, u)
 
-    //:: ExpectedOutput(assert.failed:assertion.false)
     assert false  
 }

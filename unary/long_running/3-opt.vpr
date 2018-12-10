@@ -69,7 +69,7 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
         {P(g, v, n)}
         n in g ==> (P(g, v, n) || n == v)*/
 label l1
-/*    link_ZOPG_next(g, u, y)
+    link_ZOPG_next(g, u, y)
 
 
 label l2
