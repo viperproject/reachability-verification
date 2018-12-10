@@ -29,14 +29,14 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     requires u.next != x
     requires u.next.next != x && u.next.next != u
     requires x.next.next != x //Should follow from ring definition?
-    requires (forall n: Ref, m: Ref :: {P(g,n,m)} n in g && m in g ==> P(g,n,m) && P(g, m, n))
+    requires (forall n: Ref, m: Ref :: {P(g,n,m)} n in g && m in g ==> P(g,n,m))
     ensures true
 {
 
     /*assume (forall n: Ref, m:Ref, a:Ref ::
         {DEP($$(g), n, m, a, a.next)} {DEP($$(g), m, n, a, a.next)}
         n in g && m in g && a in g && n != m ==> 
-            (DEP($$(g), n, m, a, a.next) || DEP($$(g), m, n, a, a.next))) */
+            (DEP($$(g), n, m, a, a.next) || DEP($$(g), m, n, a, a.next)))*/
     
     var v : Ref := u.next
     var w : Ref := v.next
@@ -59,8 +59,16 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
 
         n in g && n != v ==>
                 (!DEP($$(g), v, n, u, v))*/
-        assert forall n: Ref :: (n in g && P(g, w, u) && E(g, u, v) && P(g, v, n) && u != v) ==> DEP($$(g), w, n, u, v)
-                //assert forall n: Ref :: (n in g && (n == v || n == w)) ==> P(g, w, u) && E(g, u, v) && P(g, v, n) && DEP($$(g), w, n, u, v)
+        //assert forall n: Ref :: (n in g && P(g, w, u) && E(g, u, v) && P(g, v, n) && u != v) ==> DEP($$(g), w, n, u, v)
+                //assert forall n: Ref :: (n in g && (n == v || n == w)) ==> P(g, w, u) && E(g, u, v) && P(g, v, n) && DEP($$(g), w, n, u, v)                
+                /*
+    assert P(g, v, w)
+    assert DEP($$(g), u, w, u, v) && !DEP($$(g), w, u, u, v)
+    assert P(g, y, u)
+    assert DEP($$(g), w, u, x, y)*/
+    /*assert forall p: Ref, q: Ref :: 
+        {DEP($$(g), w, x, p, q)}
+        p in g && q in g && DEP($$(g), w, x, p, q) ==> !DEP($$(g), w, q, u, v)*/
     unlink_ZOPG_next(g, u)
     /*assert forall n: Ref ::
         {DEP($$(g), v, n, u, v)}
@@ -89,12 +97,32 @@ label l6
 label l7
     link_ZOPG_next(g, v, z)
 
+    //TODO NEEDED 
+    assert forall n: Ref :: {P6(g, v, n)} n in g ==> (P6(g, v, n) ==> n == v || P6(g, w, n)) 
+    assert forall n: Ref :: {P7(g, w, n)} n in g ==> (P6(g, w, n) ==> P7(g, w, n)) 
+    //TODO NEEDED 
+    assert forall n: Ref :: {P7(g, z, n)} n in g ==> (P6(g, z, n) ==> P7(g, z, n) || P7(g, w, n))
+    //TODO NEEDED 
+    assert P6(g, w,x) ==> P7(g, w,x)
+    assert E7(g, x, v)
+
+
+    //3+
+    //assert P(g, u, y) && P(g, y, w)// && P(g, u, w)// && P(g, x, v) && P(g, x, z) && P(g, v, z)
+    //assert P(g, v,z) && P7(g, w, v) ==> P(g, w, z)
+    /*assert forall n: Ref :: 
+        {P(g, w, n)}
+            (P7(g,w,z) && n in g && (P7(g,w,n) || P7(g,z,n))) ==> 
+            P(g, w, n)*/
     /*assert P(g, u, y) && P(g, y, w) && P(g, x, v) && P(g, v, z)
     assert (forall n: Ref :: {P6(g, w, n)} n in g ==> P6(g, w, n)) ==> (forall n: Ref :: {P(g, w, n)} n in g ==> P(g, w, n))*
     assert forall n: Ref, m: Ref :: {P(g, n, m)} n in g && m in g ==> P(g, n, u)  && P(g, u, m) ==> P(g, n, m)
 */
 
     //assert P1(g, w, x)
+    /*assert (forall n: Ref :: {P(g, u, n)} {P(g,n,u)} n in g ==> P(g, u, n) && P(g, n, u)) ==> 
+            (forall n: Ref, m: Ref :: {P(g,n,m)} n in g && m in g ==> P(g, n, u) && P(g, u, m))*/
+    //:: ExpectedOutput(assert.failed:assertion.false)
     assert false
     /*assert P(g, u, y) && P(g, y, w) && P(g, u, w)
     assert (forall n: Ref :: {P(g, w, n)} n != y && n != w && n in g ==> P(g, w, n)) ==> (forall n: Ref :: {P(g, u, n)} n in g ==> P(g, u, n))

@@ -40,7 +40,7 @@ domain ZeroOnePathGraphTCs {
             { DEP(EG,x,y,u,y) }
             { exists_path_(EG,x,y), exists_path(EG,x,u) }
             { edge(EG,u,y), exists_path(EG,x,u) }
-                /*exists_path_(EG,x,y) && exists_path_(EG,x,u) && edge(EG,u,y) && u != y ==> DEP_(EG,x,y,u,y)
+                /*exists_path_(EG,x,y) &&* exists_path_(EG,x,u) && edge(EG,u,y) && u != y ==> DEP_(EG,x,y,u,y)
     }*/
 
     //TODO: Rename quantified variables 
