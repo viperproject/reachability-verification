@@ -1,5 +1,6 @@
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/purification.vpr"
+import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
 
 import "../../_preambles/common/graph.vpr"
@@ -10,19 +11,19 @@ import "../../_preambles/macros.vpr"
 
 method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
     requires xe in g
-    requires GRAPH(g)
+    requires GRAPH(g) && CLOSED(g)
     requires unshared(g)
     requires acyclic(g)
-    requires forall n:Ref :: { E(g,n,xe) } n in g ==> !E(g,n,xe) // xe doesn't have a predecessor
-    requires forall n: Ref :: { P(g, xe, n) } (n in g) ==> P(g, xe, n)
+    requires forall n:Ref :: { E_(g,n,xe) } n in g ==> !E_(g,n,xe) // xe doesn't have a predecessor
+    requires forall n: Ref :: { P_(g, xe, n) } (n in g) ==> P_(g, xe, n)
 
-    ensures GRAPH(g)
+    ensures GRAPH(g) && CLOSED(g)
     ensures unshared(g)
     ensures mrk subset g
-    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk && v1 != y ==> ( E0(g,v1,v2) ==>  E(g,v2,v1) ) 
-    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v2 in mrk && v1 in mrk            ==> (  E(g,v2,v1) ==> E0(g,v1,v2) ) 
-    ensures y != null ==> forall n:Ref :: { P(g,y,n) }  n in g ==> P(g,y,n)
-    ensures y != null ==> (forall n: Ref :: { P(g, y, n) } (n in mrk) <==> P(g, y, n)) 
+    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v2,v1) } v2 in mrk && v1 in mrk && v1 != y ==> ( E0(g,v1,v2) ==> E_(g,v2,v1) ) 
+    ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v2,v1) } v2 in mrk && v1 in mrk            ==> ( E_(g,v2,v1) ==> E0(g,v1,v2) ) 
+    ensures y != null ==> forall n:Ref :: { P_(g,y,n) }  n in g ==> P_(g,y,n)
+    ensures y != null ==> (forall n: Ref :: { P_(g, y, n) } (n in mrk) <==> P_(g, y, n)) 
     // ensures xe.next == null || mrk == g //-- not easy to prove
 {
     var t: Ref := null
@@ -39,7 +40,7 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
 
         invariant x != null ==> x in g
         // invariant y != null ==> y in g
-        invariant GRAPH(g)
+        invariant GRAPH(g) && CLOSED(g)
         invariant unshared(g)
 
         invariant mrk subset g
@@ -53,44 +54,44 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
         // invariant y != null && y.next == null <==> mrk == Set(y) || mrk == Set(x,y)
 
         // y never has a predecessor
-        invariant x != null ==> forall n:Ref :: { E(g,n,x) } n in g ==> !E(g,n,x)
+        invariant x != null ==> forall n:Ref :: { E_(g,n,x) } n in g ==> !E_(g,n,x)
         
         // x never has a predecessor
-        invariant y != null ==> forall n:Ref :: { E(g,n,y) } n in g ==> !E(g,n,y)
+        invariant y != null ==> forall n:Ref :: { E_(g,n,y) } n in g ==> !E_(g,n,y)
         
         // In a non-trivial graph (x != y), an old edge goes from y to x (starting from the second iteration, once y is assigned).
         invariant y != null && x != null && x != y ==> E0(g,y,x)
 
         // encoding the edges that haven't been flipped yet
-        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v1,v2) } !(v1 in mrk) ==> ( E0(g,v1,v2) <==> E(g,v1,v2) )
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v1,v2) } !(v1 in mrk) ==> ( E0(g,v1,v2) <==> E_(g,v1,v2) )
         
         // encoding the destroyed edge
-        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v1,v2) } v1 in mrk && !(v2 in mrk) ==> ( E0(g,v1,v2) ==> !E(g,v1,v2) && !E(g,v2,v1) )
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v1,v2) } v1 in mrk && !(v2 in mrk) ==> ( E0(g,v1,v2) ==> !E_(g,v1,v2) && !E_(g,v2,v1) )
 
         // we observe flipped edges after the second iteration  
-        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E(g,v2,v1) } v1 in mrk && v2 in mrk && v1 != y ==> ( E0(g,v1,v2) <==> E(g,v2,v1) ) 
+        invariant forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v2,v1) } v1 in mrk && v2 in mrk && v1 != y ==> ( E0(g,v1,v2) <==> E_(g,v2,v1) ) 
 
         
         // needed for triggering 
-        invariant x != null ==> __learn_trigger__(E(g, x, x.next)) 
+        invariant x != null ==> __learn_trigger__(E_(g, x, x.next)) 
 
 
         // reachability properties
-        invariant y != null ==> !P(g, y, x)
-        invariant y != null && y.next != null ==> P(g, y, y.next)
-        invariant forall n:Ref :: { P(g,x,n) }{ P(g,y,n) } n in g ==> ( P(g,x,n) ||  P(g,y,n))
-        invariant forall n:Ref :: { P(g,x,n) }{ P(g,y,n) } n in g ==> (!P(g,x,n) || !P(g,y,n))
+        invariant y != null ==> !P_(g, y, x)
+        invariant y != null && y.next != null ==> P_(g, y, y.next)
+        invariant forall n:Ref :: { P_(g,x,n) }{ P_(g,y,n) } n in g ==> ( P_(g,x,n) ||  P_(g,y,n))
+        invariant forall n:Ref :: { P_(g,x,n) }{ P_(g,y,n) } n in g ==> (!P_(g,x,n) || !P_(g,y,n))
 
         // the relation between mrk and P. 
 
-        invariant y != null ==> (forall n: Ref :: { P(g, y, n) } (n in mrk) <==> P(g, y, n)) 
+        invariant y != null ==> (forall n: Ref :: { P_(g, y, n) } (n in mrk) <==> P_(g, y, n)) 
 
         invariant acyclic(g)
     {
-        // assert (forall v1:Ref, v2:Ref :: { E(g,v1,v2) }{ P(g,v2,v1) } E(g,v1,v2) ==> !P(g,v2,v1))
+        // assert (forall v1:Ref, v2:Ref :: { E_(g,v1,v2) }{ P_(g,v2,v1) } E_(g,v1,v2) ==> !P_(g,v2,v1))
 
         mrk := mrk union Set(x)
-        // assert x.next != null && x != x.next ==> E(g, x, x.next)
+        // assert x.next != null && x != x.next ==> E_(g, x, x.next)
         t := x.next
 
 

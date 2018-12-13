@@ -1,8 +1,8 @@
 import "../../_preambles/TrCloDomain.vpr"
-import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
 import "../../_preambles/framing.vpr"
 import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
 
 
@@ -21,9 +21,9 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
     requires acyclic(g1)
     requires x1 in g1
 
-    requires forall n:Ref :: { P(g0,x,n) } n in g0 ==> P(g0,x,n)
-    requires forall n:Ref :: { P(g0,n,x0) } n in g0 ==> P(g0,n,x0)
-    requires forall m:Ref :: { P(g1,x1,m) } m in g1 ==> P(g1,x1,m)
+    requires forall n:Ref :: { P_(g0,x,n) } n in g0 ==> P_(g0,x,n)
+    requires forall n:Ref :: { P_(g0,n,x0) } n in g0 ==> P_(g0,n,x0)
+    requires forall m:Ref :: { P_(g1,x1,m) } m in g1 ==> P_(g1,x1,m)
 
     requires x0.left == null || x0.right == null
 
@@ -52,7 +52,7 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
 
     //Post conditions
     assert GRAPH(g0 union g1)
-    assert forall n:Ref :: { P(g0 union g1,x,n) } n in (g0 union g1) ==> P(g0 union g1,x,n)
+    assert forall n:Ref :: { P_(g0 union g1,x,n) } n in (g0 union g1) ==> P_(g0 union g1,x,n)
 
     assert acyclic(g0 union g1)
 

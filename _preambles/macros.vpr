@@ -1,6 +1,15 @@
+/**
+ * This file contains the macro definitions that are used for convenience. 
+ * Basically, syntactic sugar. 
+ */
+
 define disjoint(graph_A, graph_B)
-    ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_A ==> !(r in graph_B) ) &&
-    ( forall r:Ref :: { r in graph_A, r in graph_B } r in graph_B ==> !(r in graph_A) )
+    (forall r:Ref :: 
+        { r in graph_A, r in graph_B } 
+            r in graph_A ==> !(r in graph_B)) &&
+    (forall r:Ref :: 
+        { r in graph_A, r in graph_B } 
+            r in graph_B ==> !(r in graph_A))
 
 define is_global_root(g,root)
     forall n:Ref :: { exists_path($$(g),root,n) } n in g ==> exists_path($$(g),root,n)
@@ -28,7 +37,45 @@ define acyclic_list_segment(graph_A)
 define single_direction_paths(graph_A, graph_B)
     (CLOSED(graph_A) || CLOSED(graph_B)) && disjoint(graph_A, graph_B)
 
-define P(g, x, y)
+
+define E(state_label, g, x, y)
+    edge(old[state_label]($$(g)), x, y)
+
+define E_(g, x, y)
+    edge($$(g), x, y)
+
+define E0(g, x, y)
+    edge(old($$(g)), x, y)
+
+define E1(g, x, y)
+    edge(old[l1]($$(g)), x, y)
+
+define E2(g, x, y)
+    edge(old[l2]($$(g)), x, y)
+
+define E3(g, x, y)
+    edge(old[l3]($$(g)), x, y)
+
+define E4(g, x, y)
+    edge(old[l4]($$(g)), x, y)
+
+define E5(g, x, y)
+    edge(old[l5]($$(g)), x, y)
+
+define E6(g, x, y)
+    edge(old[l6]($$(g)), x, y)
+
+define E7(g, x, y)
+    edge(old[l7]($$(g)), x, y)
+
+define E8(g, x, y)
+    edge(old[l8]($$(g)), x, y)
+
+
+define P(state_label, g, x, y)
+    exists_path(old[state_label]($$(g)), x, y)
+
+define P_(g, x, y)
     exists_path($$(g), x, y)
 
 define P0(g, x, y)
@@ -58,32 +105,65 @@ define P7(g, x, y)
 define P8(g, x, y)
     exists_path(old[l8]($$(g)), x, y)
 
-define E(g, x, y)
-    edge($$(g), x, y)
 
-define E0(g, x, y)
-    edge(old($$(g)), x, y)
+define SP_(g, X, y)
+    exists_spath($$(g), X, y)
 
-define E1(g, x, y)
-    edge(old[l1]($$(g)), x, y)
+define SP0(g, X, y)
+    exists_spath(old($$(g)), X, y)
 
-define E2(g, x, y)
-    edge(old[l2]($$(g)), x, y)
+define SP1(g, X, y)
+    exists_spath(old[l1]($$(g)), X, y)
 
-define E3(g, x, y)
-    edge(old[l3]($$(g)), x, y)
+define SP2(g, X, y)
+    exists_spath(old[l2]($$(g)), X, y)
 
-define E4(g, x, y)
-    edge(old[l4]($$(g)), x, y)
+define SP3(g, X, y)
+    exists_spath(old[l3]($$(g)), X, y)
 
-define E5(g, x, y)
-    edge(old[l5]($$(g)), x, y)
+define SP4(g, X, y)
+    exists_spath(old[l4]($$(g)), X, y)
 
-define E6(g, x, y)
-    edge(old[l6]($$(g)), x, y)
+define SP5(g, X, y)
+    exists_spath(old[l5]($$(g)), X, y)
 
-define E7(g, x, y)
-    edge(old[l7]($$(g)), x, y)
+define SP6(g, X, y)
+    exists_spath(old[l6]($$(g)), X, y)
 
-define E8(g, x, y)
-    edge(old[l8]($$(g)), x, y)
+define SP7(g, X, y)
+    exists_spath(old[l7]($$(g)), X, y)
+
+define SP8(g, X, y)
+    exists_spath(old[l8]($$(g)), X, y)
+
+
+define DEP_(g, x, y, u, v)
+    DEP($$(g), x, y, u, v)
+
+define DEP0(g, x, y, u, v)
+    DEP(old($$(g)), x, y, u, v)
+
+define DEP1(g, x, y, u, v)
+    DEP(old[l1]($$(g)), x, y, u, v)
+
+define DEP2(g, x, y, u, v)
+    DEP(old[l2]($$(g)), x, y, u, v)
+
+define DEP3(g, x, y, u, v)
+    DEP(old[l3]($$(g)), x, y, u, v)
+
+define DEP4(g, x, y, u, v)
+    DEP(old[l4]($$(g)), x, y, u, v)
+
+define DEP5(g, x, y, u, v)
+    DEP(old[l5]($$(g)), x, y, u, v)
+
+define DEP6(g, x, y, u, v)
+    DEP(old[l6]($$(g)), x, y, u, v)
+
+define DEP7(g, x, y, u, v)
+    DEP(old[l7]($$(g)), x, y, u, v)
+
+define DEP8(g, x, y, u, v)
+    DEP(old[l8]($$(g)), x, y, u, v)
+

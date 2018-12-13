@@ -1,31 +1,30 @@
 import "../../../_preambles/TrCloDomain.vpr"
 import "../../../_preambles/purification.vpr"
+import "../../../_preambles/memspecs.vpr"
 import "../../_preambles/memspecs.vpr"
 
 import "../../../_preambles/common/graph.vpr"
 import "../../../_preambles/common/dag.vpr"
 import "../../_preambles/dag.vpr"
-
 import "../../../_preambles/macros.vpr"
-
 
 
 method mFind(g: Set[Ref], x: Ref, 
             root: Ref) // ghost parameter
     
     returns (retval: Ref)
-    requires GRAPH(g)
+    requires GRAPH(g) && CLOSED(g)
     requires x in g && root in g
-    requires forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+    requires forall n:Ref :: { P_(g, n, root) } n in g ==> P_(g, n, root)
 
-    ensures GRAPH(g)
+    ensures GRAPH(g) && CLOSED(g)
     ensures retval in g
-    ensures forall n:Ref :: { P(g, n, root) } n in g ==> P(g, n, root)
+    ensures forall n:Ref :: { P_(g, n, root) } n in g ==> P_(g, n, root)
     ensures retval == root
     ensures forall a:Ref, b:Ref :: 
-        { P(g, a, b) } 
-        { P(g, x, a), P(g, x, b) }
-            P(g, x, a) && P(g, x, b) ==> ( P(g, a, b) <==> a == b || b == root )
+        { P_(g, a, b) } 
+        { P_(g, x, a), P_(g, x, b) }
+            P_(g, x, a) && P_(g, x, b) ==> ( P_(g, a, b) <==> a == b || b == root )
 {
     var i:Ref := x.next; 
 
@@ -38,15 +37,17 @@ method mFind(g: Set[Ref], x: Ref,
         unlink_DAG_next(g, x)
         link_DAG_next(g, x, i)
 
+        assert CLOSED(g)
+
         // Needed semantic assertion
-        assert x1 != null ==> P(g, x1, root)
+        assert x1 != null ==> P_(g, x1, root)
     }
     else {
         i := x; 
     }
     
     // Needed syntactic assertion
-    assert __learn_trigger__( P(g, x, root) )
+    assert __learn_trigger__( P_(g, x, root) )
     
     retval := i; 
 }
@@ -56,20 +57,20 @@ method mFind(g: Set[Ref], x: Ref,
 //     requires GRAPH(g)
 //     requires x in g && y in g
 //     requires x != null && y != null
-//     requires forall n:Ref :: { P(g, n, root_x) } n in g ==> P(g, n, root_x)
-//     requires forall n:Ref :: { P(g, n, root_y) } n in g ==> P(g, n, root_y)
+//     requires forall n:Ref :: { P_(g, n, root_x) } n in g ==> P_(g, n, root_x)
+//     requires forall n:Ref :: { P_(g, n, root_y) } n in g ==> P_(g, n, root_y)
 
 //     ensures GRAPH(g)
 //     ensures forall a:Ref, b:Ref :: 
 //         {}
-//             (P(g, x, a) || P(g, y, a)) && 
-//             (P(g, x, b) || P(g, y, b)) 
+//             (P_(g, x, a) || P_(g, y, a)) && 
+//             (P_(g, x, b) || P_(g, y, b)) 
 //                 && P0(g, x, a) ==> 
 // {
 //     var t: Ref
 //     t := mFind(g, x, root_x)
 //     var s: Ref 
-//     assume forall n:Ref :: { P(g, n, root_y) } n in g ==> P(g, n, root_y)
+//     assume forall n:Ref :: { P_(g, n, root_y) } n in g ==> P_(g, n, root_y)
 //     s := mFind(g, y, root_y)
 
 //     if ( t != s ) {

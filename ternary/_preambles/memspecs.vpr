@@ -1,152 +1,46 @@
+/**
+ * This file contains the macro definitions that mimic Graph type annotations (for ternary graphs). 
+ * 
+ * The arity-independent part is defined in the global version of this file: 
+ * _preambles/memspecs.vpr 
+ */
+
 field first: Ref
 field second: Ref
 field third: Ref 
 
 define HEAP_PARTIAL_ORDER(p, s)
     (p.first == s || p.second == s || p.third == s)
-
-define NODES_first(nodes, p)
-    (forall n:Ref :: 
-        { n.first } 
-            n in nodes ==> acc(n.first, p))
-
-define NODES_second(nodes, p)
-    (forall n:Ref :: 
-        { n.second } 
-            n in nodes ==> acc(n.second, p))
-
-define NODES_third(nodes, p)
-    (forall n:Ref :: 
-        { n.third } 
-            n in nodes ==> acc(n.third, p))
-
-define PROTECTED_NODES_first(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.first, write)
-    && (forall n:Ref :: 
-        { n.first } 
-            n in nodes && n != mutable_node ==> acc(n.first, p))
-
-define PROTECTED_NODES_second(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.second, write)
-    && (forall n:Ref :: 
-        { n.second } 
-            n in nodes && n != mutable_node ==> acc(n.second, p))
-
-define PROTECTED_NODES_third(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.third, write)
-    && (forall n:Ref :: 
-        { n.third } 
-            n in nodes && n != mutable_node ==> acc(n.third, p))
-
+    
 define NODES(nodes, p)
-    NODES_first(nodes, p)
-    && NODES_second(nodes, p)
-    && NODES_third(nodes, p)
-
-define READONLY_NODES(nodes)
-    NODES(nodes, 1/2)
-
-define COMPLETE_first(nodes)  
-    (forall n:Ref ::
-        { n.first in nodes }
-        { n in nodes, n.first }
-            n in nodes ==> n.first in nodes)
-
-define COMPLETE_second(nodes)
-    (forall n:Ref ::
-        { n.second in nodes }
-        { n in nodes, n.second }
-            n in nodes ==> n.second in nodes)
-
-define COMPLETE_third(nodes)
-    (forall n:Ref ::
-        { n.third in nodes }
-        { n in nodes, n.third }
-            n in nodes ==> n.third in nodes)
+    NODES_for(first, nodes, p)
+    && NODES_for(second, nodes, p)
+    && NODES_for(third, nodes, p)
 
 define COMPLETE(nodes)
-    COMPLETE_first(nodes)
-    && COMPLETE_second(nodes)
-
-define CLOSED_first(nodes)  
-    (forall n:Ref ::
-        { n.first in nodes }
-        { n in nodes, n.first }
-            n in nodes && n.first != null ==> n.first in nodes)
-
-define CLOSED_second(nodes)
-    (forall n:Ref ::
-        { n.second in nodes }
-        { n in nodes, n.second }
-            n in nodes && n.second != null ==> n.second in nodes)
-
-define CLOSED_third(nodes)
-    (forall n:Ref ::
-        { n.third in nodes }
-        { n in nodes, n.third }
-            n in nodes && n.third != null ==> n.third in nodes)
+    COMPLETE_for(first, nodes)
+    && COMPLETE_for(second, nodes)
+    && COMPLETE_for(third, nodes)
 
 define CLOSED(nodes)
-    CLOSED_first(nodes)
-    && CLOSED_second(nodes)
-    && CLOSED_third(nodes)
-
-define GRAPH(nodes)
-    !(null in nodes)
-    && NODES(nodes, write)
-    && CLOSED(nodes)
-
-define READONLY_GRAPH(nodes)
-    !(null in nodes)
-    && NODES(nodes, 1/2)
-    && CLOSED(nodes)
+    CLOSED_for(first, nodes)
+    && CLOSED_for(second, nodes)
+    && CLOSED_for(third, nodes)
 
 define PROTECTED_GRAPH_first(nodes, mutable_node)
     !(null in nodes)
-    && PROTECTED_NODES_first(nodes, mutable_node, 1/2)
-    && NODES_second(nodes, 1/2)
-    && NODES_third(nodes, 1/2)
-    && CLOSED(nodes)
+    && PROTECTED_NODES_for(first, nodes, mutable_node, 1/2)
+    && NODES_for(second, nodes, 1/2)
+    && NODES_for(third, nodes, 1/2)
 
 define PROTECTED_GRAPH_second(nodes, mutable_node)
     !(null in nodes)
-    && NODES_first(nodes, 1/2)
-    && PROTECTED_NODES_second(nodes, mutable_node, 1/2)
-    && NODES_third(nodes, 1/2)
-    && CLOSED(nodes)
+    && NODES_for(first, nodes, 1/2)
+    && PROTECTED_NODES_for(second, nodes, mutable_node, 1/2)
+    && NODES_for(third, nodes, 1/2)
 
 define PROTECTED_GRAPH_third(nodes, mutable_node)
     !(null in nodes)
-    && NODES_first(nodes, 1/2)
-    && NODES_second(nodes, 1/2)
-    && PROTECTED_NODES_third(nodes, mutable_node, 1/2)
-    && CLOSED(nodes)
-
-define RING(nodes)
-    !(null in nodes)
-    && NODES(nodes, write)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING_first(nodes, mutable_node)
-    !(null in nodes)
-    && PROTECTED_NODES_first(nodes, mutable_node, 1/2)
-    && NODES_second(nodes, 1/2)
-    && NODES_third(nodes, 1/2)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING_second(nodes, mutable_node)
-    !(null in nodes)
-    && NODES_first(nodes, 1/2)
-    && PROTECTED_NODES_second(nodes, mutable_node, 1/2)
-    && NODES_third(nodes, 1/2)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING_third(nodes, mutable_node)
-    !(null in nodes)
-    && NODES_first(nodes, 1/2)
-    && NODES_second(nodes, 1/2)
-    && PROTECTED_NODES_third(nodes, mutable_node, 1/2)
-    && COMPLETE(nodes)
+    && NODES_for(first, nodes, 1/2)
+    && NODES_for(second, nodes, 1/2)
+    && PROTECTED_NODES_for(third, nodes, mutable_node, 1/2)

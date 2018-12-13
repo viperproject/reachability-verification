@@ -2,6 +2,7 @@ import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
 import "../../_preambles/framing.vpr"
+import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
 import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/zopg.vpr"
@@ -15,6 +16,8 @@ define UNSHARED_CONNECTED(g)
     ( forall v1:Ref, v2:Ref, v:Ref :: { v in g, v1.next, v2.next } v1 in g && v2 in g && v in g ==> ( v1.next == v && v2.next == v ==> v1 == v2 ) )
     && ( forall v:Ref :: { v.next } v in g ==> ( v == v.next <==> g == Set(v) ) )
 
+define RING(g)
+    ( GRAPH(g) && COMPLETE(g) )
 
 method create_node(graph: Set[Ref], init_val: Int) returns (new_graph: Set[Ref], new_node: Ref)
     ensures !( new_node in graph )

@@ -1,7 +1,7 @@
 method unlink_DAG_next(g: Set[Ref], node:Ref)
-    requires PROTECTED_GRAPH(g,node)
+    requires PROTECTED_GRAPH_next(g,node)
     requires node in g
-    ensures PROTECTED_GRAPH(g,node)
+    ensures PROTECTED_GRAPH_next(g,node)
     ensures node.next == null
     ensures old(node.next) == null ==> $$(g) == old($$(g))
     ensures old(node.next) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.next))
@@ -9,10 +9,11 @@ method unlink_DAG_next(g: Set[Ref], node:Ref)
     ensures acyclic_graph($$(g))
 
 method link_DAG_next(g:Set[Ref], from:Ref, to:Ref)
-    requires PROTECTED_GRAPH(g,from) 
+    requires PROTECTED_GRAPH_next(g,from) 
     requires from in g
-    requires to != null ==> to in g //&& to != from // why do we need (to != from)? 
-    ensures PROTECTED_GRAPH(g,from)
+    requires to != null ==> to in g 
+    // requires to != from // why do we need (to != from)? 
+    ensures PROTECTED_GRAPH_next(g,from)
     ensures from.next == to
     ensures (to == null) ==> $$(g) == old($$(g))
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)

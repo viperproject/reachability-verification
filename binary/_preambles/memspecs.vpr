@@ -1,99 +1,34 @@
+/**
+ * This file contains the macro definitions that mimic Graph type annotations (for binary graphs). 
+ * 
+ * The arity-independent part is defined in the global version of this file: 
+ * _preambles/memspecs.vpr 
+ */
+
 field left: Ref
 field right: Ref
 
 define HEAP_PARTIAL_ORDER(p, s)
     (p.left == s || p.right == s)
 
-define NODES_left(nodes, p)
-    ( forall n:Ref :: {n.left} n in nodes ==> acc(n.left, p) )
-
-define NODES_right(nodes, p)
-    ( forall n:Ref :: {n.right} n in nodes ==> acc(n.right, p) )
-
-define PROTECTED_NODES_left(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.left, write)
-    && ( forall n:Ref :: { n.left } n in nodes && n != mutable_node ==> acc(n.left, p) )
-
-define PROTECTED_NODES_right(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.right, write)
-    && ( forall n:Ref :: { n.right } n in nodes && n != mutable_node ==> acc(n.right, p) )
-
 define NODES(nodes, p)
-    NODES_left(nodes, p)
-    && NODES_right(nodes, p)
-
-define READONLY_NODES(nodes)
-    NODES(nodes, 1/2)
-
-define COMPLETE_left(nodes)  
-    ( forall n:Ref ::
-        { n.left in nodes }
-        { n in nodes, n.left }
-            n in nodes ==> n.left in nodes )
-
-define COMPLETE_right(nodes)
-    ( forall n:Ref ::
-        { n.right in nodes }
-        { n in nodes, n.right }
-            n in nodes ==> n.right in nodes )
+    NODES_for(left, nodes, p)
+    && NODES_for(right, nodes, p)
 
 define COMPLETE(nodes)
-    COMPLETE_left(nodes)
-    && COMPLETE_right(nodes)
-
-define CLOSED_left(nodes)  
-    ( forall n:Ref ::
-        { n.left in nodes }
-        { n in nodes, n.left }
-            n in nodes && n.left != null ==> n.left in nodes )
-
-define CLOSED_right(nodes)
-    ( forall n:Ref ::
-        { n.right in nodes }
-        { n in nodes, n.right }
-            n in nodes && n.right != null ==> n.right in nodes )
+    COMPLETE_for(left, nodes)
+    && COMPLETE_for(right, nodes)
 
 define CLOSED(nodes)
-    CLOSED_left(nodes)
-    && CLOSED_right(nodes)
-
-define GRAPH(nodes)
-    !(null in nodes)
-    && NODES(nodes, write)
-    && CLOSED(nodes)
-
-define READONLY_GRAPH(nodes)
-    !(null in nodes)
-    && READONLY_NODES(nodes)
-    && CLOSED(nodes)
+    CLOSED_for(left, nodes)
+    && CLOSED_for(right, nodes)
 
 define PROTECTED_GRAPH_left(nodes, mutable_node)
     !(null in nodes)
-    && PROTECTED_NODES_left(nodes, mutable_node, 1/2)
-    && NODES_right(nodes, 1/2)
-    && CLOSED(nodes)
+    && PROTECTED_NODES_for(left, nodes, mutable_node, 1/2)
+    && NODES_for(right, nodes, 1/2)
 
 define PROTECTED_GRAPH_right(nodes, mutable_node)
     !(null in nodes)
-    && PROTECTED_NODES_right(nodes, mutable_node, 1/2)
-    && NODES_left(nodes, 1/2)
-    && CLOSED(nodes)
-
-define RING(nodes)
-    !(null in nodes)
-    && NODES(nodes, write)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING_left(nodes, mutable_node)
-    !(null in nodes)
-    && PROTECTED_NODES_left(nodes, mutable_node, 1/2)
-    && NODES_right(nodes, 1/2)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING_right(nodes, mutable_node)
-    !(null in nodes)
-    && PROTECTED_NODES_right(nodes, mutable_node, 1/2)
-    && NODES_left(nodes, 1/2)
-    && COMPLETE(nodes)
+    && PROTECTED_NODES_for(right, nodes, mutable_node, 1/2)
+    && NODES_for(left, nodes, 1/2)

@@ -1,10 +1,10 @@
 // --- This file contains the common parts of the encoding of Update Formulas for 0-1-path graphs. --- 
 
 define __psi__(EG, alpha,beta, x0,y0,u0,v0,w0,z0)  
-    ((forall u_:Ref, v_:Ref :: 
+    (/*(forall u_:Ref, v_:Ref :: 
         { DEP(EG,x0,y0,u_,v_) } 
             ! DEP(EG,x0,y0,u_,v_)) 
-    && ( DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
+    &&*/ ( DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
     && ( DEP(EG,beta,y0,w0,z0)    && (beta != y0)  || ((alpha == w0) && (beta == z0)   && (z0 == y0))    ))
 
 define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to) 
@@ -23,10 +23,21 @@ define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
                 (u0 != v0 && x0 != y0) ==> (
                     (DEP(smaller_EG, x0, y0, u0, v0)
                     || (x0==from && u0==from && y0==to && v0==to)
-                    || ( exists w0:Ref, z0:Ref :: __psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
-                    || ( exists U0:Ref, V0:Ref :: __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
-                    || (u0==from) && (v0==to) 
-                        && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
+                    
+                    || ( exists w0:Ref, z0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? } 
+                            __psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
+                            
+                    || ( exists U0:Ref, V0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? }
+                            __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
+
+                    || (u0==from) && (v0==to) && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? }
+                            __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
                     <==> 
                         DEP(larger_EG, x0, y0, u0, v0) )))
 

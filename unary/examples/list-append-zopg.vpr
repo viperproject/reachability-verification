@@ -1,0 +1,149 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/common/zopg.vpr"
+import "../_preambles/zopg.vpr"
+
+
+method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
+
+    requires GRAPH(g) && CLOSED(g)
+    requires x in g && y in g && x != y
+
+    requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
+    requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
+
+    requires acyclic(g)
+    requires functional(g)
+    requires unshared(g)
+
+    // ensures GRAPH(g) && CLOSED(g)
+
+    // ensures acyclic(g)
+    // ensures functional(g)
+    // ensures unshared(g)
+
+    // ensures forall u:Ref,  v:Ref :: { E_(g, u, v) } E_(g, u, v) <==> E0(g, u, v) || (u==last && v==y)
+    // ensures forall u:Ref :: { P_(g, res, u) } P_(g, res, u) <==> P0(g, x, u) || P0(g, y, u)
+
+{
+    last := x
+
+    if ( last == null ) { 
+
+        res := y
+    
+    } else { 
+    
+        while ( last.next != null ) 
+            invariant GRAPH(g) && CLOSED(g)
+            invariant last in g
+            invariant x in g && y in g
+
+            invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
+            invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
+
+            invariant acyclic(g)
+            //invariant functional(g)
+            invariant unshared(g)
+
+            invariant $$(g) == old($$(g))
+
+            // Introducing the whitnesses for the existential quantifiers: 
+            invariant P_(g, x, last)
+                      && ( last.next != null ==> E_(g, last, last.next) && P_(g, last.next, last.next) ==> P_(g, last, last.next) )
+        {
+            last := last.next
+            // assert false
+        }
+
+label l1
+
+        assert forall n:Ref :: { P_(g, x, n) }{  P_(g, y, n)} n in g ==> P_(g, x, n) || P_(g, y, n) 
+        assert forall n:Ref :: { P_(g, x, n) }{  P_(g, y, n)} n in g && !P_(g, y, n) ==> P_(g, x, n) 
+        assert forall n:Ref :: { P_(g, x, n) }{  P_(g, y, n)} n in g && !P_(g, y, n) && n != x ==> DEP_(g, x, n, x, x.next)
+
+
+
+        // // assert forall n:Ref :: { DEP_(g, x, n, last, y) } n in g && n != x ==> 
+        // //     exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
+        // //         ( DEP_($$(g),x,last,U0,V0) && (x != last) || ((x == U0)   && (U0 == last) && (V0 == y)) )
+        // //      && ( DEP_($$(g),y,n,w0,z0)  && (y != n)  || ((last == w0) && (y == z0)   && (z0 == n)) )
+
+        // // assume forall n:Ref :: 
+        // //     // { DEP_(g, x, n, last, y) }
+        // //     { n in g } 
+        // //     // { DEP_(g, x, ) }
+        // //         __learn_trigger__( DEP_(g, x, n, last, y) ) &&
+        // //         n in g && n != x ==> 
+        // //             exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: __psi__($$(g), last,y, x,n, U0,V0, w0,z0)
+
+        // assert forall n:Ref :: { DEP_(g, x, n, last, y) } n in g && n != x ==> 
+        //     exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
+        //         let EG==($$(g)) in let x0==(x) in let y0==(n) in let alpha==(last) in let beta==(y) in let u0==(U0) in let v0==(V0) in
+        //         (( DEP_(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
+        //       && ( DEP_(EG,beta,y0,w0,z0)    && (beta != y0)  || ((alpha == w0) && (beta == z0)   && (z0 == y0))    ))
+
+        // assert forall n:Ref :: { DEP_(g, x, n, last, y) } 
+        //     n in g && n != x ==> 
+        //         __learn_trigger__( DEP_(g, x, n, last, y) ) && 
+        //         exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: __psi__($$(g), last,y, x,n, U0,V0, w0,z0)
+
+        
+        
+        
+        // // Encoding last.next := ya; ...
+        // link_ZOPG_next(g, last, y)
+
+        assert forall x0:Ref, y0:Ref :: 
+            // { DEP_(g, x0, y0, last, y) }
+            // { DEP1(g, x0, last, x0, x0.next), DEP1(g, y, y0, y, y.next) }
+                x0 in g && y0 in g && x0.next in g && y0.next in g
+                 && __psi__(old[l1]($$(g)), last, y, x0, y0, x0, x0.next, y, y.next) 
+                ==> __psi__(old[l1]($$(g)), last, y, x0, y0, x0, x0.next, y, y.next)
+
+        assert forall x0:Ref, y0:Ref :: 
+            { DEP_(g, x0, y0, last, y) }
+            { DEP1(g, x0, last, x0, x0.next), DEP1(g, y, y0, y, y.next) }
+                (x0 in g && y0 in g && x0.next in g && y0.next in g) &&
+                x0 != last && DEP1(g, x0, last, x0, x0.next) && 
+                y0 != y    && DEP1(g, y, y0, y, y.next) 
+                    ==> __psi__(old[l1]($$(g)), last, y, x0, y0, x0, x0.next, y, y.next)
+        
+        assert forall x0:Ref, y0:Ref :: 
+            { DEP_(g, x0, y0, last, y) }
+            { DEP1(g, x0, last, x0, x0.next), DEP1(g, y, y0, y, y.next) }
+                (x0 in g && y0 in g && x0.next in g && y0.next in g) &&
+                __psi__(old[l1]($$(g)), last, y, x0, y0, x0, x0.next, y, y.next)
+                    ==> DEP_(g, x0, y0, last, y)
+
+        assert forall x0:Ref, y0:Ref :: 
+            { DEP_(g, x0, y0, last, y) }
+            { DEP1(g, x0, last, x0, x0.next), DEP1(g, y, y0, y, y.next) }
+                (x0 in g && y0 in g && x0.next in g && y0.next in g) &&
+                x0 != last && DEP1(g, x0, last, x0, x0.next) && 
+                y0 != y    && DEP1(g, y, y0, y, y.next) 
+                    ==> DEP_(g, x0, y0, last, y)
+
+        // assert forall x0:Ref, y0:Ref, u0:Ref, v0:Ref :: 
+        //     { DEP_(g, x0, y0, u0, v0) } 
+        //     // { DEP_(g, x0, y0, last, y) }
+        //     { DEP1(g, x0, y0, u0, v0) }
+        //         DEP_(g, x0, y0, u0, v0) && !DEP_(g, x0, y0, last, y) <==> DEP1(g, x0, y0, u0, v0)
+
+        // assert P_(g, last, y)
+
+        
+        // assert forall n:Ref :: { P_(g, x, n) } n in g ==> P_(g, x, n)
+
+        // // Negated definition of TC[f] and the follow-up lemma 
+        // assert forall u:Ref,  v:Ref :: { P_(g, u, v) } !P_(g, u, v) ==> u != v && forall w:Ref :: { P_(g, w, v) } !E_(g, u, w) || !P_(g, w, v)
+        // assert forall u:Ref,  v:Ref :: { E_(g, u, v) } u in g && v in g && !P_(g, u, v) ==> __learn_trigger__( E_(g, u, v) )
+    }
+    res := x
+}

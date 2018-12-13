@@ -1,56 +1,24 @@
+/**
+ * This file contains the macro definitions that mimic Graph type annotations (for unary graphs). 
+ * 
+ * The arity-independent part is defined in the global version of this file: 
+ * _preambles/memspecs.vpr 
+ */
+
 field next: Ref
 
 define HEAP_PARTIAL_ORDER(p, s)
     (p.next == s)
 
 define NODES(nodes, p)
-    (forall n:Ref :: 
-        { n.next } 
-            n in nodes ==> acc(n.next, p))
+    NODES_for(next, nodes, p)
 
-define PROTECTED_NODES(nodes, mutable_node, p)
-    (mutable_node in nodes)
-    && acc(mutable_node.next, write)
-    && (forall n:Ref :: 
-        { n.next } 
-            n in nodes && n != mutable_node ==> acc(n.next, p))
+define COMPLETE(nodes)
+    COMPLETE_for(next, nodes)
 
-define READONLY_NODES(nodes)
-    NODES(nodes, 1/2)
+define CLOSED(nodes)
+    CLOSED_for(next, nodes)
 
-define COMPLETE(nodes)  
-    (forall n:Ref ::
-        { n.next in nodes }
-        { n in nodes, n.next }
-            n in nodes ==> n.next in nodes)
-
-define CLOSED(nodes)  
-    (forall n:Ref ::
-        { n.next in nodes }
-        { n in nodes, n.next }
-            n in nodes && n.next != null ==> n.next in nodes)
-
-define GRAPH(nodes)
+define PROTECTED_GRAPH_next(nodes, mutable_node)
     !(null in nodes)
-    && NODES(nodes, write)
-    && CLOSED(nodes)
-
-define READONLY_GRAPH(nodes)
-    !(null in nodes)
-    && READONLY_NODES(nodes)
-    && CLOSED(nodes)
-
-define PROTECTED_GRAPH(nodes, mutable_node)
-    !(null in nodes)
-    && PROTECTED_NODES(nodes, mutable_node, 1/2)
-    && CLOSED(nodes)
-
-define RING(nodes)
-    !(null in nodes)
-    && NODES(nodes, write)
-    && COMPLETE(nodes)
-
-define PROTECTED_RING(nodes, mutable_node)
-    !(null in nodes)
-    && PROTECTED_NODES(nodes, mutable_node, 1/2)
-    && COMPLETE(nodes)
+    && PROTECTED_NODES_for(next, nodes, mutable_node, 1/2)

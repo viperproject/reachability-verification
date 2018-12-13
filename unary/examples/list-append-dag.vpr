@@ -1,0 +1,73 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/purification.vpr"
+import "../../_preambles/framing.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
+
+import "../../_preambles/macros.vpr"
+
+
+method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
+
+    requires GRAPH(g) && CLOSED(g)
+    requires x in g && y in g && x != y
+
+    requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
+    requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
+
+    requires acyclic(g)
+    requires functional(g)
+    requires unshared(g)
+
+    ensures GRAPH(g) && CLOSED(g)
+
+    ensures acyclic(g)
+    ensures functional(g)
+    ensures unshared(g)
+
+    ensures forall u:Ref,  v:Ref :: { E_(g, u, v) } E_(g, u, v) <==> E0(g, u, v) || (u==last && v==y)
+    ensures forall u:Ref :: { P_(g, res, u) } P_(g, res, u) <==> P0(g, x, u) || P0(g, y, u)
+
+{
+    last := x
+
+    if ( last == null ) { 
+
+        res := y
+    
+    } else { 
+    
+        while ( last.next != null ) 
+            invariant GRAPH(g) && CLOSED(g)
+            invariant last in g
+            invariant x in g && y in g
+
+            invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
+            invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
+
+            invariant acyclic(g)
+            //invariant functional(g)
+            invariant unshared(g)
+
+            invariant $$(g) == old($$(g))
+
+            // Introducing the whitnesses for the existential quantifiers: 
+            invariant P_(g, x, last)
+                      && ( last.next != null ==> E_(g, last, last.next) && P_(g, last.next, last.next) ==> P_(g, last, last.next) )
+        {
+            last := last.next
+            // assert false
+        }
+
+        //last.next := y
+        link_DAG_next(g, last, y)
+
+        // Negated definition of TC[f] and the follow-up lemma 
+        // assert forall u:Ref,  v:Ref :: !P_(g, u, v) ==> u != v && forall w:Ref :: !E_(g, u, w) || !P_(g, w, v)
+        assert forall u:Ref,  v:Ref :: { E_(g, u, v) } u in g && v in g && !P_(g, u, v) ==> __learn_trigger__( E_(g, u, v) )
+    }
+    res := x
+}

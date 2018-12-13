@@ -20,19 +20,19 @@ function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
             u in g1 && v in g1 ==> __learn_trigger__( exists_path($$(g1 union g0),u,v) )
 
 method unlink_ZOPG_next(g:Set[Ref], node:Ref)
-    requires PROTECTED_GRAPH(g,node)
+    requires PROTECTED_GRAPH_next(g,node)
     requires node in g
-    ensures PROTECTED_GRAPH(g,node)
+    ensures PROTECTED_GRAPH_next(g,node)
     ensures node.next == null
     ensures old(node.next) == null ==> $$(g) == old($$(g))
     ensures old(node.next) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.next))
     ensures old(node.next) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.next))
 
 method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
-    requires PROTECTED_GRAPH(g,from) 
+    requires PROTECTED_GRAPH_next(g,from) 
     requires from in g && from.next == null
     requires (to != null) ==> to in g
-    ensures PROTECTED_GRAPH(g,from)
+    ensures PROTECTED_GRAPH_next(g,from)
     ensures from.next == to
     ensures (to == null) ==> $$(g) == old($$(g))
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)

@@ -1,0 +1,41 @@
+/**
+ * This file contains the macro definitions that mimic Graph type annotations. 
+ * 
+ * The arity-specific parts are defined in the local versions of this file 
+ * (e.g., binary/_preambles/memspecs.vpr). 
+ */
+
+define READONLY_NODES(nodes)
+    NODES(nodes, 1/2)
+
+define GRAPH(nodes)
+    !(null in nodes)
+    && NODES(nodes, write)
+
+define READONLY_GRAPH(nodes)
+    !(null in nodes)
+    && READONLY_NODES(nodes)
+
+define NODES_for($field$, nodes, p)
+    (forall n:Ref :: 
+        { n.$field$ } 
+            n in nodes ==> acc(n.$field$, p))
+
+define PROTECTED_NODES_for($field$, nodes, mutable_node, p)
+    ((mutable_node in nodes)
+    && acc(mutable_node.$field$, write)
+    && (forall n:Ref :: 
+        { n.$field$ } 
+            n in nodes && n != mutable_node ==> acc(n.$field$, p)))
+
+define CLOSED_for($field$, nodes)  
+    (forall n:Ref :: 
+        { n.$field$ in nodes }
+        { n in nodes, n.$field$ }
+            n in nodes && n.$field$ != null ==> n.$field$ in nodes)
+
+define COMPLETE_for($field$, nodes)
+    (forall n:Ref :: 
+        { n.$field$ in nodes }
+        { n in nodes, n.$field$ }
+            n in nodes ==> n.$field$ in nodes)

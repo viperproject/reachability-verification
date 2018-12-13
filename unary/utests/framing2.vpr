@@ -3,6 +3,7 @@ import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
 import "../../_preambles/framing.vpr"
 import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
 
 
@@ -13,7 +14,8 @@ import "../_preambles/dag.vpr"
 
 
 method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
-    requires GRAPH(g0) && GRAPH(g1)
+    requires GRAPH(g0) && CLOSED(g0)
+    requires GRAPH(g1) && CLOSED(g1)
     requires x0 in g0
     requires x1 in g1
     requires disjoint(g0,g1)
@@ -35,9 +37,9 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
 
     //Needed for proving acyclic_list_segment
     assert forall v1: Ref, v2:Ref ::
-        {E(g0 union g1, v1, v2)}
-        E(g0 union g1, v1, v2) ==> 
-            E(g0, v1, v2) || E(g1, v1, v2)
+        { E_(g0 union g1, v1, v2) }
+            E_(g0 union g1, v1, v2) ==> 
+                E_(g0, v1, v2) || E_(g1, v1, v2)
 
     //Post conditions
     assert GRAPH(g0 union g1)
