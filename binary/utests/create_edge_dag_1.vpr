@@ -13,12 +13,12 @@ import "../_preambles/dag.vpr"
 
 method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
     requires GRAPH(g0)
-    requires acyclic(g0)
+    requires ACYCLIC(g0)
     requires x0 in g0
     requires x in g0
 
     requires GRAPH(g1)
-    requires acyclic(g1)
+    requires ACYCLIC(g1)
     requires x1 in g1
 
     requires forall n:Ref :: { P_(g0,x,n) } n in g0 ==> P_(g0,x,n)
@@ -27,7 +27,7 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
 
     requires x0.left == null || x0.right == null
 
-    requires disjoint(g0,g1)
+    requires DISJOINT(g0,g1)
 
 {
     // The NoExit axiom applications can be inlined:
@@ -38,7 +38,7 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
     assume apply_TCFraming(g0,g1)
     assume apply_TCFraming(g1,g0)
 
-    assert acyclic(g0 union g1) //Needed for triggering?
+    assert ACYCLIC(g0 union g1) //Needed for triggering?
 
     if ( x0.left == null ) {
         //x0.left := x1
@@ -54,7 +54,7 @@ method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
     assert GRAPH(g0 union g1)
     assert forall n:Ref :: { P_(g0 union g1,x,n) } n in (g0 union g1) ==> P_(g0 union g1,x,n)
 
-    assert acyclic(g0 union g1)
+    assert ACYCLIC(g0 union g1)
 
 
     //:: ExpectedOutput(assert.failed:assertion.false)

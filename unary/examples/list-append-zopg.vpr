@@ -18,15 +18,15 @@ method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
     requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
     requires forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
 
-    requires acyclic(g)
-    requires functional(g)
-    requires unshared(g)
+    requires ACYCLIC(g)
+    requires FUNCTIONAL(g)
+    requires UNSHARED(g)
 
     // ensures GRAPH(g) && CLOSED(g)
 
-    // ensures acyclic(g)
-    // ensures functional(g)
-    // ensures unshared(g)
+    // ensures ACYCLIC(g)
+    // ensures FUNCTIONAL(g)
+    // ensures UNSHARED(g)
 
     // ensures forall u:Ref,  v:Ref :: { E_(g, u, v) } E_(g, u, v) <==> E0(g, u, v) || (u==last && v==y)
     // ensures forall u:Ref :: { P_(g, res, u) } P_(g, res, u) <==> P0(g, x, u) || P0(g, y, u)
@@ -48,9 +48,9 @@ method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
             invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> ( P_(g, x, n) ||  P_(g, y, n))
             invariant forall n:Ref :: { P_(g, x, n) }{ P_(g, y, n) } n in g ==> (!P_(g, x, n) || !P_(g, y, n))
 
-            invariant acyclic(g)
-            //invariant functional(g)
-            invariant unshared(g)
+            invariant ACYCLIC(g)
+            //invariant FUNCTIONAL(g)
+            invariant UNSHARED(g)
 
             invariant $$(g) == old($$(g))
 

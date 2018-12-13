@@ -35,13 +35,13 @@ domain ZeroOnePathGraphTCs {
     }
 
     //TODO: Rename quantified variables 
-    axiom ax_TailTriangleImposable {
+    /*axiom ax_TailTriangleImposable {
         forall EG:Set[Edge], x:Ref, y:Ref, u:Ref ::
             { DEP(EG,x,y,u,y) }
             { exists_path_(EG,x,y), exists_path(EG,x,u) }
             { edge(EG,u,y), exists_path(EG,x,u) }
-                /*exists_path_(EG,x,y) &&*/ exists_path_(EG,x,u) && edge(EG,u,y) && u != y ==> DEP_alias(EG,x,y,u,y)
-    }
+                /*exists_path_(EG,x,y) &&* exists_path_(EG,x,u) && edge(EG,u,y) && u != y ==> DEP_alias(EG,x,y,u,y)
+    }*/
 
     //TODO: Rename quantified variables 
     axiom ax_NoEdgeNoDEP {

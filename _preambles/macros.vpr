@@ -1,169 +1,180 @@
 /**
  * This file contains the macro definitions that are used for convenience. 
- * Basically, syntactic sugar. 
+ * Basically0, syntactic sugar. 
  */
 
-define disjoint(graph_A, graph_B)
+define DISJOINT(graph_A, graph_B)
     (forall r:Ref :: 
         { r in graph_A, r in graph_B } 
-            r in graph_A ==> !(r in graph_B)) &&
+            (r in graph_A) ==> !(r in graph_B)) &&
     (forall r:Ref :: 
         { r in graph_A, r in graph_B } 
-            r in graph_B ==> !(r in graph_A))
+            (r in graph_B) ==> !(r in graph_A))
 
-define is_global_root(g,root)
-    forall n:Ref :: { exists_path($$(g),root,n) } n in g ==> exists_path($$(g),root,n)
+define GLOBAL_ROOT(graph_A,root)
+    (forall n:Ref :: 
+        { P_(graph_A, root, n) } 
+            (n in graph_A) ==> P_(graph_A, root, n))
 
-define is_global_sroot(graph_A, roots)
-    forall n:Ref :: {exists_spath($$(graph_A), roots, n)} n in graph_A ==> exists_spath($$(graph_A),roots,n)
+define GLOBAL_SROOT(graph_A, roots)
+    (forall n:Ref :: 
+        { SP_(graph_A, roots, n) } 
+            (n in graph_A) ==> SP_(graph_A, roots, n))
 
-define is_global_sink(g,sink)
-    forall n:Ref :: { exists_path($$(g),n,sink) } n in g ==> exists_path($$(g),n,sink)
+define GLOBAL_SINK(graph_A,sink)
+    (forall n:Ref :: 
+        { P_(graph_A, n, sink) } 
+            (n in graph_A) ==> P_(graph_A, n, sink))
     
-define unshared(g)
-    unshared_graph($$(g))
-
-define functional(graph_A)
-    func_graph($$(graph_A))
-
-define acyclic(g)
-    acyclic_graph($$(g))
-
-define acyclic_list_segment(graph_A)
-    acyclic_graph($$(graph_A)) &&
-    func_graph($$(graph_A)) &&
+define UNSHARED(graph_A)
     unshared_graph($$(graph_A))
 
+define FUNCTIONAL(graph_A)
+    func_graph($$(graph_A))
+
+define ACYCLIC(graph_A)
+    acyclic_graph($$(graph_A))
+
+define acyclic_list_segment(graph_A)
+    ACYCLIC(graph_A) 
+    && FUNCTIONAL(graph_A) 
+    && UNSHARED(graph_A)
+
 define single_direction_paths(graph_A, graph_B)
-    (CLOSED(graph_A) || CLOSED(graph_B)) && disjoint(graph_A, graph_B)
+    (CLOSED(graph_A) || CLOSED(graph_B)) && DISJOINT(graph_A, graph_B)
 
 
-define E(state_label, g, x, y)
-    edge(old[state_label]($$(g)), x, y)
+define E(state_label, graph_A, x0, y0)
+    edge(old[state_label]($$(graph_A)), x0, y0)
 
-define E_(g, x, y)
-    edge($$(g), x, y)
+define E_(graph_A, x0, y0)
+    edge($$(graph_A), x0, y0)
 
-define E0(g, x, y)
-    edge(old($$(g)), x, y)
+define E0(graph_A, x0, y0)
+    edge(old($$(graph_A)), x0, y0)
 
-define E1(g, x, y)
-    edge(old[l1]($$(g)), x, y)
+define E1(graph_A, x0, y0)
+    edge(old[l1]($$(graph_A)), x0, y0)
 
-define E2(g, x, y)
-    edge(old[l2]($$(g)), x, y)
+define E2(graph_A, x0, y0)
+    edge(old[l2]($$(graph_A)), x0, y0)
 
-define E3(g, x, y)
-    edge(old[l3]($$(g)), x, y)
+define E3(graph_A, x0, y0)
+    edge(old[l3]($$(graph_A)), x0, y0)
 
-define E4(g, x, y)
-    edge(old[l4]($$(g)), x, y)
+define E4(graph_A, x0, y0)
+    edge(old[l4]($$(graph_A)), x0, y0)
 
-define E5(g, x, y)
-    edge(old[l5]($$(g)), x, y)
+define E5(graph_A, x0, y0)
+    edge(old[l5]($$(graph_A)), x0, y0)
 
-define E6(g, x, y)
-    edge(old[l6]($$(g)), x, y)
+define E6(graph_A, x0, y0)
+    edge(old[l6]($$(graph_A)), x0, y0)
 
-define E7(g, x, y)
-    edge(old[l7]($$(g)), x, y)
+define E7(graph_A, x0, y0)
+    edge(old[l7]($$(graph_A)), x0, y0)
 
-define E8(g, x, y)
-    edge(old[l8]($$(g)), x, y)
-
-
-define P(state_label, g, x, y)
-    exists_path(old[state_label]($$(g)), x, y)
-
-define P_(g, x, y)
-    exists_path($$(g), x, y)
-
-define P0(g, x, y)
-    exists_path(old($$(g)), x, y)
-
-define P1(g, x, y)
-    exists_path(old[l1]($$(g)), x, y)
-
-define P2(g, x, y)
-    exists_path(old[l2]($$(g)), x, y)
-
-define P3(g, x, y)
-    exists_path(old[l3]($$(g)), x, y)
-
-define P4(g, x, y)
-    exists_path(old[l4]($$(g)), x, y)
-
-define P5(g, x, y)
-    exists_path(old[l5]($$(g)), x, y)
-
-define P6(g, x, y)
-    exists_path(old[l6]($$(g)), x, y)
-
-define P7(g, x, y)
-    exists_path(old[l7]($$(g)), x, y)
-
-define P8(g, x, y)
-    exists_path(old[l8]($$(g)), x, y)
+define E8(graph_A, x0, y0)
+    edge(old[l8]($$(graph_A)), x0, y0)
 
 
-define SP_(g, X, y)
-    exists_spath($$(g), X, y)
+define P(state_label, graph_A, x0, y0)
+    exists_path(old[state_label]($$(graph_A)), x0, y0)
 
-define SP0(g, X, y)
-    exists_spath(old($$(g)), X, y)
+define P_(graph_A, x0, y0)
+    exists_path($$(graph_A), x0, y0)
 
-define SP1(g, X, y)
-    exists_spath(old[l1]($$(g)), X, y)
+define P0(graph_A, x0, y0)
+    exists_path(old($$(graph_A)), x0, y0)
 
-define SP2(g, X, y)
-    exists_spath(old[l2]($$(g)), X, y)
+define P1(graph_A, x0, y0)
+    exists_path(old[l1]($$(graph_A)), x0, y0)
 
-define SP3(g, X, y)
-    exists_spath(old[l3]($$(g)), X, y)
+define P2(graph_A, x0, y0)
+    exists_path(old[l2]($$(graph_A)), x0, y0)
 
-define SP4(g, X, y)
-    exists_spath(old[l4]($$(g)), X, y)
+define P3(graph_A, x0, y0)
+    exists_path(old[l3]($$(graph_A)), x0, y0)
 
-define SP5(g, X, y)
-    exists_spath(old[l5]($$(g)), X, y)
+define P4(graph_A, x0, y0)
+    exists_path(old[l4]($$(graph_A)), x0, y0)
 
-define SP6(g, X, y)
-    exists_spath(old[l6]($$(g)), X, y)
+define P5(graph_A, x0, y0)
+    exists_path(old[l5]($$(graph_A)), x0, y0)
 
-define SP7(g, X, y)
-    exists_spath(old[l7]($$(g)), X, y)
+define P6(graph_A, x0, y0)
+    exists_path(old[l6]($$(graph_A)), x0, y0)
 
-define SP8(g, X, y)
-    exists_spath(old[l8]($$(g)), X, y)
+define P7(graph_A, x0, y0)
+    exists_path(old[l7]($$(graph_A)), x0, y0)
+
+define P8(graph_A, x0, y0)
+    exists_path(old[l8]($$(graph_A)), x0, y0)
 
 
-define DEP_(g, x, y, u, v)
-    DEP($$(g), x, y, u, v)
+define SP(state_label, graph_A, X0, y0)
+    exists_spath(old[state_label]($$(graph_A)), X0, y0)
 
-define DEP0(g, x, y, u, v)
-    DEP(old($$(g)), x, y, u, v)
+define SP_(graph_A, X0, y0)
+    exists_spath($$(graph_A), X0, y0)
 
-define DEP1(g, x, y, u, v)
-    DEP(old[l1]($$(g)), x, y, u, v)
+define SP0(graph_A, X0, y0)
+    exists_spath(old($$(graph_A)), X0, y0)
 
-define DEP2(g, x, y, u, v)
-    DEP(old[l2]($$(g)), x, y, u, v)
+define SP1(graph_A, X0, y0)
+    exists_spath(old[l1]($$(graph_A)), X0, y0)
 
-define DEP3(g, x, y, u, v)
-    DEP(old[l3]($$(g)), x, y, u, v)
+define SP2(graph_A, X0, y0)
+    exists_spath(old[l2]($$(graph_A)), X0, y0)
 
-define DEP4(g, x, y, u, v)
-    DEP(old[l4]($$(g)), x, y, u, v)
+define SP3(graph_A, X0, y0)
+    exists_spath(old[l3]($$(graph_A)), X0, y0)
 
-define DEP5(g, x, y, u, v)
-    DEP(old[l5]($$(g)), x, y, u, v)
+define SP4(graph_A, X0, y0)
+    exists_spath(old[l4]($$(graph_A)), X0, y0)
 
-define DEP6(g, x, y, u, v)
-    DEP(old[l6]($$(g)), x, y, u, v)
+define SP5(graph_A, X0, y0)
+    exists_spath(old[l5]($$(graph_A)), X0, y0)
 
-define DEP7(g, x, y, u, v)
-    DEP(old[l7]($$(g)), x, y, u, v)
+define SP6(graph_A, X0, y0)
+    exists_spath(old[l6]($$(graph_A)), X0, y0)
 
-define DEP8(g, x, y, u, v)
-    DEP(old[l8]($$(g)), x, y, u, v)
+define SP7(graph_A, X0, y0)
+    exists_spath(old[l7]($$(graph_A)), X0, y0)
 
+define SP8(graph_A, X0, y0)
+    exists_spath(old[l8]($$(graph_A)), X0, y0)
+
+
+define DEP(state_label, graph_A, x0, y0, u0, v0)
+    DEP(old[state_label]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP_(graph_A, x0, y0, u0, v0)
+    DEP($$(graph_A), x0, y0, u0, v0)
+
+define DEP0(graph_A, x0, y0, u0, v0)
+    DEP(old($$(graph_A)), x0, y0, u0, v0)
+
+define DEP1(graph_A, x0, y0, u0, v0)
+    DEP(old[l1]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP2(graph_A, x0, y0, u0, v0)
+    DEP(old[l2]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP3(graph_A, x0, y0, u0, v0)
+    DEP(old[l3]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP4(graph_A, x0, y0, u0, v0)
+    DEP(old[l4]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP5(graph_A, x0, y0, u0, v0)
+    DEP(old[l5]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP6(graph_A, x0, y0, u0, v0)
+    DEP(old[l6]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP7(graph_A, x0, y0, u0, v0)
+    DEP(old[l7]($$(graph_A)), x0, y0, u0, v0)
+
+define DEP8(graph_A, x0, y0, u0, v0)
+    DEP(old[l8]($$(graph_A)), x0, y0, u0, v0)

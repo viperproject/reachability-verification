@@ -18,9 +18,9 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     requires GRAPH(g1) && CLOSED(g1)
     requires x0 in g0
     requires x1 in g1
-    requires disjoint(g0,g1)
-    requires is_global_root(g0,x0)
-    requires is_global_root(g1,x1)
+    requires DISJOINT(g0,g1)
+    requires GLOBAL_ROOT(g0,x0)
+    requires GLOBAL_ROOT(g1,x1)
 
     requires acyclic_list_segment(g0)
     requires acyclic_list_segment(g1)
@@ -32,8 +32,8 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
 
     //assert forall v1:Ref, v2:Ref :: v1 in g0 && v2 in g1 ==> !edge($$(g0 union g1),v1,v2) || !exists_path($$(g0 union g1),v2,v1)
     //assert forall v1:Ref, v2:Ref :: v1 in g0 && v2 in g0 ==> !edge($$(g0 union g1),v1,v2) || !exists_path($$(g0 union g1),v2,v1)
-    assert acyclic(g0 union g1)
-    assert functional(g0 union g1)
+    assert ACYCLIC(g0 union g1)
+    assert FUNCTIONAL(g0 union g1)
 
     //Needed for proving acyclic_list_segment
     assert forall v1: Ref, v2:Ref ::
@@ -43,12 +43,12 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
 
     //Post conditions
     assert GRAPH(g0 union g1)
-    assert is_global_sroot(g0 union g1,Set(x0,x1))
+    assert GLOBAL_SROOT(g0 union g1,Set(x0,x1))
 
     assert acyclic_list_segment(g0 union g1)
 
 
-    assert disjoint(g0,g1)
+    assert DISJOINT(g0,g1)
 
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false

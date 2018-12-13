@@ -23,7 +23,7 @@ import "../../../_preambles/macros.vpr"
 
 // // method lemma_ClosedIntervals(g: Set[Ref], x:Ref, root:Ref)
 // //     requires CLOSED_GRAPH(g)
-// //     requires acyclic(g)
+// //     requires ACYCLIC(g)
 // //     requires x in g && root in g && root.next == null
 // //     requires forall n:Ref :: { P_(g, n, root) } n in g ==> P_(g, n, root)
 // // {
@@ -37,7 +37,7 @@ import "../../../_preambles/macros.vpr"
 
 // method lemma_NextOfRootIsNull(g: Set[Ref], root:Ref)
 //     requires CLOSED_GRAPH(g) && root in g
-//     requires acyclic(g)
+//     requires ACYCLIC(g)
 //     requires forall n:Ref :: { P_(g, n, root) } n in g ==> P_(g, n, root)
 // {
 //     // // CLOSED(g)
@@ -56,7 +56,7 @@ import "../../../_preambles/macros.vpr"
 
 // method lemma_NoPathFromRoot(g: Set[Ref], root:Ref)
 //     requires CLOSED_GRAPH(g) && root in g
-//     requires acyclic(g)
+//     requires ACYCLIC(g)
 //     requires forall n:Ref :: { P_(g, n, root) } n in g ==> P_(g, n, root)
 // {
 //     // CLOSED(g)
@@ -165,7 +165,7 @@ method mFind(g: Set[Ref], x: Ref,
     requires g == interval(g, x, root)
 
     ensures GRAPH(g) && CLOSED(g)
-    ensures acyclic(g)
+    ensures ACYCLIC(g)
     ensures retval in g 
     ensures ROOT(g, retval)
     ensures retval == root

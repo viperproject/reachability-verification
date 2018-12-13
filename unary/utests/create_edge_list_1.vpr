@@ -18,13 +18,13 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
     requires GRAPH(g1)  && CLOSED(g1) 
     requires x1 in g1
 
-    requires disjoint(g0,g1)
+    requires DISJOINT(g0,g1)
 
     requires acyclic_list_segment(g0)
     requires acyclic_list_segment(g1)
 
-    requires is_global_root(g0,x0)
-    requires is_global_root(g1,x1)
+    requires GLOBAL_ROOT(g0,x0)
+    requires GLOBAL_ROOT(g1,x1)
 
 
 {
@@ -38,13 +38,13 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
         invariant GRAPH(g1) && CLOSED(g1) 
         invariant x1 in g1
 
-        invariant disjoint(g0,g1)
+        invariant DISJOINT(g0,g1)
 
         invariant acyclic_list_segment(g0)
         invariant acyclic_list_segment(g1)
 
-        invariant is_global_root(g0,x0)
-        invariant is_global_root(g1,x1)
+        invariant GLOBAL_ROOT(g0,x0)
+        invariant GLOBAL_ROOT(g1,x1)
 
         // Counter variable:
         invariant last in g0

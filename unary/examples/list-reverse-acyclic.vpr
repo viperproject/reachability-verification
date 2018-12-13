@@ -12,13 +12,13 @@ import "../../_preambles/macros.vpr"
 method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
     requires xe in g
     requires GRAPH(g) && CLOSED(g)
-    requires unshared(g)
-    requires acyclic(g)
+    requires UNSHARED(g)
+    requires ACYCLIC(g)
     requires forall n:Ref :: { E_(g,n,xe) } n in g ==> !E_(g,n,xe) // xe doesn't have a predecessor
     requires forall n: Ref :: { P_(g, xe, n) } (n in g) ==> P_(g, xe, n)
 
     ensures GRAPH(g) && CLOSED(g)
-    ensures unshared(g)
+    ensures UNSHARED(g)
     ensures mrk subset g
     ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v2,v1) } v2 in mrk && v1 in mrk && v1 != y ==> ( E0(g,v1,v2) ==> E_(g,v2,v1) ) 
     ensures forall v1:Ref, v2:Ref :: { E0(g,v1,v2) }{ E_(g,v2,v1) } v2 in mrk && v1 in mrk            ==> ( E_(g,v2,v1) ==> E0(g,v1,v2) ) 
@@ -41,7 +41,7 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
         invariant x != null ==> x in g
         // invariant y != null ==> y in g
         invariant GRAPH(g) && CLOSED(g)
-        invariant unshared(g)
+        invariant UNSHARED(g)
 
         invariant mrk subset g
         invariant y != null ==> y in mrk
@@ -86,7 +86,7 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
 
         invariant y != null ==> (forall n: Ref :: { P_(g, y, n) } (n in mrk) <==> P_(g, y, n)) 
 
-        invariant acyclic(g)
+        invariant ACYCLIC(g)
     {
         // assert (forall v1:Ref, v2:Ref :: { E_(g,v1,v2) }{ P_(g,v2,v1) } E_(g,v1,v2) ==> !P_(g,v2,v1))
 

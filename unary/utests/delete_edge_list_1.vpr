@@ -13,12 +13,12 @@ import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
 method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
-    requires disjoint(g0,g1)
+    requires DISJOINT(g0,g1)
     requires GRAPH(g0 union g1)
 
     requires x0 in g0 && x1 in g1
-    requires is_global_sink(g0,x0)
-    requires is_global_root(g1,x1)
+    requires GLOBAL_SINK(g0,x0)
+    requires GLOBAL_ROOT(g1,x1)
 
     // The only edge between g0 and g1 is from x0 to x1:
 
@@ -27,7 +27,7 @@ method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
 
     //requires forall n:Ref :: n in g1 && n.next != null ==> n.next in g1
 
-    requires acyclic(g0 union g1)
+    requires ACYCLIC(g0 union g1)
     requires x0.next == x1
 
 {
@@ -36,9 +36,9 @@ method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
     assume apply_TCFraming(g0,g1)
 
     assert !P_(g0 union g1, x0, x1)
-    assert acyclic(g1)
-    assert acyclic(g0)
-    assert is_global_root(g1,x1)
+    assert ACYCLIC(g1)
+    assert ACYCLIC(g0)
+    assert GLOBAL_ROOT(g1,x1)
 
     //Postconditions
     assert GRAPH(g0 union g1)
@@ -47,10 +47,10 @@ method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
     assert GRAPH(g0)
     assert GRAPH(g1)
 
-    assert acyclic(g1)
-    assert acyclic(g0)
+    assert ACYCLIC(g1)
+    assert ACYCLIC(g0)
 
-    assert is_global_root(g1,x1)
+    assert GLOBAL_ROOT(g1,x1)
     
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false
