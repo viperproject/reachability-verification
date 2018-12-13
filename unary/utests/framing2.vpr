@@ -22,8 +22,8 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     requires GLOBAL_ROOT(g0,x0)
     requires GLOBAL_ROOT(g1,x1)
 
-    requires acyclic_list_segment(g0)
-    requires acyclic_list_segment(g1)
+    requires ACYCLIC_LIST_SEGMENT(g0)
+    requires ACYCLIC_LIST_SEGMENT(g1)
 {
     assume apply_TCFraming(g0,g1)
     //assert forall to:Ref :: to in (g0 union g1) ==> exists from:Ref :: from in Set(x0,x1) && exists_path($$(g0 union g1),from,to)
@@ -35,7 +35,7 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     assert ACYCLIC(g0 union g1)
     assert FUNCTIONAL(g0 union g1)
 
-    //Needed for proving acyclic_list_segment
+    //Needed for proving ACYCLIC_LIST_SEGMENT
     assert forall v1: Ref, v2:Ref ::
         { E_(g0 union g1, v1, v2) }
             E_(g0 union g1, v1, v2) ==> 
@@ -45,7 +45,7 @@ method test_union(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref)
     assert GRAPH(g0 union g1)
     assert GLOBAL_SROOT(g0 union g1,Set(x0,x1))
 
-    assert acyclic_list_segment(g0 union g1)
+    assert ACYCLIC_LIST_SEGMENT(g0 union g1)
 
 
     assert DISJOINT(g0,g1)

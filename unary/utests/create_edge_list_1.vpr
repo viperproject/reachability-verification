@@ -20,8 +20,8 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
 
     requires DISJOINT(g0,g1)
 
-    requires acyclic_list_segment(g0)
-    requires acyclic_list_segment(g1)
+    requires ACYCLIC_LIST_SEGMENT(g0)
+    requires ACYCLIC_LIST_SEGMENT(g1)
 
     requires GLOBAL_ROOT(g0,x0)
     requires GLOBAL_ROOT(g1,x1)
@@ -40,8 +40,8 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
 
         invariant DISJOINT(g0,g1)
 
-        invariant acyclic_list_segment(g0)
-        invariant acyclic_list_segment(g1)
+        invariant ACYCLIC_LIST_SEGMENT(g0)
+        invariant ACYCLIC_LIST_SEGMENT(g1)
 
         invariant GLOBAL_ROOT(g0,x0)
         invariant GLOBAL_ROOT(g1,x1)
@@ -72,7 +72,7 @@ method join(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref) returns (x:Ref, last:Ref)
     assert GRAPH(g0 union g1)
     assert forall u:Ref :: P_(g0 union g1,x,u) <==> P0(g0,x0,u) || P0(g1,x1,u)
     assert forall u:Ref, v:Ref :: E_(g0 union g1,u,v) <==> E0(g0,u,v) || E0(g1,u,v) || (u==last && v==x1)
-    assert acyclic_list_segment(g0 union g1)
+    assert ACYCLIC_LIST_SEGMENT(g0 union g1)
 
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false

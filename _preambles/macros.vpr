@@ -35,7 +35,7 @@ define FUNCTIONAL(graph_A)
 define ACYCLIC(graph_A)
     acyclic_graph($$(graph_A))
 
-define acyclic_list_segment(graph_A)
+define ACYCLIC_LIST_SEGMENT(graph_A)
     ACYCLIC(graph_A) 
     && FUNCTIONAL(graph_A) 
     && UNSHARED(graph_A)
@@ -147,34 +147,34 @@ define SP8(graph_A, X0, y0)
 
 
 define DEP(state_label, graph_A, x0, y0, u0, v0)
-    DEP(old[state_label]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[state_label]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP_(graph_A, x0, y0, u0, v0)
-    DEP($$(graph_A), x0, y0, u0, v0)
+    exists_DEP($$(graph_A), x0, y0, u0, v0)
 
 define DEP0(graph_A, x0, y0, u0, v0)
-    DEP(old($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old($$(graph_A)), x0, y0, u0, v0)
 
 define DEP1(graph_A, x0, y0, u0, v0)
-    DEP(old[l1]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l1]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP2(graph_A, x0, y0, u0, v0)
-    DEP(old[l2]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l2]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP3(graph_A, x0, y0, u0, v0)
-    DEP(old[l3]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l3]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP4(graph_A, x0, y0, u0, v0)
-    DEP(old[l4]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l4]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP5(graph_A, x0, y0, u0, v0)
-    DEP(old[l5]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l5]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP6(graph_A, x0, y0, u0, v0)
-    DEP(old[l6]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l6]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP7(graph_A, x0, y0, u0, v0)
-    DEP(old[l7]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l7]($$(graph_A)), x0, y0, u0, v0)
 
 define DEP8(graph_A, x0, y0, u0, v0)
-    DEP(old[l8]($$(graph_A)), x0, y0, u0, v0)
+    exists_DEP(old[l8]($$(graph_A)), x0, y0, u0, v0)

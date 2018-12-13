@@ -2,22 +2,22 @@
 function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
     requires NODES(g0, 1/2)
     requires NODES(g1, 1/2)
-    ensures forall u:Ref, v:Ref :: 
-        { DEP($$(g0 union g1), u, v, u, u.next) }
-        { DEP($$(g0 union g1), u, v.next, v, v.next) } 
-            u in g0 && v in g0 ==> __learn_trigger__( exists_path($$(g0 union g1),u,v) )
-    ensures forall u:Ref, v:Ref :: 
-        { DEP($$(g1 union g0), u, v, u, u.next) }
-        { DEP($$(g1 union g0), u, v.next, v, v.next) } 
-            u in g1 && v in g1 ==> __learn_trigger__( exists_path($$(g1 union g0),u,v) )
-    ensures forall u:Ref, v:Ref :: 
-        { DEP($$(g0 union g1), u, v, u, u.next) }
-        { DEP($$(g0 union g1), u, v.next, v, v.next) } 
-            u in g0 && v in g0 ==> __learn_trigger__( exists_path($$(g0 union g1),u,v) )
-    ensures forall u:Ref, v:Ref :: 
-        { DEP($$(g1 union g0), u, v, u, u.next) }
-        { DEP($$(g1 union g0), u, v.next, v, v.next) } 
-            u in g1 && v in g1 ==> __learn_trigger__( exists_path($$(g1 union g0),u,v) )
+    ensures forall u0:Ref, v0:Ref :: 
+        { DEP_(g0 union g1, u0, v0, u0, u0.next) }
+        { DEP_(g0 union g1, u0, v0.next, v0, v0.next) } 
+            u0 in g0 && v0 in g0 ==> __learn_trigger__( P_(g0 union g1,u0,v0) )
+    ensures forall u0:Ref, v0:Ref :: 
+        { DEP_(g1 union g0, u0, v0, u0, u0.next) }
+        { DEP_(g1 union g0, u0, v0.next, v0, v0.next) } 
+            u0 in g1 && v0 in g1 ==> __learn_trigger__( P_(g1 union g0,u0,v0) )
+    ensures forall u0:Ref, v0:Ref :: 
+        { DEP_(g0 union g1, u0, v0, u0, u0.next) }
+        { DEP_(g0 union g1, u0, v0.next, v0, v0.next) } 
+            u0 in g0 && v0 in g0 ==> __learn_trigger__( P_(g0 union g1,u0,v0) )
+    ensures forall u0:Ref, v0:Ref :: 
+        { DEP_(g1 union g0, u0, v0, u0, u0.next) }
+        { DEP_(g1 union g0, u0, v0.next, v0, v0.next) } 
+            u0 in g1 && v0 in g1 ==> __learn_trigger__( P_(g1 union g0,u0,v0) )
 
 method unlink_ZOPG_next(g:Set[Ref], node:Ref)
     requires PROTECTED_GRAPH_next(g,node)
@@ -38,48 +38,48 @@ method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
 
-    // Automatic reasoning support
+    // // Automatic reasoning support
     // a. Arity-independent
     ensures forall n:Ref, m:Ref :: 
-        { exists_path($$(g), n, m) } 
+        { P_(g, n, m) } 
             n in g && m in g ==> 
-                __learn_trigger__( exists_path($$(g), n, from) ) && 
-                __learn_trigger__( exists_path($$(g), from, m) )
+                __learn_trigger__( P_(g, n, from) ) && 
+                __learn_trigger__( P_(g, from, m) )
     ensures (to != null) ==> forall n:Ref, m:Ref :: 
-        { exists_path($$(g), n, m) } 
+        { P_(g, n, m) } 
             n in g && m in g ==> 
-                __learn_trigger__( exists_path($$(g), n, to) ) && 
-                __learn_trigger__( exists_path($$(g), to, m) )
+                __learn_trigger__( P_(g, n, to) ) && 
+                __learn_trigger__( P_(g, to, m) )
 
     // b. Arity-dependent
-    ensures forall n:Ref :: 
-        { exists_path($$(g), to, n) }
-        { exists_path($$(g), from, n) } 
-            n in g && n != from ==> __learn_trigger__(DEP($$(g), from, n, from, from.next))
-    ensures (to != null) ==> forall n:Ref :: 
-        { exists_path($$(g), to, n) }
-        { exists_path($$(g), from, n) } 
-            n in g && n != to ==> __learn_trigger__(DEP($$(g), to, n, to, to.next))
-    ensures forall n:Ref :: 
-        { exists_path($$(g), n, to) }
-        { exists_path($$(g), n, from) } 
-            n in g && n != from ==> __learn_trigger__(DEP($$(g), n, from, n, n.next))
-    ensures (to != null) ==> forall n:Ref :: 
-        { exists_path($$(g), n, to) }
-        { exists_path($$(g), n, from) } 
-            n in g && n != to ==> __learn_trigger__(DEP($$(g), n, to, n, n.next)) // never helped so far
+    ensures forall n0:Ref :: 
+        { P_(g, to, n0) }
+        { P_(g, from, n0) } 
+            n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, from, n0, from, from.next))
+    ensures (to != null) ==> forall n0:Ref :: 
+        { P_(g, to, n0) }
+        { P_(g, from, n0) } 
+            n0 in g && n0 != to ==> __learn_trigger__(DEP_(g, to, n0, to, to.next))
+    ensures forall n0: Ref :: 
+        { P_(g, n0, to) }
+        { P_(g, n0, from) } 
+            n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, n0, from, n0, n0.next))
+    ensures (to != null) ==> forall n0:Ref :: 
+        { P_(g, n0, to) }
+        { P_(g, n0, from) } 
+            n0 in g && n0 != to ==> __learn_trigger__(DEP_(g, n0, to, n0, n0.next)) // never helped so far
 
-    ensures (to != null) ==> forall n:Ref :: 
-        { DEP($$(g), to, n, to, to.next) }
-        { DEP($$(g), from, n, from, from.next) } 
-            n in g ==> 
-                __learn_trigger__( exists_path($$(g), from, n) ) && 
-                __learn_trigger__( exists_path(old($$(g)), from, n) ) // never helped so far
+    ensures (to != null) ==> forall n0:Ref :: 
+        { DEP_(g, to, n0, to, to.next) }
+        { DEP_(g, from, n0, from, from.next) } 
+            n0 in g ==> 
+                __learn_trigger__( P_(g, from, n0) ) && 
+                __learn_trigger__( P0(g, from, n0) ) // never helped so far
 
-    ensures (to != null) ==> forall n:Ref :: 
-        { DEP($$(g), to, n, to, to.next) }
-        { DEP($$(g), from, n, from, from.next) } 
-            n in g ==> 
-                __learn_trigger__( exists_path($$(g), to, n) ) && 
-                __learn_trigger__( exists_path(old($$(g)), to, n) )
+    ensures (to != null) ==> forall n0:Ref :: 
+        { DEP_(g, to, n0, to, to.next) }
+        { DEP_(g, from, n0, from, from.next) } 
+            n0 in g ==> 
+                __learn_trigger__( P_(g, to, n0) ) && 
+                __learn_trigger__( P0(g, to, n0) )
 

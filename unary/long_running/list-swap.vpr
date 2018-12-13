@@ -3,6 +3,7 @@ import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
 import "../../_preambles/framing.vpr"
 import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
 
 
@@ -18,10 +19,10 @@ method swap(g:Set[Ref], x:Ref, i:Int, j:Int)
 
     // memory safety
     requires x in g
-    requires GRAPH(g)
+    requires GRAPH(g) && CLOSED(g)
 
     // reachability
-    requires acyclic_list_segment(g)
+    requires ACYCLIC_LIST_SEGMENT(g)
     requires GLOBAL_ROOT(g,x)
 {
     var count:Int := 0
@@ -41,7 +42,7 @@ method swap(g:Set[Ref], x:Ref, i:Int, j:Int)
 
         // memory safety
         invariant x in g
-        invariant GRAPH(g)
+        invariant GRAPH(g) && CLOSED(g)
 
         // nodes
         invariant node != null ==> node in g
@@ -54,7 +55,7 @@ method swap(g:Set[Ref], x:Ref, i:Int, j:Int)
 
 
         // reachability
-        invariant acyclic_list_segment(g)
+        invariant ACYCLIC_LIST_SEGMENT(g)
         invariant GLOBAL_ROOT(g,x)
 
         invariant node_i != null ==> exists_path($$(g),prev_i,node_i)

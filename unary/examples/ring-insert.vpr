@@ -97,14 +97,14 @@ method ringInsert(g:Set[Ref], start:Ref, x:Int)
     }
     link_ZOPG_next(new_g, node, new_node)
 
-    // assert forall n:Ref :: { exists_path($$(new_g), node, n) } n in new_g
-    //     ==> exists_path($$(new_g), node, n)
-    // assert forall n:Ref :: { exists_path($$(new_g), n, node) } n in new_g
-    //     ==> exists_path($$(new_g), n, node)
+    assert forall n:Ref :: { exists_path($$(new_g), node, n) } n in new_g
+        ==> exists_path($$(new_g), node, n)
+    assert forall n:Ref :: { exists_path($$(new_g), n, node) } n in new_g
+        ==> exists_path($$(new_g), n, node)
 
     // The following assertion speeds things up
-    // assert forall n:Ref, m:Ref ::
-    //     { exists_path($$(new_g), n, m) }
-    //         n in new_g && m in new_g ==>
-    //             exists_path($$(new_g), n, node) && exists_path($$(new_g), node, m)
+    assert forall n:Ref, m:Ref ::
+        { exists_path($$(new_g), n, m) }
+            n in new_g && m in new_g ==>
+                exists_path($$(new_g), n, node) && exists_path($$(new_g), node, m)
 }
