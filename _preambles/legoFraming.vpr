@@ -1,0 +1,48 @@
+// Overlapping Purification: 
+//  only the beginning of the edges and paths is in the set; 
+//  the ends may or may not be in the set. 
+//  This may be useful for framing. 
+function $$(nodes0: Set[Ref]): Set[Edge]
+    requires READONLY_NODES(nodes0)
+    ensures (forall x0: Ref, y0: Ref :: 
+        { create_edge(x0, y0) } 
+            ((x0 in nodes0) /*&& (y0 in nodes0)*/ && HEAP_PARTIAL_ORDER(x0,y0)) <==> (create_edge(x0, y0) in result))
+    /*ensures (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0), exists_path(result, x0, y0) }
+            (x0 in nodes0) && exists_path(result, x0, y0) ==> (y0 in nodes0))*/
+    ensures (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0), exists_path(result, x0, y0) } 
+            (y0 in nodes0) && exists_path(result, x0, y0) ==> (x0 in nodes0))
+
+
+define ConvexTCFraming(s_old, s_new, MOD, GLOB) {
+    assume (let FRAME==(GLOB setminus MOD) in 
+        (forall x0:Ref, y0:Ref :: 
+            { P_(GLOB, x0, y0) }
+            { P(s_new, GLOB, x0, y0) } 
+            { P(s_old, GLOB, x0, y0) } 
+                P(s_old, GLOB, x0, y0) || 
+                !(forall alpha:Ref, beta:Ref :: 
+                    { P_(MOD, alpha, beta) }
+                    { P(s_new, MOD, alpha, beta) }
+                    { P(s_old, FRAME, x0, alpha), P(s_old, FRAME, beta, y0) } 
+                        !(P(s_old, FRAME, x0, alpha) && P(s_new, MOD, alpha, beta) && P(s_old, FRAME, beta, y0)))
+                <==> P(s_new, GLOB, x0, y0)))
+}
+
+// To be applied before a method call. 
+define __Split_P__(MOD, GLOB) {
+    assert MOD subset GLOB
+    // P(g, _, _) ~~~> P(mod, _, _)
+    assume forall v1:Ref, v2:Ref :: 
+        { P_(g1, v1, v2) }
+            (v1 in MOD) && 
+            (v2 in MOD) && P_(GLOB, v1, v2) ==> P_(MOD, v1, v2)
+    // P(g, _, _) ~~~> P(frame, _, _)
+    assume forall v1:Ref, v2:Ref :: 
+        { P_(MOD, v1, v2) }
+             (v1 in GLOB) && 
+            !(v1 in MOD) && 
+            !(v2 in MOD) && 
+            (v2 in GLOB) && P_(GLOB, v1, v2) ==> P_(GLOB setminus MOD, v1, v2)
+}
