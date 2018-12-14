@@ -5,36 +5,36 @@ function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
     requires READONLY_NODES(g0)
     requires READONLY_NODES(g1)
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g0 union g1, u, v, u, u.first) }
-        { DEP(g0 union g1, u, v, u, u.second) }
-        { DEP(g0 union g1, u, v, u, u.third) }
-        { DEP(g0 union g1, u, v.first, v, v.first) } 
-        { DEP(g0 union g1, u, v.second, v, v.second) } 
-        { DEP(g0 union g1, u, v.third, v, v.third) } 
+        { DEP_(g0 union g1, u, v, u, u.first) }
+        { DEP_(g0 union g1, u, v, u, u.second) }
+        { DEP_(g0 union g1, u, v, u, u.third) }
+        { DEP_(g0 union g1, u, v.first, v, v.first) } 
+        { DEP_(g0 union g1, u, v.second, v, v.second) } 
+        { DEP_(g0 union g1, u, v.third, v, v.third) } 
             u in g0 && v in g0 ==> __learn_trigger__( P_(g0 union g1,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g1 union g0, u, v, u, u.first) }
-        { DEP(g1 union g0, u, v, u, u.second) }
-        { DEP(g1 union g0, u, v, u, u.third) }
-        { DEP(g1 union g0, u, v.first, v, v.first) } 
-        { DEP(g0 union g1, u, v.second, v, v.second) } 
-        { DEP(g0 union g1, u, v.third, v, v.third) }  
+        { DEP_(g1 union g0, u, v, u, u.first) }
+        { DEP_(g1 union g0, u, v, u, u.second) }
+        { DEP_(g1 union g0, u, v, u, u.third) }
+        { DEP_(g1 union g0, u, v.first, v, v.first) } 
+        { DEP_(g0 union g1, u, v.second, v, v.second) } 
+        { DEP_(g0 union g1, u, v.third, v, v.third) }  
             u in g1 && v in g1 ==> __learn_trigger__( P_(g1 union g0,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g0 union g1, u, v, u, u.first) }
-        { DEP(g0 union g1, u, v, u, u.second) }
-        { DEP(g0 union g1, u, v, u, u.third) }
-        { DEP(g0 union g1, u, v.first, v, v.first) } 
-        { DEP(g0 union g1, u, v.second, v, v.second) }
-        { DEP(g0 union g1, u, v.third, v, v.third) } 
+        { DEP_(g0 union g1, u, v, u, u.first) }
+        { DEP_(g0 union g1, u, v, u, u.second) }
+        { DEP_(g0 union g1, u, v, u, u.third) }
+        { DEP_(g0 union g1, u, v.first, v, v.first) } 
+        { DEP_(g0 union g1, u, v.second, v, v.second) }
+        { DEP_(g0 union g1, u, v.third, v, v.third) } 
             u in g0 && v in g0 ==> __learn_trigger__( P_(g0 union g1,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g1 union g0, u, v, u, u.first) }
-        { DEP(g1 union g0, u, v, u, u.second) }
-        { DEP(g1 union g0, u, v, u, u.third) }
-        { DEP(g1 union g0, u, v.first, v, v.first) } 
-        { DEP(g1 union g0, u, v.second, v, v.second) }
-        { DEP(g1 union g0, u, v.third, v, v.third) } 
+        { DEP_(g1 union g0, u, v, u, u.first) }
+        { DEP_(g1 union g0, u, v, u, u.second) }
+        { DEP_(g1 union g0, u, v, u, u.third) }
+        { DEP_(g1 union g0, u, v.first, v, v.first) } 
+        { DEP_(g1 union g0, u, v.second, v, v.second) }
+        { DEP_(g1 union g0, u, v.third, v, v.third) } 
             u in g1 && v in g1 ==> __learn_trigger__( P_(g1 union g0,u,v) )
 
 method unlink_ZOPG_first(g:Set[Ref], node:Ref)

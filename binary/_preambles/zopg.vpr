@@ -3,28 +3,28 @@ function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
     requires READONLY_NODES(g0)
     requires READONLY_NODES(g1)
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g0 union g1, u, v, u, u.left) }
-        { DEP(g0 union g1, u, v, u, u.right) }
-        { DEP(g0 union g1, u, v.left, v, v.left) } 
-        { DEP(g0 union g1, u, v.right, v, v.right) } 
+        { DEP_(g0 union g1, u, v, u, u.left) }
+        { DEP_(g0 union g1, u, v, u, u.right) }
+        { DEP_(g0 union g1, u, v.left, v, v.left) } 
+        { DEP_(g0 union g1, u, v.right, v, v.right) } 
             u in g0 && v in g0 ==> __learn_trigger__( P_(g0 union g1,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g1 union g0, u, v, u, u.left) }
-        { DEP(g1 union g0, u, v, u, u.right) }
-        { DEP(g1 union g0, u, v.left, v, v.left) } 
-        { DEP(g1 union g0, u, v.right, v, v.right) } 
+        { DEP_(g1 union g0, u, v, u, u.left) }
+        { DEP_(g1 union g0, u, v, u, u.right) }
+        { DEP_(g1 union g0, u, v.left, v, v.left) } 
+        { DEP_(g1 union g0, u, v.right, v, v.right) } 
             u in g1 && v in g1 ==> __learn_trigger__( P_(g1 union g0,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g0 union g1, u, v, u, u.left) }
-        { DEP(g0 union g1, u, v, u, u.right) }
-        { DEP(g0 union g1, u, v.left, v, v.left) } 
-        { DEP(g0 union g1, u, v.right, v, v.right) } 
+        { DEP_(g0 union g1, u, v, u, u.left) }
+        { DEP_(g0 union g1, u, v, u, u.right) }
+        { DEP_(g0 union g1, u, v.left, v, v.left) } 
+        { DEP_(g0 union g1, u, v.right, v, v.right) } 
             u in g0 && v in g0 ==> __learn_trigger__( P_(g0 union g1,u,v) )
     ensures forall u:Ref, v:Ref :: 
-        { DEP(g1 union g0, u, v, u, u.left) }
-        { DEP(g1 union g0, u, v, u, u.right) }
-        { DEP(g1 union g0, u, v.left, v, v.left) } 
-        { DEP(g1 union g0, u, v.right, v, v.right) } 
+        { DEP_(g1 union g0, u, v, u, u.left) }
+        { DEP_(g1 union g0, u, v, u, u.right) }
+        { DEP_(g1 union g0, u, v.left, v, v.left) } 
+        { DEP_(g1 union g0, u, v.right, v, v.right) } 
             u in g1 && v in g1 ==> __learn_trigger__( P_(g1 union g0,u,v) )
 
 method unlink_ZOPG_left(g:Set[Ref], node:Ref)

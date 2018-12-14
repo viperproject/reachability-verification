@@ -12,12 +12,12 @@ import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
 method connect_DAGs(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref, x:Ref)
-    requires GRAPH(g0)
+    requires GRAPH(g0) && CLOSED(g0)
     requires ACYCLIC(g0)
     requires x0 in g0
     requires x in g0
 
-    requires GRAPH(g1)
+    requires GRAPH(g1) && CLOSED(g1)
     requires ACYCLIC(g1)
     requires x1 in g1
 
