@@ -1,10 +1,10 @@
 // --- This file contains the common parts of the encoding of Update Formulas for 0-1-path graphs. --- 
 
 define __psi__(EG, alpha,beta, x0,y0,u0,v0,w0,z0)  
-    (/*(forall u_:Ref, v_:Ref :: 
+    ((forall u_:Ref, v_:Ref :: 
         { exists_DEP(EG,x0,y0,u_,v_) } 
             ! exists_DEP(EG,x0,y0,u_,v_)) 
-    &&*/ ( exists_DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
+    && ( exists_DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
     && ( exists_DEP(EG,beta,y0,w0,z0)    && (beta != y0)  || ((alpha == w0) && (beta == z0)   && (z0 == y0))    ))
 
 define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to) 

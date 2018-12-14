@@ -134,7 +134,7 @@ domain ZeroOnePathGraphTCs {
                 exists_DEP(EG, x0, n, x0, y0) ==> exists_path(EG, x0, n)
     }*/
     
-    axiom ax_DepNeedsCoAlignedPathAndEdge {
+    axiom ax_DepNeedsCOALIGNED_INTEREDGESPathAndEdge {
         forall EG: Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
             { exists_DEP(EG, x0, y0, u0, v0) } 
             { exists_path(EG, x0, u0), exists_path(EG, v0, y0) }

@@ -31,6 +31,8 @@ method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
     ensures forall u:Ref,  v:Ref :: { E_(g, u, v) } E_(g, u, v) <==> E0(g, u, v) || (u==last && v==y)
     ensures forall u:Ref :: { P_(g, res, u) } P_(g, res, u) <==> P0(g, x, u) || P0(g, y, u)
 
+    //:: ExpectedOutput(postcondition.violated:assertion.false)
+    ensures false
 {
     last := x
 

@@ -25,6 +25,9 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
     ensures y != null ==> forall n:Ref :: { P_(g,y,n) }  n in g ==> P_(g,y,n)
     ensures y != null ==> (forall n: Ref :: { P_(g, y, n) } (n in mrk) <==> P_(g, y, n)) 
     // ensures xe.next == null || mrk == g //-- not easy to prove
+
+    //:: ExpectedOutput(postcondition.violated:assertion.false)
+    ensures false
 {
     var t: Ref := null
     var x: Ref := xe

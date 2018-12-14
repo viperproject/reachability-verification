@@ -58,6 +58,9 @@ method ringInsert(g:Set[Ref], start:Ref, x:Int)
         { exists_path($$(new_g),n,m) }
             n in new_g && m in new_g
                 ==> exists_path($$(new_g),n,m) && exists_path($$(new_g),m,n)
+
+    //:: ExpectedOutput(postcondition.violated:assertion.false)
+    ensures false
 {
     new_g, new_node := create_node(g, x)
     var node:Ref := start

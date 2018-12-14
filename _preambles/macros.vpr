@@ -1,6 +1,6 @@
 /**
  * This file contains the macro definitions that are used for convenience. 
- * Basically0, syntactic sugar. 
+ * Basically, syntactic sugar. 
  */
 
 define DISJOINT(graph_A, graph_B)
@@ -40,7 +40,7 @@ define ACYCLIC_LIST_SEGMENT(graph_A)
     && FUNCTIONAL(graph_A) 
     && UNSHARED(graph_A)
 
-define single_direction_paths(graph_A, graph_B)
+define COALIGNED_INTEREDGES(graph_A, graph_B)
     (CLOSED(graph_A) || CLOSED(graph_B)) && DISJOINT(graph_A, graph_B)
 
 
