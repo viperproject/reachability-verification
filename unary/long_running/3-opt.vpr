@@ -296,7 +296,7 @@ label l6
         {P_(g, z, n)}
             n in g && !DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next) ==> DEP_(g, w, n, w, w.next)// ==> P_(g, w, n)
     assert forall n: Ref ::
-        {P_(g, z, n)}
+        {P_(g, w, n)}
             n in g && DEP_(g, w, n, w, w.next) ==> P_(g, w, n)
     assert forall n: Ref ::
         {P_(g, z, n)}
