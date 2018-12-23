@@ -310,8 +310,11 @@ label l6
         {P_(g, z, n)}
             n in g && !P6(g, w, n) ==> !P6(g, v, n)
     assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && !P6(g, v, n) && n != z ==> !DEP6(g, z, n, v, w) && DEP6(g, z, n, z, z.next)
+        {DEP6(g, z, n, z, z.next)}
+            (n in g && n != z ==> P6(g, z, n)) && (
+                n in g && n != z && P6(g, z, n) ==> DEP6(g, z, n, z, z.next)
+            ) && (n in g && n != z ==> DEP6(g, z, n, z, z.next))&& 
+            (n in g && !P6(g, v, n) && n != z ==> !DEP6(g, z, n, v, w) && DEP6(g, z, n, z, z.next))
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g && !DEP6(g, z, n, v, w) && DEP6(g, z, n, z, z.next) ==> DEP_(g, z, n, z, z.next)
