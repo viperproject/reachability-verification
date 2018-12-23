@@ -215,10 +215,10 @@ label l2
     {P_(g, v, n)} {P_(g, z, n)}
     n in g ==> P_(g, v, n) || P_(g, z, n)
     assert P_(g, z, y) && P_(g, v, y)
-
-/*label l3
+*/
+label l3
     link_ZOPG_next(g, y, w)
-
+/*
     assert forall n: Ref ::
     {P_(g, n, y)}
     n in g && P3(g, n, y) ==> P_(g, n, y)
@@ -274,77 +274,55 @@ label l6
     unlink_ZOPG_next(g, v)
 
     //FOR TRIGGERING
-    //First show that there is a path from w to v
-    assert !DEP6(g, w, x, v, w) && DEP6(g, w, x, w, w.next) ==> DEP_(g, w, x, w, w.next)
-    assert P_(g, w, x) && E_(g, x, v) && P_(g, x, v)
-    assert P_(g, w, v)
-
-    //Then show that there existed a path from w to n for all n that were reachable from w
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && P6(g, v, n) ==> P6(g, w, n)
-
-    //show that there is a path from z to w
-    assert !DEP6(g, z, w, v, w) && P6(g, z, w) ==> DEP6(g, z, w, z, z.next)
-    assert !DEP6(g, z, w, v, w) && DEP6(g, z, w, z, z.next) ==> DEP_(g, z, w, z, z.next) && P_(g, z, w)
     
-    //Show that there exists a path from w to n for all n that were reachable from w
     assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && P6(g, w, n) && n != w ==> !DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next)
+        {P6(g, w, n)}
+            !P6(g, v, n) ==> !P6(g, w, n)
     assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && !DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next) ==> DEP_(g, w, n, w, w.next)// ==> P_(g, w, n)
-    assert forall n: Ref ::
-        {P_(g, w, n)}
-            n in g && DEP_(g, w, n, w, w.next) ==> P_(g, w, n)
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && P6(g, w, n) ==> P_(g, w, n)
-    
-    //Show that there exists a path from z to n for all nodes that are not reachable from w
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && !P_(g, w, n) ==> !P6(g, w, n)
-    assert forall n: Ref :: 
-        {P_(g, z, n)}
-            n in g && !P6(g, w, n) ==> !P6(g, v, n)
+        {DEP6(g, z, n, v, w)}
+            !P6(g, w, n) ==> !DEP6(g, z, n, v, w)
     assert forall n: Ref ::
         {DEP6(g, z, n, z, z.next)}
-            (n in g && n != z ==> P6(g, z, n)) && (
-                n in g && n != z && P6(g, z, n) ==> DEP6(g, z, n, z, z.next)
-            ) && (n in g && n != z ==> DEP6(g, z, n, z, z.next))&& 
-            (n in g && !P6(g, v, n) && n != z ==> !DEP6(g, z, n, v, w) && DEP6(g, z, n, z, z.next))
+            !DEP6(g, z, n, v, w) && P6(g, z, n) ==> (z == n || DEP6(g, z, n, z, z.next))
+    assert forall n: Ref ::
+        {DEP_(g, z, n, z, z.next)}
+           !DEP6(g, z, n, v, w) && (z == n || DEP6(g, z, n, z, z.next)) ==> (z == n || DEP_(g, z, n, z, z.next))
     assert forall n: Ref ::
         {P_(g, z, n)}
-            n in g && !DEP6(g, z, n, v, w) && DEP6(g, z, n, z, z.next) ==> DEP_(g, z, n, z, z.next)
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && DEP_(g, z, n, z, z.next) ==> P_(g, z, n)
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && !P_(g, w, n) ==> P_(g, z, n)
-
-    //show that there is a path from z to n for all n reachable from w
+           (z == n || DEP_(g, z, n, z, z.next)) ==> P_(g, z, n) 
     assert forall n: Ref :: 
         {P_(g, z, n)}
-            n in g && P6(g, w, n) && n != w ==> !DEP6(g, w, n, v, w)
+            n in g && !P6(g, v, n) ==> P_(g, z, n)
+
+    assert P6(g, w, x) && E6(g, x, v) ==> P6(g, w, v)
+    assert forall n: Ref ::
+        {P6(g, w, n)}
+            P6(g, v, n) ==> P6(g, w, n)
+    assert forall n: Ref ::
+        {DEP6(g, w, n, v, w)}{DEP6(g, w, n, w, w.next)}
+            P6(g, w, n) ==> (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next)))
+    assert forall n: Ref ::
+        {DEP_(g, w, n, w, w.next)}
+            (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next))) ==> (n == w || DEP_(g, w, n, w, w.next))
+    assert forall n: Ref ::
+        {P_(g, w, n)}
+            (n == w || DEP_(g, w, n, w, w.next)) ==> P_(g, w, n)
+    assert forall n: Ref ::
+        {P_(g, w, n)}
+            P6(g, v, n) ==> P_(g, w, n)
+
+    assert P6(g, z, w) && !DEP6(g, z, w, v, w) ==> DEP6(g, z, w, z, z.next)
+    assert !DEP6(g, z, w, v, w) && DEP6(g, z, w, z, z.next) ==> DEP_(g, z, w, z, z.next)
+    assert DEP_(g, z, w, z, z.next) ==> P_(g, z, w)
+    assert P_(g, z, w)
+
     assert forall n: Ref ::
         {P_(g, z, n)}
-            n in g && P6(g, w, n) && !DEP6(g, w, n, v, w) && n != w && DEP6(g, w, n, w, w.next) && DEP_(g, w, n, w, w.next) ==>
-                P_(g, w, n)
+            n in g && P6(g, v, n) && P_(g, w, n) && P_(g, z, w) ==> P_(g, z, n)
     assert forall n: Ref ::
         {P_(g, z, n)}
-            n in g && P_(g, w, n) ==> P_(g, z, n)
-    /*assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && P6(g, w, n) ==> P6(g, z, n)
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && P6(g, z, n) && !DEP6(g, z, n, v, w) && n != z ==> DEP6(g, z, n, z, z.next)
-    assert forall n: Ref ::
-        {P_(g, z, n)}
-            n in g && !DEP6(g, z, n, v, w) &&  DEP6(g, z, n, z, z.next) ==> DEP_(g, z, n, z, z.next)*/
+            n in g && P6(g, v, n) ==> P_(g, z, n)
+
     assert forall n: Ref ::
         {P_(g, n, v)}
             n in g && n != v ==> 
