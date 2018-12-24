@@ -55,7 +55,7 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     assert forall n0: Ref :: 
         {DEP_(g, v, n0, u, v)} 
         n0 in g && v != n0 ==> !DEP_(g, v, n0, u, v) && DEP_(g, v, n0, v, w)
-
+*/
     unlink_ZOPG_next(g, u)
 
 /*    //FOR TRIGGERING
