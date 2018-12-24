@@ -311,19 +311,19 @@ label l6
     
     assert forall n: Ref ::
         {P6(g, w, n)}
-            !P6(g, v, n) ==> !P6(g, w, n)
+            n in g && !P6(g, v, n) ==> !P6(g, w, n)
     assert forall n: Ref ::
         {DEP6(g, z, n, v, w)}
-            !P6(g, w, n) ==> !DEP6(g, z, n, v, w)
+            n in g && !P6(g, w, n) ==> !DEP6(g, z, n, v, w)
     assert forall n: Ref ::
         {DEP6(g, z, n, z, z.next)}
-            !DEP6(g, z, n, v, w) && P6(g, z, n) ==> (z == n || DEP6(g, z, n, z, z.next))
+            n in g && !DEP6(g, z, n, v, w) && P6(g, z, n) ==> (z == n || DEP6(g, z, n, z, z.next))
     assert forall n: Ref ::
         {DEP_(g, z, n, z, z.next)}
-           !DEP6(g, z, n, v, w) && (z == n || DEP6(g, z, n, z, z.next)) ==> (z == n || DEP_(g, z, n, z, z.next))
+           n in g && !DEP6(g, z, n, v, w) && (z == n || DEP6(g, z, n, z, z.next)) ==> (z == n || DEP_(g, z, n, z, z.next))
     assert forall n: Ref ::
         {P_(g, z, n)}
-           (z == n || DEP_(g, z, n, z, z.next)) ==> P_(g, z, n) 
+           n in g && (z == n || DEP_(g, z, n, z, z.next)) ==> P_(g, z, n) 
     assert forall n: Ref :: 
         {P_(g, z, n)}
             n in g && !P6(g, v, n) ==> P_(g, z, n)
@@ -331,19 +331,19 @@ label l6
     assert P6(g, w, x) && E6(g, x, v) ==> P6(g, w, v)
     assert forall n: Ref ::
         {P6(g, w, n)}
-            P6(g, v, n) ==> P6(g, w, n)
+            n in g && P6(g, v, n) ==> P6(g, w, n)
     assert forall n: Ref ::
         {DEP6(g, w, n, v, w)}{DEP6(g, w, n, w, w.next)}
-            P6(g, w, n) ==> (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next)))
+            n in g && P6(g, w, n) ==> (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next)))
     assert forall n: Ref ::
         {DEP_(g, w, n, w, w.next)}
-            (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next))) ==> (n == w || DEP_(g, w, n, w, w.next))
+            n in g && (n == w || (!DEP6(g, w, n, v, w) && DEP6(g, w, n, w, w.next))) ==> (n == w || DEP_(g, w, n, w, w.next))
     assert forall n: Ref ::
         {P_(g, w, n)}
-            (n == w || DEP_(g, w, n, w, w.next)) ==> P_(g, w, n)
+            n in g && (n == w || DEP_(g, w, n, w, w.next)) ==> P_(g, w, n)
     assert forall n: Ref ::
         {P_(g, w, n)}
-            P6(g, v, n) ==> P_(g, w, n)
+            n in g && P6(g, v, n) ==> P_(g, w, n)
 
     assert P6(g, z, w) && !DEP6(g, z, w, v, w) ==> DEP6(g, z, w, z, z.next)
     assert !DEP6(g, z, w, v, w) && DEP6(g, z, w, z, z.next) ==> DEP_(g, z, w, z, z.next)
