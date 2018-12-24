@@ -72,7 +72,7 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     /*assert forall p: Ref, q: Ref :: 
         {DEP_(g, w, x, p, q)}
         p in g && q in g && DEP_(g, w, x, p, q) ==> !DEP_(g, w, q, u, v)*/
-
+/*
     //FOR TRIGGERING
     assert forall n0: Ref, m: Ref :: {DEP_(g, n0, m, n0, n0.next)} n0 in g && m in g ==> n0.next in g &&
         E_(g, n0, n0.next) && n0 != n0.next && 
@@ -82,10 +82,10 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     assert forall n0: Ref :: 
         {DEP_(g, v, n0, u, v)} 
         n0 in g && v != n0 ==> !DEP_(g, v, n0, u, v) && DEP_(g, v, n0, v, w)
-
+*/
     unlink_ZOPG_next(g, u)
 
-    //FOR TRIGGERING
+/*    //FOR TRIGGERING
     assert forall n: Ref :: 
         {P_(g, n, u)} 
         n in g && n != u ==> (DEP_(g, n, u, n, n.next) ==> P_(g, n, u))
@@ -100,13 +100,13 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     assert forall n: Ref ::
         {P_(g, v, n)}
         n in g ==> P_(g, v, n)
-
+*/
 
 
 label l1
     link_ZOPG_next(g, u, y)
 
-    //FOR TRIGGERING
+    /*//FOR TRIGGERING
     assert forall n: Ref ::
         {P_(g, v, n)}
         n in g && n != v ==> 
@@ -152,7 +152,7 @@ label l1
                 { P_(g, n0, from) } 
                     n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, n0, from, n0, n0.next))
 
-    ****/
+    ****
 
 
     //NEEDED INFO AT THIS STATE
@@ -165,7 +165,7 @@ label l1
     assert forall n: Ref ::
         {P_(g, v, n)}
         n in g ==>
-            P_(g, v, n)
+            P_(g, v, n)*/
 
 
 label l2
