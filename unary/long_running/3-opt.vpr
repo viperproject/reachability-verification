@@ -155,7 +155,7 @@ label l1
             P_(g, v, n)
 
 */
-/*
+
     unlink_ZOPG_next(g, u)
 
     //AXIOM
@@ -305,17 +305,17 @@ label l3
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g && P3(g, z, n) ==> (z == n || DEP3(g, z, n, z, z.next)) ==> (z == n || DEP_(g, z, n, z, z.next))
-*/
-    edge_update(g, u, y)
-    edge_update(g, y, w)
+
+    //edge_update(g, u, y)
+    //edge_update(g, y, w)
 
     //NEEDED INFO
-    assume forall n: Ref ::
+    assert forall n: Ref ::
         {P_(g, z, n)}
             n in g ==> (P_(g, z, n) || n == v)
-    assume !DEP_(g, z, w, v, w) && !DEP_(g, z, y, x, y)
-    assume P_(g, w, x)
-    assume forall n: Ref ::
+    assert !DEP_(g, z, w, v, w) && !DEP_(g, z, y, x, y)
+    assert P_(g, w, x)
+    assert forall n: Ref ::
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
  
@@ -394,7 +394,7 @@ label l5
         {P_(g, n, v)}
             n in g ==> P_(g, n, v)
 
-
+/*
 label l6
     unlink_ZOPG_next(g, v)
 
