@@ -155,6 +155,7 @@ label l1
             P_(g, v, n)
 
 */
+
     unlink_ZOPG_next(g, u)
 
     //AXIOM
@@ -231,7 +232,7 @@ label l1
     assert forall n: Ref ::
         {P_(g, n, u)}
             n in g ==> P_(g, n, u)
-/*
+
 label l2
     unlink_ZOPG_next(g, y)
 
@@ -314,7 +315,7 @@ label l3
     assert forall n: Ref ::
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
-   
+ /*  
 label l4
     unlink_ZOPG_next(g, x)
 
