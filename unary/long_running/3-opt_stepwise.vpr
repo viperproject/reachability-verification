@@ -188,7 +188,13 @@ label l2
             n in g && P2(g, n, u) && P2(g, u, y) ==> P2(g, n, y)
     assert forall n: Ref ::
         {DEP2(g, n, y, n, n.next)}
-            n in g && P2(g, n, y) ==> (n == y || (!DEP2(g, n, y, y, z)) && DEP2(g, n, y, n, n.next))
+            n in g && P2(g, n, y) ==> (n == y || !DEP2(g, n, y, y, z))
+    assert forall n: Ref ::
+        {P2(g, n.next, y)}
+            n in g && P2(g, n, y) && n != y && E2(g, n, n.next) ==> P2(g, n.next, y)
+    assert forall n: Ref ::
+        {DEP2(g, n, y, n, n.next)}
+            n in g && P2(g, n, y) && E2(g, n, n.next) && P2(g, n.next, y) ==> DEP2(g, n, y, n, n.next)
     assert forall n: Ref ::
         {P_(g, n, y)}
             n in g && (n == y || (!DEP2(g, n, y, y, z)) && DEP2(g, n, y, n, n.next)) ==>
