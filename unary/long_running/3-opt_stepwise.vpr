@@ -91,6 +91,9 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     assert P0(g, v, x) && !DEP0(g, v, x, u, v) && DEP0(g, v, x, v, w) ==> DEP_(g, v, x, v, w)
 
     //NEEDED INFO
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u ==> u0.next == old(u0.next)) && u.next == null
     assert forall n: Ref ::
         {P_(g, v, n)}
             n in g ==> P_(g, v, n)
@@ -133,6 +136,9 @@ label l1
 
     //edge_update(g, u, y)
     //NEEDED INFO
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u ==> u0.next == old(u0.next)) && u.next == y
     assert forall n: Ref ::
         {P_(g, v, n)}
             n in g ==> P_(g, v, n)
@@ -189,6 +195,9 @@ label l2
                 (n == y || DEP_(g, n, y, n, n.next))
 
     //NEEDED INFO
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != y && u0 != u ==> u0.next == old(u0.next)) && u.next == y && y.next == null
     assert forall n: Ref ::
         {P_(g, v, n)}{P_(g, z, n)}
             n in g ==> P_(g, z, n) || P_(g, v, n)
@@ -219,6 +228,9 @@ label l3
     //edge_update(g, y, w)
 
     //NEEDED INFO
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != y && u0 != u ==> u0.next == old(u0.next)) && u.next == y && y.next == w
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g ==> (P_(g, z, n) || n == v)
