@@ -367,6 +367,10 @@ label l5
     link_ZOPG_next(g, x, v)
 
     //FOR TRIGGERING
+    assert !DEP5(g, z, w, v, w) && DEP_(g, z, w, v, w) ==> DEP_(g, z, w, x, v)
+    assert !E5(g, x, v) ==> !DEP5(g, z, w, x, v)
+    assert P5(g, z, w) ==> DEP5(g, z, w, z, z.next) ==> DEP_(g, z, w, z, z.next)
+    assert DEP_(g, z, w, z, z.next) && DEP_(g, z, w, x, v) ==> !DEP5(g, z, w, z, z.next)
     assert P5(g, z, x) ==> P_(g, z, x)
     assert forall n: Ref ::
         {P_(g, z, n)}
