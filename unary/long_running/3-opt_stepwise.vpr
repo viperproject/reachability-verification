@@ -197,7 +197,7 @@ label l2
     assert forall n: Ref ::
         {P_(g, n, y)}
             n in g ==> P_(g, n, y)
-        
+   
 label l3
     link_ZOPG_next(g, y, w)
 
@@ -228,11 +228,25 @@ label l3
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
 
+
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != y && u0 != u ==> (u0.next == old(u0.next))
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g && (u0.next == old(u0.next)) ==> u0.next != u0
+    assert y.next != y && u.next != u
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g ==> u0.next != u0
+    assert forall u0: Ref ::
+        {Set(u0)}
+            g != Set(u0)
     assert ( forall u0:Ref :: 
         { u0.next } 
         u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) ) 
  
- //steps5to8(g, u, v, w, x, y, z)
+    //steps5to8(g, u, v, w, x, y, z)
 
     /*
     */
@@ -258,6 +272,14 @@ method steps5to8(g: Set[Ref], u: Ref , v: Ref, w: Ref, x: Ref, y: Ref, z: Ref)
     requires ( forall u0:Ref :: 
         { u0.next } 
         u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) )
+    ensures GRAPH(g)
+    ensures forall n: Ref ::
+     {P_(g, v, n)}
+        n in g ==> P_(g, v, n)
+
+    ensures forall n: Ref ::
+     {P_(g, n, v)}
+        n in g ==> P_(g, n, v)
     
 {
 
@@ -323,8 +345,7 @@ label l5
             n in g && P5(g, n, x) ==> P_(g, n, x)
     
 
-    //edge_update(g, u, y)
-    //edge_update(g, y, w)
+
     //edge_update(g, x, v)
 
     //NEEDED INFO
@@ -396,7 +417,10 @@ label l6
                 DEP6(g, n, v, n, n.next)
     assert forall n: Ref ::
         {P_(g, n, v)}
-        n in g && n != v && !DEP6(g, n, v, v, w) && DEP6(g, n, v, n, n.next) ==> DEP_(g, n, v, n, n.next) && P_(g, n, v)
+        n in g && n != v && !DEP6(g, n, v, v, w) && DEP6(g, n, v, n, n.next) ==> DEP_(g, n, v, n, n.next)
+    assert forall n: Ref ::
+        {P_(g, n, v)}
+            n in g && DEP_(g, n, v, n, n.next) ==> P_(g, n, v)
 
     //NEEDED INFO
     assert forall n: Ref :: 
@@ -423,6 +447,9 @@ label l7
     assert forall n: Ref ::
      {P_(g, n, v)}
         n in g ==> P_(g, n, v)
+
+    /*
+    *
 
 }
 */
