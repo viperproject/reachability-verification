@@ -306,6 +306,9 @@ label l3
         {P_(g, z, n)}
             n in g && P3(g, z, n) ==> (z == n || DEP3(g, z, n, z, z.next)) ==> (z == n || DEP_(g, z, n, z, z.next))
 
+    //edge_update(g, u, y)
+    //edge_update(g, y, w)
+
     //NEEDED INFO
     assert forall n: Ref ::
         {P_(g, z, n)}
@@ -315,7 +318,8 @@ label l3
     assert forall n: Ref ::
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
- /*  
+ 
+  
 label l4
     unlink_ZOPG_next(g, x)
 
@@ -380,6 +384,8 @@ label l5
     assert forall n: Ref :: 
         {P_(g, n, v)}
             n in g ==> P_(g, n, v)
+
+/*
 label l6
     unlink_ZOPG_next(g, v)
 
