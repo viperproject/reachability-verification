@@ -234,14 +234,22 @@ label l2
         { u0.next } 
         u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) ) 
  
-    //steps4to8(g, u, v, w, x, y, z)
+    steps4to8(g, u, v, w, x, y, z)
+
+    assert forall n: Ref ::
+     {P_(g, v, n)}
+        n in g ==> P_(g, v, n)
+
+    assert forall n: Ref ::
+     {P_(g, n, v)}
+        n in g ==> P_(g, n, v)
 
     /*
     */
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false
 }
-/*
+
 method steps4to8(g: Set[Ref], u: Ref , v: Ref, w: Ref, x: Ref, y: Ref, z: Ref)
     requires GRAPH(g)
     requires u in g && v in g && w in g && w in g && x in g && y in g && z in g
@@ -466,10 +474,10 @@ label l7
         n in g ==> P_(g, n, v)
 
     /*
-    *
+    */
 
 }
-*/
+
 method edge_update(g: Set[Ref], from: Ref, to: Ref)
     requires PROTECTED_GRAPH_next(g, from)
     requires from in g && to in g
