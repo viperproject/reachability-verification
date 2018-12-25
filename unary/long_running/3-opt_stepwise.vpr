@@ -65,7 +65,7 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     var y : Ref := x.next
     var z : Ref := y.next
 
-    unlink_ZOPG_next(g, u)
+    /*unlink_ZOPG_next(g, u)
 
     //AXIOM
     assume apply_noExit($$(g), g, g setminus Set(v))
@@ -206,7 +206,61 @@ label l2
     assert forall n: Ref ::
         {P_(g, n, y)}
             n in g ==> P_(g, n, y)
-   
+
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != y && u0 != u ==> (u0.next == old(u0.next))
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g && (u0.next == old(u0.next)) ==> u0.next != u0
+    assert y.next != y && u.next != u
+    assert forall u0: Ref ::
+        {u0.next}
+            u0 in g ==> u0.next != u0
+    assert forall u0: Ref ::
+        {Set(u0)}
+            g != Set(u0)
+    assert ( forall u0:Ref :: 
+        { u0.next } 
+        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) ) 
+ 
+    //steps4to8(g, u, v, w, x, y, z)
+
+    /*
+    */
+    //:: ExpectedOutput(assert.failed:assertion.false)
+    assert false
+}
+
+method steps4to8(g: Set[Ref], u: Ref , v: Ref, w: Ref, x: Ref, y: Ref, z: Ref)
+    requires GRAPH(g)
+    requires u in g && v in g && w in g && w in g && x in g && y in g && z in g
+    requires not_equal(u, v, w, x, y, z)
+    requires u.next == y && v.next == w && x.next == y && y.next == null
+    requires z.next != x
+    requires w.next != x && w.next != u
+    requires forall n: Ref ::
+        {P_(g, v, n)}{P_(g, z, n)}
+            n in g ==> P_(g, z, n) || P_(g, v, n)
+    requires !P_(g, z, v) && !P_(g, w, v) && !DEP_(g, z, y, x, y)
+    requires P_(g, w, x)
+    requires forall n: Ref ::
+        {P_(g, n, y)}
+            n in g ==> P_(g, n, y)
+    requires ( forall u0:Ref :: 
+        { u0.next } 
+        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) )
+    ensures GRAPH(g)
+    ensures forall n: Ref ::
+     {P_(g, v, n)}
+        n in g ==> P_(g, v, n)
+
+    ensures forall n: Ref ::
+     {P_(g, n, v)}
+        n in g ==> P_(g, n, v)
+    
+{
+
 label l3
     link_ZOPG_next(g, y, w)
 
@@ -228,9 +282,6 @@ label l3
     //edge_update(g, y, w)
 
     //NEEDED INFO
-    assert (forall u0: Ref ::
-        {u0.next}
-            u0 in g && u0 != y && u0 != u ==> u0.next == old(u0.next)) && u.next == y && y.next == w
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g ==> (P_(g, z, n) || n == v)
@@ -239,62 +290,6 @@ label l3
     assert forall n: Ref ::
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
-
-
-    assert forall u0: Ref ::
-        {u0.next}
-            u0 in g && u0 != y && u0 != u ==> (u0.next == old(u0.next))
-    assert forall u0: Ref ::
-        {u0.next}
-            u0 in g && (u0.next == old(u0.next)) ==> u0.next != u0
-    assert y.next != y && u.next != u
-    assert forall u0: Ref ::
-        {u0.next}
-            u0 in g ==> u0.next != u0
-    assert forall u0: Ref ::
-        {Set(u0)}
-            g != Set(u0)
-    assert ( forall u0:Ref :: 
-        { u0.next } 
-        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) ) 
- 
-    //steps5to8(g, u, v, w, x, y, z)
-
-    /*
-    */
-    //:: ExpectedOutput(assert.failed:assertion.false)
-    assert false
-}
-/*
-method steps5to8(g: Set[Ref], u: Ref , v: Ref, w: Ref, x: Ref, y: Ref, z: Ref)
-    requires GRAPH(g)
-    requires u in g && v in g && w in g && w in g && x in g && y in g && z in g
-    requires not_equal(u, v, w, x, y, z)
-    requires u.next == y && v.next == w && x.next == y && y.next == w
-    requires z.next != x
-    requires w.next != x && w.next != u
-    requires forall n: Ref ::
-        {P_(g, z, n)}
-            n in g ==> (P_(g, z, n) || n == v)
-    requires !DEP_(g, z, w, v, w) && !DEP_(g, z, y, x, y)
-    requires P_(g, w, x)
-    requires forall n: Ref ::
-        {P_(g, n, x)}
-            n in g ==> P_(g, n, x)
-    requires ( forall u0:Ref :: 
-        { u0.next } 
-        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) )
-    ensures GRAPH(g)
-    ensures forall n: Ref ::
-     {P_(g, v, n)}
-        n in g ==> P_(g, v, n)
-
-    ensures forall n: Ref ::
-     {P_(g, n, v)}
-        n in g ==> P_(g, n, v)
-    
-{
-
 
   
 label l4
@@ -461,10 +456,10 @@ label l7
         n in g ==> P_(g, n, v)
 
     /*
-    *
+    */
 
 }
-*/
+
 method edge_update(g: Set[Ref], from: Ref, to: Ref)
     requires PROTECTED_GRAPH_next(g, from)
     requires from in g && to in g
