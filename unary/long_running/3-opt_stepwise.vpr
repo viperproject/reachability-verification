@@ -152,6 +152,9 @@ label l2
     unlink_ZOPG_next(g, y)
 
     //FOR TRIGGERING
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u && u0 != y ==> u0.next == old(u0.next))
     assert !DEP2(g, z, v, z, z.next) ==> !DEP_(g, z, v, z, z.next)
     assert !DEP2(g, w, v, w, w.next) ==> !DEP_(g, w, v, w, w.next)
     assert forall n: Ref ::
@@ -203,7 +206,8 @@ label l2
     //NEEDED INFO
     assert (forall u0: Ref ::
         {u0.next}
-            u0 in g && u0 != y && u0 != u ==> u0.next == old(u0.next)) && u.next == y && y.next == null
+            u0 in g && u0 != y && u0 != u ==> (u0.next == old(u0.next)))
+    assert u.next == y && y.next == null
     assert forall n: Ref ::
         {P_(g, v, n)}{P_(g, z, n)}
             n in g ==> P_(g, z, n) || P_(g, v, n)
