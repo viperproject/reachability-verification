@@ -1,4 +1,3 @@
-//:: IgnoreFile(/carbon/issue/137/)
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
 import "../../_preambles/purification.vpr"
@@ -39,6 +38,15 @@ define UNSHARED_CONNECTED(g)
 
 define RING(graph) ( GRAPH(graph) && COMPLETE(graph) )
 
+
+define not_equal(u, v, w, x, y, z) (
+    u != v && u != w && u != x && u != y && u != z &&
+              v != w && v != x && v != y && v != z &&
+                        w != x && w != y && w != z &&
+                                  x != y && x != z &&
+                                            y != z
+)
+
 method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     requires RING(g) //Access permissions + next in g
     requires UNSHARED_CONNECTED(g)
@@ -56,106 +64,6 @@ method three_opt(g: Set[Ref], u: Ref, x: Ref)// returns (res:Int)
     var w : Ref := v.next
     var y : Ref := x.next
     var z : Ref := y.next
-
-    //Change from u-->v-->w to u-->y-->w
-    //and from    x-->y-->z to x-->v-->z
-
-/*
-    //FOR TRIGGERING
-    assert forall n0: Ref, m: Ref :: {DEP_(g, n0, m, n0, n0.next)} n0 in g && m in g ==> n0.next in g &&
-        E_(g, n0, n0.next) && n0 != n0.next && 
-        exists_path($$(g), n0.next, m) ==>  DEP_(g, n0, m, n0, n0.next)
-    assert forall n0: Ref :: {DEP_(g, n0, u, u, v)} n0 in g && n0 != u ==> 
-    !DEP_(g, n0, u, u, v) && DEP_(g, n0, u, n0, n0.next)
-    assert forall n0: Ref :: 
-        {DEP_(g, v, n0, u, v)} 
-        n0 in g && v != n0 ==> !DEP_(g, v, n0, u, v) && DEP_(g, v, n0, v, w)
-*
-    unlink_ZOPG_next(g, u)
-
-/*    //FOR TRIGGERING
-    assert forall n: Ref :: 
-        {P_(g, n, u)} 
-        n in g && n != u ==> (DEP_(g, n, u, n, n.next) ==> P_(g, n, u))
-    assert forall n: Ref :: 
-        {P_(g, v, n)} 
-        n in g && n != v ==> (DEP_(g, v, n, v, w) ==> P_(g, v, n))
-
-    //NEEDED INFO AT THIS STATE
-    assert forall n: Ref ::
-        {P_(g, n, u)}
-        n in g ==> P_(g, n, u)
-    assert forall n: Ref ::
-        {P_(g, v, n)}
-        n in g ==> P_(g, v, n)
-
-*
-
-label l1
-    link_ZOPG_next(g, u, y)
-/*
-    //FOR TRIGGERING
-    assert forall n: Ref ::
-        {P_(g, v, n)}
-        n in g && n != v ==> 
-            (P1(g, v, n) && DEP1(g, v, n, v, w) && DEP_(g, v, n, v, w)) ==>
-                P_(g, v, n)
-    //state_l2(g, u, v, w, x, y, z)
-    
-
-    /// ATG: this is where we get unsound! 
-    //assert false
-
-    /**** 
-    The unsoundness can be reproduces with the following definitions of update formulas: 
-
-        method unlink_ZOPG_next(g:Set[Ref], node:Ref)
-            requires PROTECTED_GRAPH_next(g,node)
-            requires node in g
-            ensures PROTECTED_GRAPH_next(g,node)
-            ensures node.next == null
-            ensures old(node.next) == null ==> $$(g) == old($$(g))
-            ensures old(node.next) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.next))
-
-        method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
-            requires PROTECTED_GRAPH_next(g,from) 
-            requires from in g && from.next == null
-            requires (to != null) ==> to in g
-            ensures PROTECTED_GRAPH_next(g,from)
-            ensures from.next == to
-            ensures (to == null) ==> $$(g) == old($$(g))
-            ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
-
-            // Automatic reasoning support
-            // a. Arity-independent
-            ensures (to != null) ==> forall n:Ref, m:Ref :: 
-                { P_(g, n, m) } 
-                    n in g && m in g ==> 
-                        __learn_trigger__( P_(g, n, to) ) && 
-                        __learn_trigger__( P_(g, to, m) )
-
-            // b. Arity-dependent
-            ensures forall n0: Ref :: 
-                { P_(g, n0, to) }
-                { P_(g, n0, from) } 
-                    n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, n0, from, n0, n0.next))
-
-    ****
-
-
-    //NEEDED INFO AT THIS STATE
-    assert forall n: Ref ::
-        {P_(g, n, u)}{P_(g, n, y)}
-        n in g ==> P_(g, n, u) && P_(g, n, y)
-    assert forall n: Ref ::
-        {P_(g, u, n)}
-        n in g && P_(g, y, n) <==> P_(g, u, n)
-    assert forall n: Ref ::
-        {P_(g, v, n)}
-        n in g ==>
-            P_(g, v, n)
-
-*/
 
     unlink_ZOPG_next(g, u)
 
@@ -319,7 +227,41 @@ label l3
     assert forall n: Ref ::
         {P_(g, n, x)}
             n in g ==> P_(g, n, x)
+
+    assert ( forall u0:Ref :: 
+        { u0.next } 
+        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) ) 
  
+ //steps5to8(g, u, v, w, x, y, z)
+
+    /*
+    */
+    //:: ExpectedOutput(assert.failed:assertion.false)
+    assert false
+}
+/*
+method steps5to8(g: Set[Ref], u: Ref , v: Ref, w: Ref, x: Ref, y: Ref, z: Ref)
+    requires GRAPH(g)
+    requires u in g && v in g && w in g && w in g && x in g && y in g && z in g
+    requires not_equal(u, v, w, x, y, z)
+    requires u.next == y && v.next == w && x.next == y && y.next == w
+    requires z.next != x
+    requires w.next != x && w.next != u
+    requires forall n: Ref ::
+        {P_(g, z, n)}
+            n in g ==> (P_(g, z, n) || n == v)
+    requires !DEP_(g, z, w, v, w) && !DEP_(g, z, y, x, y)
+    requires P_(g, w, x)
+    requires forall n: Ref ::
+        {P_(g, n, x)}
+            n in g ==> P_(g, n, x)
+    requires ( forall u0:Ref :: 
+        { u0.next } 
+        u0 in g ==> ( u0 == u0.next <==> g == Set(u0) ) )
+    
+{
+
+
   
 label l4
     unlink_ZOPG_next(g, x)
@@ -395,7 +337,7 @@ label l5
         {P_(g, n, v)}
             n in g ==> P_(g, n, v)
 
-/*
+
 label l6
     unlink_ZOPG_next(g, v)
 
@@ -482,13 +424,8 @@ label l7
      {P_(g, n, v)}
         n in g ==> P_(g, n, v)
 
-    /*
-    */
-    //:: ExpectedOutput(assert.failed:assertion.false)
-    assert false
-
 }
-
+*/
 method edge_update(g: Set[Ref], from: Ref, to: Ref)
     requires PROTECTED_GRAPH_next(g, from)
     requires from in g && to in g
