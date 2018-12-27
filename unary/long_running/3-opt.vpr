@@ -183,6 +183,10 @@ label l1
     assert P0(g, v, x) && !DEP0(g, v, x, u, v) && DEP0(g, v, x, v, w) ==> DEP_(g, v, x, v, w)
 
     //NEEDED INFO
+    assert GRAPH(g)
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u ==> u0.next == old(u0.next)) && u.next == null
     assert forall n: Ref ::
         {P_(g, v, n)}
             n in g ==> P_(g, v, n)
@@ -225,6 +229,10 @@ label l1
 
     //edge_update(g, u, y)
     //NEEDED INFO
+    assert GRAPH(g)
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u ==> u0.next == old(u0.next)) && u.next == y
     assert forall n: Ref ::
         {P_(g, v, n)}
             n in g ==> P_(g, v, n)
@@ -238,6 +246,9 @@ label l2
     unlink_ZOPG_next(g, y)
 
     //FOR TRIGGERING
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != u && u0 != y ==> u0.next == old(u0.next))
     assert !DEP2(g, z, v, z, z.next) ==> !DEP_(g, z, v, z, z.next)
     assert !DEP2(g, w, v, w, w.next) ==> !DEP_(g, w, v, w, w.next)
     assert forall n: Ref ::
@@ -274,13 +285,24 @@ label l2
             n in g && P2(g, n, u) && P2(g, u, y) ==> P2(g, n, y)
     assert forall n: Ref ::
         {DEP2(g, n, y, n, n.next)}
-            n in g && P2(g, n, y) ==> (n == y || (!DEP2(g, n, y, y, z)) && DEP2(g, n, y, n, n.next))
+            n in g && P2(g, n, y) ==> (n == y || !DEP2(g, n, y, y, z))
+    assert forall n: Ref ::
+        {P2(g, n.next, y)}
+            n in g && P2(g, n, y) && n != y && E2(g, n, n.next) ==> P2(g, n.next, y)
+    assert forall n: Ref ::
+        {DEP2(g, n, y, n, n.next)}
+            n in g && P2(g, n, y) && E2(g, n, n.next) && P2(g, n.next, y) ==> DEP2(g, n, y, n, n.next)
     assert forall n: Ref ::
         {P_(g, n, y)}
             n in g && (n == y || (!DEP2(g, n, y, y, z)) && DEP2(g, n, y, n, n.next)) ==>
                 (n == y || DEP_(g, n, y, n, n.next))
 
     //NEEDED INFO
+    assert GRAPH(g)
+    assert (forall u0: Ref ::
+        {u0.next}
+            u0 in g && u0 != y && u0 != u ==> (u0.next == old(u0.next)))
+    assert u.next == y && y.next == null
     assert forall n: Ref ::
         {P_(g, v, n)}{P_(g, z, n)}
             n in g ==> P_(g, z, n) || P_(g, v, n)
@@ -311,6 +333,7 @@ label l3
     //edge_update(g, y, w)
 
     //NEEDED INFO
+    assert GRAPH(g)
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g ==> (P_(g, z, n) || n == v)
@@ -355,6 +378,7 @@ label l4
 
     //TODO In stepwise approach, proving "forall n: P4(x, n) ==> P_(z, n)" is not needed.
     //NEEDED INFO
+    assert GRAPH(g)
     assert forall n: Ref ::
         {P_(g, z, n)}
             n in g ==> (P_(g, z, n) || n == v)
@@ -386,6 +410,7 @@ label l5
     //edge_update(g, x, v)
 
     //NEEDED INFO
+    assert GRAPH(g)
     assert forall n: Ref :: 
         {P_(g, z, n)}
             n in g ==> P_(g, z, n)
@@ -395,7 +420,7 @@ label l5
         {P_(g, n, v)}
             n in g ==> P_(g, n, v)
 
-/*
+
 label l6
     unlink_ZOPG_next(g, v)
 
@@ -454,9 +479,13 @@ label l6
                 DEP6(g, n, v, n, n.next)
     assert forall n: Ref ::
         {P_(g, n, v)}
-        n in g && n != v && !DEP6(g, n, v, v, w) && DEP6(g, n, v, n, n.next) ==> DEP_(g, n, v, n, n.next) && P_(g, n, v)
+        n in g && n != v && !DEP6(g, n, v, v, w) && DEP6(g, n, v, n, n.next) ==> DEP_(g, n, v, n, n.next)
+    assert forall n: Ref ::
+        {P_(g, n, v)}
+            n in g && DEP_(g, n, v, n, n.next) ==> P_(g, n, v)
 
     //NEEDED INFO
+    assert GRAPH(g)
     assert forall n: Ref :: 
         {P_(g, z, n)}
             n in g ==> P_(g, z, n)
@@ -474,6 +503,7 @@ label l7
             n in g && P7(g, n, v) ==> P_(g, n, v)
 
     //NEEDED INFO
+    assert GRAPH(g)
     assert forall n: Ref ::
      {P_(g, v, n)}
         n in g ==> P_(g, v, n)
