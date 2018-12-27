@@ -347,6 +347,7 @@ label l4
     unlink_ZOPG_next(g, x)
 
     //FOR TRIGGERING
+    assert GRAPH(old[l4](g))
     assert P4(g, w, x) ==> !DEP4(g, w, x, x, y) && DEP4(g, w, x, w, w.next) ==> DEP_(g, w, x, w, w.next)
     assert forall n: Ref ::
         {P_(g, n, x)}
