@@ -28,7 +28,11 @@ domain ZeroOnePathGraphTCs {
             { exists_DEP(EG,x0,y0,x0,v0) }
             { exists_path_(EG,x0,y0), exists_path(EG,v0,y0) }
             { edge(EG,x0,v0), exists_path(EG,v0,y0) }
-                /*exists_path_(EG,x0,y0) &&*/ edge(EG,x0,v0)  && x0 != v0 && exists_path_(EG,v0,y0) ==> exists_DEP_alias(EG,x0,y0,x0,v0)
+                /*exists_path_(EG,x0,y0) &&*/ edge(EG,x0,v0)  && x0 != v0 && exists_path_(EG,v0,y0) 
+                    //TODO: add condition
+                    //&& !exists_path_(EG,v0,x0)
+
+                        ==> exists_DEP_alias(EG,x0,y0,x0,v0)
     }
 
     /*axiom ax_TailTriangleImposable {
