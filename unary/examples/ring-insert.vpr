@@ -1,6 +1,9 @@
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
-import "../../_preambles/purification.vpr"
+
+//import "../../_preambles/purification.vpr"
+import "../../_preambles/legoFraming.vpr"
+
 import "../../_preambles/framing.vpr"
 import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
@@ -25,13 +28,13 @@ method create_node(graph: Set[Ref], init_val: Int) returns (new_graph: Set[Ref],
     ensures acc(new_node.next) && acc(new_node.val)
     ensures new_node.next == null
     ensures new_node.val == init_val
-{
-    new_node := new(*)
-    assume !( new_node in graph )
-    new_node.next := null
-    new_node.val := init_val
-    new_graph := graph union Set(new_node)
-}
+// {
+//     new_node := new(*)
+//     assume !( new_node in graph )
+//     new_node.next := null
+//     new_node.val := init_val
+//     new_graph := graph union Set(new_node)
+// }
 
 method ringInsert(g:Set[Ref], start:Ref, x:Int)
     returns (new_g:Set[Ref], new_node:Ref, new_start:Ref)
@@ -85,13 +88,25 @@ method ringInsert(g:Set[Ref], start:Ref, x:Int)
         new_start := start
     }
 
-    assume apply_TCFraming(g,Set(new_node))
+    // assume apply_TCFraming(g,Set(new_node))
+    assume forall n:Ref, m:Ref :: 
+        { P_(new_g, n, m) } 
+        { P_(g, n, m) }
+        { P_(g union Set(new_node), n, m) }
+            n in g && m in g ==> ( P_(new_g, n, m) <==> P_(g, n, m) )
+    // assume forall n:Ref, m:Ref :: 
+    //     { P_(new_g, n, m) } 
+    //     { P_(g, n, m) }
+    //     { P_(g union Set(new_node), n, m) }
+    //         n in new_g && m in new_g && (n == node || m == node) ==> ( !P_(new_g, n, m) )
+
     assume apply_DepToTcWisdom(g,Set(new_node))
+
 
     /// new_node.next := node.next
     if ( new_node.next != null ) {
         unlink_ZOPG_next(new_g, new_node) // redundant
-    }
+    }   
     link_ZOPG_next(new_g, new_node, node.next)
 
     /// node.next := new_node
@@ -100,14 +115,14 @@ method ringInsert(g:Set[Ref], start:Ref, x:Int)
     }
     link_ZOPG_next(new_g, node, new_node)
 
-    assert forall n:Ref :: { exists_path($$(new_g), node, n) } n in new_g
-        ==> exists_path($$(new_g), node, n)
-    assert forall n:Ref :: { exists_path($$(new_g), n, node) } n in new_g
-        ==> exists_path($$(new_g), n, node)
+    // assert forall n:Ref :: { exists_path($$(new_g), node, n) } n in new_g
+    //     ==> exists_path($$(new_g), node, n)
+    // assert forall n:Ref :: { exists_path($$(new_g), n, node) } n in new_g
+    //     ==> exists_path($$(new_g), n, node)
 
     // The following assertion speeds things up
-    assert forall n:Ref, m:Ref ::
-        { exists_path($$(new_g), n, m) }
-            n in new_g && m in new_g ==>
-                exists_path($$(new_g), n, node) && exists_path($$(new_g), node, m)
+    // assert forall n:Ref, m:Ref ::
+    //     { exists_path($$(new_g), n, m) }
+    //         n in new_g && m in new_g ==>
+    //             exists_path($$(new_g), n, node) && exists_path($$(new_g), node, m)
 }
