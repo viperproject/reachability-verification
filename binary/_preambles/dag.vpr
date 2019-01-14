@@ -1,41 +1,43 @@
 method unlink_DAG_left(g: Set[Ref], node:Ref)
-    requires node in g
     requires PROTECTED_GRAPH_left(g,node)
+    requires node in g
     ensures PROTECTED_GRAPH_left(g,node)
     ensures node.left == null
-    ensures (old(node.left) == null) ==> $$(g) == old($$(g))
-    ensures (old(node.left) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.left))
-    ensures (old(node.left) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.left))
+    ensures (old(node.left) == null) || (old(node.right) == old(node.left)) ==> $$(g) == old($$(g))
+    ensures (old(node.left) != null) && (old(node.right) != old(node.left)) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.left))
+    ensures (old(node.left) != null) && (old(node.right) != old(node.left)) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.left))
     // TODO: find the best way to express acyclicity here. 
     // ensures acyclic_graph($$(g))
 
 method unlink_DAG_right(g: Set[Ref], node:Ref)
-    requires node in g
     requires PROTECTED_GRAPH_right(g,node)
+    requires node in g
     ensures PROTECTED_GRAPH_right(g,node)
     ensures node.right == null
-    ensures (old(node.right) == null) ==> $$(g) == old($$(g))
-    ensures (old(node.right) != null) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.right))
-    ensures (old(node.right) != null) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.right))
+    ensures (old(node.right) == null) || (old(node.left) == old(node.right)) ==> $$(g) == old($$(g))
+    ensures (old(node.right) != null) && (old(node.left) != old(node.right)) ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.right))
+    ensures (old(node.right) != null) && (old(node.left) != old(node.right)) ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.right))
     // TODO: find the best way to express acyclicity here. 
     // ensures acyclic_graph($$(g))
     
 method link_DAG_left(g:Set[Ref], from:Ref, to:Ref)
-    requires from in g
-    requires to != null ==> to in g && to != from
     requires PROTECTED_GRAPH_left(g,from)
+    requires from in g
+    requires from.left == null
+    requires to != null ==> to in g 
     ensures PROTECTED_GRAPH_left(g,from)
     ensures from.left == to
-    ensures (to == null) ==> $$(g) == old($$(g))
-    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+    ensures (to == null) || (old(from.right) == to) ==> ($$(g) == old($$(g)))
+    ensures (to != null) && (old(from.right) != to) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) && (old(from.right) != to) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
 
 method link_DAG_right(g:Set[Ref], from:Ref, to:Ref)
-    requires from in g
-    requires to != null ==> to in g && to != from
     requires PROTECTED_GRAPH_right(g,from)
+    requires from in g
+    requires from.right == null
+    requires to != null ==> to in g
     ensures PROTECTED_GRAPH_right(g,from)
     ensures from.right == to
-    ensures to == null ==> $$(g) == old($$(g))
-    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
-    ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+    ensures (to == null) || (old(from.left) == to) ==> ($$(g) == old($$(g)))
+    ensures (to != null) && (old(from.left) != to) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+    ensures (to != null) && (old(from.left) != to) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
