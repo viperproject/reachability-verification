@@ -11,8 +11,8 @@ method unlink_DAG_next(g: Set[Ref], node:Ref)
 method link_DAG_next(g:Set[Ref], from:Ref, to:Ref)
     requires PROTECTED_GRAPH_next(g,from) 
     requires from in g
+    requires from.next == null
     requires to != null ==> to in g 
-    // requires to != from // why do we need (to != from)? 
     ensures PROTECTED_GRAPH_next(g,from)
     ensures from.next == to
     ensures (to == null) ==> $$(g) == old($$(g))
