@@ -20,6 +20,7 @@ method createNode(graph: Set[Ref], init_next: Ref, init_fnext: Ref) returns (new
     ensures acc(new_node.next) && acc(new_node.fnext) && acc(new_node.mrk)
     ensures new_node.next == init_next
     ensures new_node.fnext == init_fnext
+    ensures !new_node.mrk
 
 method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
     requires node in graph
@@ -28,25 +29,62 @@ method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
     ensures !( node in new_graph )
 
 
-define HARRIS(G) 
-    (!(null in G) && NODES_for(next, G, write) && NODES_for(fnext, G, write)
-    && (CLOSED_for(next, G) && CLOSED_for(fnext, G)))
-    && (forall n:Ref :: { n.mrk } n in G ==> acc(n.mrk))
+define HARRIS(G)
+    (!(null in G) && NODES_for(next, G, write) && NODES_for(fnext, G, write) &&
+    (CLOSED_for(next, G) && CLOSED_for(fnext, G))) &&
+    (forall n:Ref :: { n.mrk } n in G ==> acc(n.mrk)) &&
+    // (a) ``The data structure consists of two (potentially overlapping) functional graphs: 
+    //       a list on next edges beginning at mh and one on fnext edges beginning at fh.''
+    //     Note:  
+    //         1) `n` in reachable from `mh` via `next` or from `fh` via `fnext`: 
+    (forall n:Ref :: 
+        { P_next(G, mh, n) }
+        { P_fnext(G, fh, n) }
+            n in G ==> P_next(G, mh, n) || P_fnext(G, fh, n)) &&
+    //         2) The nodes reachable from `fh` form an unshared graph (following only 
+    //            `fnext` edges) --- sharing is only due to `next` fields!
+    // (forall x:Ref, y:Ref :: 
+    //     { E_fnext(G, x, y) }
+    //         E_fnext(G, x, y) ==> P_fnext(G, fh, x)) &&
+    //         3) The list starting from `mh` is acyclic (following only `next` edges): 
+    (forall x:Ref, y:Ref :: 
+        { E_next(G, y, x) }
+        { P_next(G, x, y) }
+            x in G && y in G ==> 
+                (!P_next(G, x, y) || !E_next(G, y, x))) &&
+    //         4) The list starting from `fh` is acyclic (following only `fnext` edges): 
+    (forall x:Ref, y:Ref :: 
+        { P_fnext(G, x, y) }
+        { E_fnext(G, y, x) }
+            x in G && y in G && P_fnext(G, fh, x) && P_fnext(G, fh, y) ==> // consider dropping (P_fnext(G, fh, x) && P_fnext(G, fh, y))
+                (!P_fnext(G, x, y) || !E_fnext(G, y, x))) &&
+    // (b) ``The two lists are null terminated and ft is an element in the free list.''
+    //       Lists are null-terminated due to acyclicity (and finiteness) and CLOSED(G). 
+    P_fnext(G, fh, ft) &&
+    // (c) ``The next edges from nodes in the free list point to nodes in the 
+    //       free list or main list.'' (I.e., they are in `G`).
+    //     We get this trivially from CLOSED_for(fnext, G).
+    (forall n:Ref :: 
+        { P_fnext(G, fh, n) }
+        { P_next(G, mh, n) }
+            n in G && P_fnext(G, fh, n) /*&& n.next != null*/ ==> n.next in G) &&
+    // (d) ``All nodes in the free list are marked.'' 
+    //     Additionally, we strengthen the invariant by adding that ``all other nodes are unmarked.''
+    (forall n:Ref :: 
+        { n.mrk } 
+        { P_fnext(G, fh, n) }
+            n in G ==> (P_fnext(G, fh, n) <==> n.mrk))
 
 
 method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
     //requires GRAPH(g)
     requires HARRIS(g)
     requires mh in g && fh in g && ft in g
-    requires P_fnext(g, fh, ft)
+    requires (forall x:Ref, y:Ref :: 
+        { E_fnext(g, x, y) }
+            E_fnext(g, x, y) ==> P_fnext(g, fh, x))
 
     ensures HARRIS(new_g)
-    ensures P_fnext(new_g, fh, ft)
-
-    // ensures (forall n:Ref :: 
-    //     { isMarked(n) } 
-    //     { P_fnext(g, fh, n) }
-    //         n in g  && P_fnext(g, fh, n) ==> isMarked(n))
 {
     new_g := g
 
@@ -75,8 +113,12 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
         invariant r != null ==> P_next(g, mh, l)
         invariant r != null ==> P_next(g, mh, r)
 
+        invariant (forall x:Ref, y:Ref :: 
+            { E_fnext(g, x, y) }
+                E_fnext(g, x, y) ==> P_fnext(g, fh, x))
+
         invariant $$__fnext(g) == old($$__fnext(g))
-        // invariant forall x:Ref, y:Ref :: { P_fnext(g, x, y) } x in g && y in g ==> ( P_fnext(g, x, y) <==> Pfnext0(g, x, y) )
+
     {
         l := r 
         
@@ -90,12 +132,21 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
         nondet := havoc()
     }
 
-    assert P_fnext(new_g, fh, ft)
+    assert (forall n:Ref :: 
+        { n.mrk } 
+        { P_fnext(new_g, fh, n) }
+            n in new_g  && P_fnext(new_g, fh, n) ==> n.mrk)
 
     if ( r == null || !r.mrk ) {
         var nu: Ref 
-        new_g, nu := createNode(g, r, null)
 
+        assert (forall n:Ref :: 
+            { n.mrk } 
+            { P_fnext(new_g, fh, n) }
+                n in new_g  && P_fnext(new_g, fh, n) ==> n.mrk)
+        
+        new_g, nu := createNode(g, r, null)
+                
         // Framing
         assume forall x:Ref, y:Ref :: 
             { P_next(new_g, x, y) } 
@@ -107,15 +158,27 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
             { P_fnext(g, x, y) }
             { P_fnext(g union Set( nu ), x, y) }
                 x in g && y in g ==> ( P_fnext(new_g, x, y) <==> P_fnext(g, x, y) )
-    // assume forall n:Ref, m:Ref :: 
-    //     { P_(new_g, n, m) } 
-    //     { P_(g, n, m) }
-    //     { P_(g union Set(new_node), n, m) }
-    //         n in new_g && m in new_g && (n == node || m == node) ==> ( !P_(new_g, n, m) )
+        // NoExit
+        assume forall n:Ref :: 
+            { P_fnext(new_g, n, nu) }
+                n in new_g && n != nu ==> !P_fnext(new_g, n, nu)
+
+
+        assert $$__fnext(g) == old($$__fnext(g))
+
+        assert (forall n:Ref :: 
+            { n.mrk } 
+            { P_fnext(new_g, fh, n) }
+                n in new_g && P_fnext(new_g, fh, n) && n != nu ==> n.mrk)
+
+
+        assert (forall n:Ref :: 
+            { n.mrk } 
+            { P_fnext(new_g, fh, n) }
+                n in new_g && P_fnext(new_g, fh, n) ==> n.mrk)
 
         assert fh in g && ft in g
         assert P_fnext(new_g, fh, ft)
-
         assert l in new_g
 
         // CAS(l.next, r, nu)
@@ -124,6 +187,8 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
             // l.next := nu
             unlink_DAG__next(new_g, l)
             link_DAG__next(new_g, l, nu)
+
+
         } else {
            new_g := deleteNode(new_g, nu)
            new_g := insert(new_g, mh, fh, ft)
@@ -132,7 +197,7 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
         // assert acc(l.next)
     }
 
-    // Postcondition  
+    // // Postcondition  
 
     // // (a) ``The data structure consists of two (potentially overlapping) functional graphs: 
     // //       a list on next edges beginning at mh and one on fnext edges beginning at fh.''
