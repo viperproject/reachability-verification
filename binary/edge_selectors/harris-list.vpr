@@ -121,12 +121,12 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
             { P_next(new_g, x, y) } 
             { P_next(g, x, y) }
             { P_next(g union Set( nu ), x, y) }
-                x in g && y in g ==> ( P_next(new_g, x, y) <==> P_next(g, x, y) )
+                x in g && y in g ==> ( P_next(g, x, y) <==> P_next(new_g, x, y) )
         assume forall x:Ref, y:Ref :: 
             { P_fnext(new_g, x, y) } 
             { P_fnext(g, x, y) }
             { P_fnext(g union Set( nu ), x, y) }
-                x in g && y in g ==> ( P_fnext(new_g, x, y) <==> P_fnext(g, x, y) )
+                x in g && y in g ==> ( P_fnext(g, x, y) <==> P_fnext(new_g, x, y) )
         assume forall x:Ref, y:Ref :: 
             { E_fnext(new_g, x, y) } 
             { E_fnext(g, x, y) }
