@@ -4,12 +4,20 @@
  */
 
 define DISJOINT(graph_A, graph_B)
-    (forall r:Ref :: 
-        { r in graph_A, r in graph_B } 
-            (r in graph_A) ==> !(r in graph_B)) &&
-    (forall r:Ref :: 
-        { r in graph_A, r in graph_B } 
-            (r in graph_B) ==> !(r in graph_A))
+    (forall r0:Ref :: 
+        { r0 in graph_A, r0 in graph_B } 
+            (r0 in graph_A) ==> !(r0 in graph_B)) &&
+    (forall r0:Ref :: 
+        { r0 in graph_A, r0 in graph_B } 
+            (r0 in graph_B) ==> !(r0 in graph_A))
+
+define DISJOINT_EDGES(EG_A, EG_B)
+    (forall e0:Edge :: 
+        { e0 in EG_A, e0 in EG_B }
+            (e0 in EG_A) ==> !(e0 in EG_B)) && 
+    (forall e0:Edge :: 
+        { e0 in EG_A, e0 in EG_B }
+            (e0 in EG_B) ==> !(e0 in EG_A))
 
 define GLOBAL_ROOT(graph_A,root)
     (forall n:Ref :: 
