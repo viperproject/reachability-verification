@@ -42,3 +42,12 @@ function apply_TCFraming(graph_A:Set[Ref], graph_B:Set[Ref]): Bool
             u in graph_B && !(v in graph_B) && CLOSED(graph_B)
                 ==> !P_(graph_A union graph_B,u,v) )
 
+    ensures forall x:Ref, y:Ref :: 
+        { E_(graph_A, x, y) }
+        { E_(graph_A union graph_B, x, y) }
+            x in graph_A && y in graph_A ==> ( E_(graph_A union graph_B, x, y) <==> E_(graph_A, x, y) )
+
+    ensures forall x:Ref, y:Ref :: 
+        { E_(graph_B, x, y) }
+        { E_(graph_B union graph_A, x, y) }
+            x in graph_B && y in graph_B ==> ( E_(graph_B union graph_A, x, y) <==> E_(graph_B, x, y) )
