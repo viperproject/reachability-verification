@@ -1,7 +1,9 @@
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
-import "../../_preambles/purification.vpr"
+
 import "../../_preambles/framing.vpr"
+import "../../_preambles/legoFraming.vpr"
+
 import "../../_preambles/macros.vpr"
 import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
@@ -14,18 +16,21 @@ import "../_preambles/dag.vpr"
 
 method unjoin_dags(g0:Set[Ref], g1:Set[Ref], x0:Ref, x1:Ref)
     requires DISJOINT(g0,g1)
-    requires GRAPH(g0 union g1)
+    requires GRAPH(g0 union g1) && CLOSED(g0 union g1) && CLOSED(g1)
 
     requires x0 in g0 && x1 in g1
     requires GLOBAL_SINK(g0,x0)
     requires GLOBAL_ROOT(g1,x1)
 
     // The only edge between g0 and g1 is from x0 to x1:
-
-    requires forall n:Ref, m:Ref :: { n in g0, m in g1 } n in g0 && m in g1 ==> (E_(g0 union g1,n,m) <==> n==x0 && m==x1)
-    requires forall n:Ref, m:Ref :: { n in g1, m in g0 } n in g1 && m in g0 ==> !E_(g0 union g1,n,m)
-
-    //requires forall n:Ref :: n in g1 && n.next != null ==> n.next in g1
+    requires forall n:Ref, m:Ref :: 
+        { n in g0, m in g1 } 
+            n in g0 && m in g1 ==> 
+                (E_(g0 union g1,n,m) <==> n==x0 && m==x1)
+    requires forall n:Ref, m:Ref :: 
+        { n in g1, m in g0 } 
+            n in g1 && m in g0 ==> 
+                !E_(g0 union g1,n,m)
 
     requires ACYCLIC(g0 union g1)
     requires x0.next == x1
