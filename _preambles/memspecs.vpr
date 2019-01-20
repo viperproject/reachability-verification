@@ -16,6 +16,9 @@ define READONLY_GRAPH(nodes)
     !(null in nodes)
     && READONLY_NODES(nodes)
 
+define NODE_for($field$, node, p)
+    (acc(node.$field$, p))
+
 define NODES_for($field$, nodes, p)
     (forall n:Ref :: 
         { n.$field$ } 

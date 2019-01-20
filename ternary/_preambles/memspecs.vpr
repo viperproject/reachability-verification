@@ -11,7 +11,18 @@ field third: Ref
 
 define HEAP_PARTIAL_ORDER(p, s)
     (p.first == s || p.second == s || p.third == s)
-    
+     
+define NODE(the_node, p)
+    NODE_for(first, the_node, p)
+    && NODE_for(second, the_node, p)
+    && NODE_for(third, the_node, p)
+
+define CLOSED_NODE(the_node, p)
+    NODE(the_node, p) 
+    && (the_node.first == null)
+    && (the_node.second == null)
+    && (the_node.third == null)
+
 define NODES(nodes, p)
     NODES_for(first, nodes, p)
     && NODES_for(second, nodes, p)

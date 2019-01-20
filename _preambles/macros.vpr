@@ -51,6 +51,8 @@ define ACYCLIC_LIST_SEGMENT(graph_A)
 define COALIGNED_INTEREDGES(graph_A, graph_B)
     (CLOSED(graph_A) || CLOSED(graph_B)) && DISJOINT(graph_A, graph_B)
 
+define CONST_EDGES(graph0)
+    ($$(graph0) == old($$(graph0)))
 
 define E(state_label, graph_A, x0, y0)
     edge(old[state_label]($$(graph_A)), x0, y0)
