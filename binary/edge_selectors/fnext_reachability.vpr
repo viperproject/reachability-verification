@@ -350,8 +350,8 @@ define DISJOINT(graph_A, graph_B)
 
 // define GLOBAL_ROOT(graph_A,root)
 //     (forall n:Ref :: 
-//         { P_(graph_A, root, n) } 
-//             (n in graph_A) ==> P_(graph_A, root, n))
+//         { P_fnext(graph_A, root, n) } 
+//             (n in graph_A) ==> P_fnext(graph_A, root, n))
 
 // define GLOBAL_SROOT(graph_A, roots)
 //     (forall n:Ref :: 
@@ -360,8 +360,8 @@ define DISJOINT(graph_A, graph_B)
 
 // define GLOBAL_SINK(graph_A,sink)
 //     (forall n:Ref :: 
-//         { P_(graph_A, n, sink) } 
-//             (n in graph_A) ==> P_(graph_A, n, sink))
+//         { P_fnext(graph_A, n, sink) } 
+//             (n in graph_A) ==> P_fnext(graph_A, n, sink))
     
 define UNSHARED__fnext(graph_A)
     unshared_graph__fnext($$__fnext(graph_A))
@@ -446,5 +446,48 @@ define Pfnext7(graph_A, x0, y0)
     exists_path__fnext(old[l7]($$__fnext(graph_A)), x0, y0)
 
 define Pfnext8(graph_A, x0, y0)
-    exists_path__fnext(old[l8]($$__fnext(graph_A)), x0, y0)
+    exists_path__fnext(old[l8]($$__fnext(graph_A)), x0, y0)    
 
+define NODE__fnext(the_node, p)
+    (acc(the_node.fnext, p))
+
+define CLOSED_NODE__fnext(the_node, p)
+    NODE__fnext(the_node, p) 
+    && (the_node.fnext == null)
+
+/**
+ * This function is supposed to be assumed right after atomic memory allocation. 
+ */
+function apply_AtomicTCFraming__fnext(graph_A:Set[Ref], node_B:Ref): Bool
+    requires NODES_for(fnext, graph_A, 1/2)
+    requires CLOSED_NODE__fnext(node_B, 1/2)
+    requires !(node_B in graph_A)
+    requires (forall u0:Ref :: 
+        { E_fnext(graph_A, u0, node_B) }
+            u0 in graph_A ==> !E_fnext(graph_A, u0, node_B))
+
+    // Needed for triggering
+    requires graph_A union Set(node_B) == Set(node_B) union graph_A
+
+    // FIXME: Triggers in the following formulas are under question.
+    ensures (forall u0:Ref, v0:Ref :: 
+        { P_fnext(graph_A, u0, v0) }
+        { P_fnext(graph_A union Set(node_B), u0, v0) } 
+            u0 in graph_A && v0 in graph_A ==>
+                (P_fnext(graph_A, u0, v0) <==> P_fnext(graph_A union Set(node_B), u0, v0)))
+    
+    // A version of NoExit
+    // TODO: check this
+    ensures (forall u0:Ref :: 
+        { P_fnext(graph_A union Set(node_B), u0, node_B) }
+            u0 in graph_A ==> !P_fnext(graph_A union Set(node_B), u0, node_B))
+
+    ensures (forall v0:Ref :: 
+        { P_fnext(graph_A union Set(node_B), node_B, v0) }
+            (v0 != node_B) ==> !P_fnext(graph_A union Set(node_B), node_B, v0))
+
+    ensures (forall x:Ref, y:Ref :: 
+        { E_fnext(graph_A, x, y) }
+        { E_fnext(graph_A union Set(node_B), x, y) }
+            (x in graph_A) ==> 
+                (E_fnext(graph_A union Set(node_B), x, y) <==> E_fnext(graph_A, x, y)))

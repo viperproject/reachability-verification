@@ -2,6 +2,9 @@ import "next_reachability.vpr"
 import "fnext_reachability.vpr"
 import "trig.vpr"
 
+define CONST_EDGES__fnext(graph0)
+    ($$__fnext(graph0) == old($$__fnext(graph0)))
+
 field mrk: Bool
 
 method havoc() returns (res: Bool)
@@ -14,12 +17,12 @@ method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
     ensures res != null ==> res in g
     ensures res != null ==> P_next(g, start, res)
 
-method createNode(graph: Set[Ref], init_next: Ref, init_fnext: Ref) returns (new_graph: Set[Ref], new_node: Ref)
+method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
     ensures !( new_node in graph )
     ensures new_graph == graph union Set(new_node)
     ensures acc(new_node.next) && acc(new_node.fnext) && acc(new_node.mrk)
-    ensures new_node.next == init_next
-    ensures new_node.fnext == init_fnext
+    ensures new_node.next == null
+    ensures new_node.fnext == null
     ensures !new_node.mrk
 
 method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
@@ -105,7 +108,7 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
 
         invariant r != null ==> P_next(g, mh, l) && P_next(g, l, r)
         // fnext edges are unchanged by the loop body
-        invariant $$__fnext(g) == old($$__fnext(g))
+        invariant CONST_EDGES__fnext(g)
     {
         l := r 
         r := getUnmarked(g, l.next)
@@ -114,28 +117,11 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
 
     if ( r == null || !r.mrk ) {
         var nu: Ref 
-        new_g, nu := createNode(g, r, null)
+        new_g, nu := createNode(g)
+        assume apply_AtomicTCFraming__next(g, nu)
+        assume apply_AtomicTCFraming__fnext(g, nu)
                 
-        // Framing
-        assume forall x:Ref, y:Ref :: 
-            { P_next(new_g, x, y) } 
-            { P_next(g, x, y) }
-            { P_next(g union Set( nu ), x, y) }
-                x in g && y in g ==> ( P_next(g, x, y) <==> P_next(new_g, x, y) )
-        assume forall x:Ref, y:Ref :: 
-            { P_fnext(new_g, x, y) } 
-            { P_fnext(g, x, y) }
-            { P_fnext(g union Set( nu ), x, y) }
-                x in g && y in g ==> ( P_fnext(g, x, y) <==> P_fnext(new_g, x, y) )
-        assume forall x:Ref, y:Ref :: 
-            { E_fnext(new_g, x, y) } 
-            { E_fnext(g, x, y) }
-            { E_fnext(g union Set( nu ), x, y) }
-                x in g && y in g ==> ( E_fnext(new_g, x, y) <==> E_fnext(g, x, y) )
-        // NoExit
-        assume forall n:Ref :: 
-            { P_fnext(new_g, n, nu) }
-                n in new_g && n != nu ==> !P_fnext(new_g, n, nu)
+        link_DAG__next(new_g, nu, r)
 
         // CAS(l.next, r, nu)
         // Note: to focus on the reachability aspect, we verify a single-thread version of the algorithm. 
@@ -147,6 +133,7 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
             link_DAG__next(new_g, l, nu)
 
         } else { // CAS failed
+            //assert false
            new_g := deleteNode(new_g, nu)
            new_g := insert(new_g, mh, fh, ft) // try again
         }

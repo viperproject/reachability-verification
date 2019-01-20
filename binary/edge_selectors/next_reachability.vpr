@@ -448,3 +448,46 @@ define Pnext7(graph_A, x0, y0)
 define Pnext8(graph_A, x0, y0)
     exists_path__next(old[l8]($$__next(graph_A)), x0, y0)
 
+define NODE__next(the_node, p)
+    (acc(the_node.next, p))
+
+define CLOSED_NODE__next(the_node, p)
+    NODE__next(the_node, p) 
+    && (the_node.next == null)
+
+/**
+ * This function is supposed to be assumed right after atomic memory allocation. 
+ */
+function apply_AtomicTCFraming__next(graph_A:Set[Ref], node_B:Ref): Bool
+    requires NODES_for(next, graph_A, 1/2)
+    requires CLOSED_NODE__next(node_B, 1/2)
+    requires !(node_B in graph_A)
+    requires (forall u0:Ref :: 
+        { E_next(graph_A, u0, node_B) }
+            u0 in graph_A ==> !E_next(graph_A, u0, node_B))
+
+    // Needed for triggering
+    requires graph_A union Set(node_B) == Set(node_B) union graph_A
+
+    // FIXME: Triggers in the following formulas are under question.
+    ensures (forall u0:Ref, v0:Ref :: 
+        { P_next(graph_A, u0, v0) }
+        { P_next(graph_A union Set(node_B), u0, v0) } 
+            u0 in graph_A && v0 in graph_A ==>
+                (P_next(graph_A, u0, v0) <==> P_next(graph_A union Set(node_B), u0, v0)))
+    
+    // A version of NoExit
+    // TODO: check this
+    ensures (forall u0:Ref :: 
+        { P_next(graph_A union Set(node_B), u0, node_B) }
+            u0 in graph_A ==> !P_next(graph_A union Set(node_B), u0, node_B))
+
+    ensures (forall v0:Ref :: 
+        { P_next(graph_A union Set(node_B), node_B, v0) }
+            (v0 != node_B) ==> !P_next(graph_A union Set(node_B), node_B, v0))
+
+    ensures (forall x:Ref, y:Ref :: 
+        { E_next(graph_A, x, y) }
+        { E_next(graph_A union Set(node_B), x, y) }
+            (x in graph_A) ==> 
+                (E_next(graph_A union Set(node_B), x, y) <==> E_next(graph_A, x, y)))
