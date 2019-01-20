@@ -20,10 +20,55 @@ define next_sibling right
 define TREE(t) 
     GRAPH(t) && CLOSED(t) && ACYCLIC(t) && UNSHARED(t)
 
-/**
- * Add `sub_tree` with root `sib` as the last sibling of `node` in `tree`. 
- * Note that `node` must not be the root of `tree`. 
- */
+method addChildSubtree(tree: Set[Ref], node: Ref, 
+                       sub_tree:Set[Ref], ch: Ref) 
+                returns (new_tree: Set[Ref], 
+                         linked_node: Ref) // ghost
+    
+    requires DISJOINT(tree, sub_tree)
+
+    requires TREE(tree)
+    requires node in tree
+
+    requires TREE(sub_tree)
+    requires ch in sub_tree
+    requires GLOBAL_ROOT(sub_tree, ch)
+
+    ensures new_tree == tree union sub_tree
+    ensures TREE(new_tree)
+    ensures CONST_EDGES(sub_tree)
+
+    ensures linked_node in tree && P_(new_tree, node, linked_node)
+    ensures forall x:Ref, y:Ref :: 
+        { E_(new_tree, x, y) }
+            E_(new_tree, x, y) <==> E0(tree, x, y) || E0(sub_tree, x, y) || 
+                                    (x == linked_node && y == ch) 
+
+    ensures forall n:Ref :: 
+        { P_(new_tree, node, n) }
+        { P0(tree, node, n) }
+        { P0(sub_tree, ch, n) }
+        { n in sub_tree }
+            n in new_tree ==> 
+                ( P_(new_tree, node, n) <==> 
+                    (n in sub_tree) && P0(sub_tree, ch, n) || 
+                    P0(tree, node, n) )
+{
+    new_tree := tree union sub_tree
+    assume apply_TCFraming(tree, sub_tree)
+
+    if ( node.child != null ) {
+        new_tree, linked_node := addSiblingSubtree(tree, node.child, sub_tree, ch)
+
+    } else {
+        // Encoding node.child := ch ...
+        link_DAG_left(new_tree, node, ch)
+
+        // Ghost code for writing the postcondition
+        linked_node := node
+    }
+}
+
 method addSiblingSubtree(tree: Set[Ref], node: Ref, 
                          sub_tree:Set[Ref], sib: Ref) 
                 returns (new_tree: Set[Ref], 
@@ -67,43 +112,3 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
                 ( P_(new_tree, node, n) <==> 
                     (n in sub_tree) && P0(sub_tree, sib, n) || 
                     P0(tree, node, n) )
-{
-    var curr_node: Ref := node
-    while ( curr_node.next_sibling != null )
-        invariant TREE(tree) && TREE(sub_tree)
-        invariant node in tree && curr_node in tree
-
-        invariant sib in sub_tree
-
-        invariant DISJOINT(tree, sub_tree)
-
-        invariant curr_node.next_sibling != null ==> P_(tree, curr_node, curr_node.next_sibling)
-        invariant P_(tree, node, curr_node)
-
-        invariant forall n:Ref :: 
-            { P_(tree, node, n) }
-            { P0(tree, node, n) }
-                n in tree && !P0(tree, node, n) ==> !P_(tree, node, n)
-
-        invariant forall n:Ref :: 
-            { P_(tree, node, n) }
-            { P0(tree, node, n) }
-                n in tree && P0(tree, node, n) ==> P_(tree, node, n)
-
-        invariant CONST_EDGES(tree)
-        invariant CONST_EDGES(sub_tree)
-    {
-        curr_node := curr_node.next_sibling
-    }
-   
-    new_tree := tree union sub_tree
-    
-    // Framing
-    assume apply_TCFraming(tree, sub_tree)
-
-    // Encoding curr_node.next_sibling := sib ...
-    link_DAG_right(new_tree, curr_node, sib)
-
-    // Ghost code for writing the postcondition
-    linked_node := curr_node
-}
