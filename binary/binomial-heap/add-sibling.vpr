@@ -1,6 +1,7 @@
 import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
 
+import "../../_preambles/framing.vpr"
 import "../../_preambles/legoFraming.vpr"
 
 import "../../_preambles/macros.vpr"
@@ -32,12 +33,12 @@ define next_sibling right
 //     }
 // }
 
-method addSibling(tree: Set[Ref], node: Ref, ch: Ref) returns (new_tree: Set[Ref])
+method addSibling(tree: Set[Ref], node: Ref, sib: Ref) returns (new_tree: Set[Ref])
     requires GRAPH(tree) && CLOSED(tree)
     requires node in tree
-    requires !(ch in tree) && ch != null && acc(ch.child) && acc(ch.next_sibling) 
+    requires !(sib in tree) && sib != null && acc(sib.child) && acc(sib.next_sibling) 
     // make sure the sibling is not attached to anything yet
-    requires ch.child == null && ch.next_sibling == null 
+    requires sib.child == null && sib.next_sibling == null 
     requires ACYCLIC(tree)
     requires UNSHARED(tree)
 
@@ -73,27 +74,11 @@ method addSibling(tree: Set[Ref], node: Ref, ch: Ref) returns (new_tree: Set[Ref
         curr_node := curr_node.next_sibling
     }
    
-    new_tree := tree union Set(ch)
+    new_tree := tree union Set(sib)
     
     // Framing
-    assume forall x:Ref, y:Ref :: 
-        { P_(new_tree, x, y) } 
-        { P_(tree, x, y) }
-        { P_(tree union Set( ch ), x, y) }
-            x in tree && y in tree ==> ( P_(tree, x, y) <==> P_(new_tree, x, y) )
-    assume forall x:Ref, y:Ref :: 
-        { E_(new_tree, x, y) } 
-        { E_(tree, x, y) }
-        { E_(tree union Set( ch ), x, y) }
-            x in tree && y in tree ==> ( E_(new_tree, x, y) <==> E_(tree, x, y) )
-    // NoExit
-    assume forall n:Ref :: 
-        { P_(new_tree, n, ch) }
-            n in new_tree && n != ch ==> !P_(new_tree, n, ch)
-    assume forall n:Ref :: 
-        { P_(new_tree, n, ch) }
-            n in new_tree && n != ch ==> !P_(new_tree, ch, n)
+    assume apply_AtomicTCFraming(tree, sib)
 
-    //curr_node.next_sibling := ch
-    link_DAG_right(new_tree, curr_node, ch)
+    //curr_node.next_sibling := sib
+    link_DAG_right(new_tree, curr_node, sib)
 }
