@@ -20,14 +20,108 @@ define next_sibling right
 define TREE(t) 
     GRAPH(t) && CLOSED(t) && ACYCLIC(t) && UNSHARED(t)
 
+method addChildSubtree(tree: Set[Ref], node: Ref, 
+                       sub_tree:Set[Ref], ch: Ref) 
+                returns (new_tree: Set[Ref], 
+                         linked_node: Ref) // ghost
+    
+    requires DISJOINT(tree, sub_tree)
+
+    requires TREE(tree)
+    requires node in tree
+    // requires GLOBAL_ROOT(tree, node)
+
+    requires TREE(sub_tree)
+    requires ch in sub_tree
+    requires GLOBAL_ROOT(sub_tree, ch)
+
+    ensures new_tree == tree union sub_tree
+    ensures TREE(new_tree)
+    ensures CONST_EDGES(sub_tree)
+
+    ensures linked_node in tree && P_(new_tree, node, linked_node)
+    ensures forall x:Ref, y:Ref :: 
+        { E_(new_tree, x, y) }
+            E_(new_tree, x, y) <==> E0(tree, x, y) || E0(sub_tree, x, y) || 
+                                    (x == linked_node && y == ch) 
+
+    ensures forall n:Ref :: 
+        { P_(new_tree, node, n) }
+        { P0(tree, node, n) }
+        { P0(sub_tree, ch, n) }
+        { n in sub_tree }
+            n in new_tree ==> 
+                ( P_(new_tree, node, n) <==> 
+                    (n in sub_tree) && P0(sub_tree, ch, n) || 
+                    P0(tree, node, n) )
+{
+    new_tree := tree union sub_tree
+    assume apply_TCFraming(tree, sub_tree)
+
+    if ( node.child != null ) {
+
+        // label l1
+        // var node_ch_list: Ref := node.child
+
+        new_tree, linked_node := addSiblingSubtree(tree, node.child, sub_tree, ch)
+
+        // assert forall n:Ref :: 
+        //     { P_(new_tree, node_ch_list, n) }
+        //     { n in sub_tree }
+        //     // { P_(new_tree, node, n) }
+        //         n in sub_tree ==> P_(new_tree, node_ch_list, n)
+
+        // assert P_(new_tree, node, node_ch_list)
+
+        // assert forall n:Ref :: 
+        //     { P_(new_tree, node, n) }
+        //         n in sub_tree ==> P_(new_tree, node, n)
+        
+        // assert forall n:Ref :: 
+        //     { P1(tree, node_ch_list, n) }
+        //     { P_(new_tree, node_ch_list, n) }
+        //         n in new_tree && P1(tree, node_ch_list, n) ==> P_(new_tree, node_ch_list, n)
+
+        // assert forall n:Ref :: 
+        //     { P1(tree, node_ch_list, n) }
+        //     { P_(new_tree, node, n) }
+        //     { P1(tree, node, n) }
+        //         n in new_tree && P1(tree, node_ch_list, n) ==> P_(new_tree, node, n)
+
+        // assert P1(tree, node, node_ch_list)
+
+        // assert forall n:Ref :: 
+        //     { P1(tree, node_ch_list, n) }
+        //     { P1(tree, node, n) }
+        //         n in new_tree && P1(tree, node_ch_list, n) ==> P1(tree, node, n) 
+
+        // assert forall n:Ref :: 
+        //     { P1(tree, node, n) }
+        //     { P_(new_tree, node, n) }
+        //         n in new_tree && P1(tree, node, n) ==> P_(new_tree, node, n)
+    } else {
+        // Encoding node.child := ch ...
+        link_DAG_left(new_tree, node, ch)
+
+        // Ghost code for writing the postcondition
+        linked_node := node
+    }
+}
+
+/**
+ * Add `sub_tree` with root `sib` as the last sibling of `node` in `tree`. 
+ * Note that `node` must not be the root of `tree`. 
+ */
 method addSiblingSubtree(tree: Set[Ref], node: Ref, 
                          sub_tree:Set[Ref], sib: Ref) 
                 returns (new_tree: Set[Ref], 
                          linked_node: Ref) // ghost
     
     requires DISJOINT(tree, sub_tree)
+
     requires TREE(tree)
     requires node in tree
+    // requires GLOBAL_ROOT(tree, node)
     
     requires TREE(sub_tree)
     requires sib in sub_tree
@@ -35,18 +129,34 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
 
     ensures new_tree == tree union sub_tree
     ensures TREE(new_tree)
+    // ensures GLOBAL_ROOT(new_tree, node)
+    ensures linked_node in tree && P_(new_tree, node, linked_node)
     ensures CONST_EDGES(sub_tree)
+    
+    // We have added precisely one edge. 
     ensures forall x:Ref, y:Ref :: 
         { E_(new_tree, x, y) }
             E_(new_tree, x, y) <==> E0(tree, x, y) || E0(sub_tree, x, y) || 
                                     (x == linked_node && y == sib)
+
+    // Reachability has not changed in the part of `tree` 
+    //  unreachable from `node`. 
+    ensures forall x:Ref, y:Ref :: 
+        { P_(new_tree, x, y) }
+        { P0(tree, x, y) }
+            x in tree && !P0(tree, node, x) &&
+            y in tree && !P0(tree, node, y) ==> 
+                (P_(new_tree, x, y) <==> P0(tree, x, y))
+                    
     ensures forall n:Ref :: 
+        { P_(new_tree, node, n) }
         { P0(tree, node, n) }
-        { P_(new_tree, node, n) }
-            n in new_tree && P0(tree, node, n) ==> P_(new_tree, node, n)
-    ensures forall n:Ref :: 
-        { P_(new_tree, node, n) }
-            n in sub_tree ==> P_(new_tree, node, n)
+        { P0(sub_tree, sib, n) }
+        { n in sub_tree }
+            n in new_tree ==> 
+                ( P_(new_tree, node, n) <==> 
+                    (n in sub_tree) && P0(sub_tree, sib, n) || 
+                    P0(tree, node, n) )
 {
     var curr_node: Ref := node
     while ( curr_node.next_sibling != null )
@@ -72,7 +182,6 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
 
         invariant CONST_EDGES(tree)
         invariant CONST_EDGES(sub_tree)
-        // invariant GLOBAL_ROOT(sub_tree, sib)
     {
         curr_node := curr_node.next_sibling
     }
