@@ -1,0 +1,214 @@
+import "../../_preambles/TrCloDomain.vpr"
+// import "../../_preambles/TrCloZopgDomain.vpr"
+
+import "../../_preambles/framing.vpr"
+import "../../_preambles/legoFraming.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+// method test1(g: Set[Ref], g1: Set[Ref])
+//     requires GRAPH(g) && g1 subset g
+//     requires ACYCLIC(g) 
+//     // requires COALIGNED_INTEREDGES(g1, g setminus g1)
+
+//     //:: ExpectedOutput(postcondition.violated:assertion.false)
+//     ensures false
+// {
+//     PartitionPathsInConvexSubHeap(g, g1)
+//     assert ACYCLIC(g1)
+
+//     PartitionPathsInConvexSubHeap(g, g setminus g1)
+//     assert ACYCLIC(g setminus g1)
+// }
+
+method callee(h: Set[Ref])
+    requires GRAPH(h) 
+    requires ACYCLIC(h)
+    requires CLOSED(h)
+    ensures GRAPH(h)
+    ensures ACYCLIC(h)
+    ensures CLOSED(h)
+
+method testClosedSubFootprint(g: Set[Ref], g1: Set[Ref])
+    requires GRAPH(g) 
+    // requires CLOSED(g)
+    requires g1 subset g
+    requires CLOSED(g1)
+    requires ACYCLIC(g) 
+
+
+    //:: ExpectedOutput(postcondition.violated:assertion.false)
+    // ensures false
+{
+    var frame:Set[Ref] := g setminus g1
+
+    PartitionPathsInConvexSubHeap(g, g1)
+    assert ACYCLIC(g1)
+
+    PartitionPathsInConvexSubHeap(g, frame)
+    assert ACYCLIC(frame)
+
+label l1
+    callee(g1)
+label l2
+
+    PartitionPathsInConvexSubHeap(g, g1)
+    PartitionPathsInConvexSubHeap(g, frame)
+    ApplyConvexTCFraming(l1, l2, g1, g)
+
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         E_(g,v1,v2) ==> v1 in g && v2 in g
+
+    // //// In-In
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in g1 && v2 in g1 &&
+    //         E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    //// Out-In
+    // Need to introduce the witness
+    var a:Ref 
+    assume a in g1
+    assume forall x:Ref, y:Ref :: 
+        { P1(frame, x, a), P2(g1, a, y) }
+        //  { dummy(x,y) }
+        // { x in frame, y in g1 }
+        // { __trigger_conv_framing_Entries__(x,y) }
+            x in frame && y in g1 ==> 
+                P1(frame, x, a) && P2(g1, a, y)
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in frame && y in g1 && __trigger_conv_framing_Entries__(x,y)
+    //             ==> 
+    //             !(forall alpha:Ref :: 
+    //                 { P1(frame, x, alpha) }
+    //                 { P2(g1, alpha, y) }
+    //                     (alpha in g1) ==> !(P1(frame, x, alpha) && P2(g1, alpha, y)))
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in frame && y in g1 && __trigger_conv_framing_Entries__(x,y) ==> P2(g, x, y)
+
+    // //// In-Out
+    // Assume there are no witnesses for this case. 
+    // assume forall x:Ref, y:Ref :: 
+    //     // { P1(frame, x, a), P2(g1, a, y) }
+    //     //  { dummy(x,y) }
+    //     // { x in g1, y in frame }
+    //     { __trigger_conv_framing_eXits__(x,y) }
+    //         x in g1 && !(y in g1) ==> 
+    //             forall b:Ref :: 
+    //                 { P2(g1, x, b) }
+    //                 { P1(frame, b, y) }
+    //                     b in frame ==> !( P2(g1, x, b) && P1(frame, b, y) )
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in g1 && !(y in g1) && __trigger_conv_framing_eXits__(x,y)
+    //             ==> 
+    //             !(forall beta:Ref :: 
+    //                 { P2(g1, x, beta) }
+    //                 { P1(frame, beta, y) }
+    //                     (beta in frame) ==> !(P2(g1, x, beta) && P1(frame, beta, y)))
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in g1 && !(y in g1) && __trigger_conv_framing_eXits__(x,y) ==> !P2(g, x, y)
+
+    // assert forall x:Ref, y:Ref ::                   
+    //     { P2(frame, x, y) } 
+    //         x in g1 && y in frame ==> !P2(frame, x, y)
+
+
+    //// Out-Out
+    // Supported automatically via PartitionPathsInConvexSubHeap(a), because frame is convex. 
+
+
+
+    
+    // // NoExit wisdom
+    
+    
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in g1 && dummy(v2, v1) ==> !P_(g,v2,v1)
+
+    // // In-Out
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v2,v1) }
+    //     { P_(g,v1,v2) }
+    //         v1 in g1 && v2 in frame && E_(g,v2,v1) ==> !P_(g,v1,v2)
+
+    // // Out-In
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in g1 && v2 in frame && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    // // Out-Out
+
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in frame && E_(g,v1,v2) ==> E_(frame,v1,v2)
+
+    // assert ACYCLIC(frame)
+
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in frame && E_(g,v1,v2) ==> !P_(frame,v2,v1)
+
+
+    
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in frame ==> ( P_(g,v2,v1) <==> P_(frame,v2,v1) )
+
+
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in frame && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+
+    // // In-In
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in g1 && v2 in g1 && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    // //Out-Out
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in frame && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    // //Out-In
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in g1 && v2 in frame && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    // //In-Out
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         v1 in frame && v2 in g1 && E_(g,v1,v2) ==> !P_(g,v2,v1)
+
+    // assert forall v1:Ref, v2:Ref ::
+    //     { E_(g,v1,v2) }
+    //     { P_(g,v2,v1) }
+    //         !E_(g,v1,v2) || !P_(g,v2,v1)
+    assert ACYCLIC(g)
+
+    // assert false
+}
