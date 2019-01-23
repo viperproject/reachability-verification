@@ -19,8 +19,8 @@ function $$(nodes0: Set[Ref]): Set[Edge]
 define CONVEX(state, local_nodes, global_nodes)
     (local_nodes subset global_nodes) && 
     (forall v1:Ref, v2:Ref, u:Ref :: 
-        //{ P(state, global_nodes, v1, u), P(state, global_nodes, u, v2) } 
-        { __impossible_to_trigger__(v1, v2, u) }
+        { P(state, global_nodes, v1, u), P(state, global_nodes, u, v2) } 
+        //{ __impossible_to_trigger__(v1, v2, u) }
             v1 in local_nodes && v2 in local_nodes && !(u in local_nodes) && u in global_nodes ==> 
                 !(P(state, global_nodes, v1, u) && P(state, global_nodes, u, v2)))
 
@@ -28,8 +28,8 @@ define CONVEX(state, local_nodes, global_nodes)
 define CONVEX_(local_nodes, global_nodes)
     (local_nodes subset global_nodes) && 
     (forall v1:Ref, v2:Ref, u:Ref :: 
-        //{ P_(global_nodes, v1, u), P_(global_nodes, u, v2) } 
-        { __impossible_to_trigger__(v1, v2, u) }
+        { P_(global_nodes, v1, u), P_(global_nodes, u, v2) } 
+        //{ __impossible_to_trigger__(v1, v2, u) }
             v1 in local_nodes && v2 in local_nodes && !(u in local_nodes) && u in global_nodes ==> 
                 !(P_(global_nodes, v1, u) && P_(global_nodes, u, v2)))
 
