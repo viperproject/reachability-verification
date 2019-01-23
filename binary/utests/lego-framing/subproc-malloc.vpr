@@ -1,0 +1,84 @@
+import "../../../_preambles/TrCloDomain.vpr"
+
+import "../../../_preambles/framing.vpr"
+import "../../../_preambles/legoFraming.vpr"
+
+import "../../../_preambles/macros.vpr"
+import "../../../_preambles/memspecs.vpr"
+import "../../_preambles/memspecs.vpr"
+
+method callee(h: Set[Ref]) 
+
+    returns (new_h: Set[Ref])
+
+    requires GRAPH(h) 
+    requires ACYCLIC(h)
+    requires CLOSED(h)
+    
+    ensures h subset new_h
+    ensures GRAPH(new_h)
+    ensures ACYCLIC(new_h)
+    ensures CLOSED(new_h)
+
+method testSubProcMalloc(g: Set[Ref], g1: Set[Ref]) 
+    
+    returns (new_g: Set[Ref])
+
+    requires GRAPH(g) 
+    requires g1 subset g
+    requires CLOSED(g1)
+    requires ACYCLIC(g) 
+
+{
+    var frame:Set[Ref] := g setminus g1
+
+    PartitionPathsInConvexSubHeap(g, g1)
+    PartitionPathsInConvexSubHeap(g, frame)
+
+    var new_g1: Set[Ref] 
+
+label l1
+    new_g1 := callee(g1)
+label l2
+
+    // How can we get this? 
+    // exhale GRAPH(frame)
+    // exhale GRAPH(new_g1)
+
+    new_g := frame union new_g1
+    assume DISJOINT(frame, new_g1)
+
+    PartitionPathsInConvexSubHeap(new_g, new_g1)
+    PartitionPathsInConvexSubHeap(new_g, frame)
+    
+    ApplyConvexTCFraming(l1, l2, new_g1, new_g)
+    
+    
+
+    //// Out-In
+    // Need to introduce the witness
+    // TODO: is it okay to write the witness in terms of the old heap partitions? 
+    var a:Ref 
+    // assume a in new_g1
+    // assume forall x:Ref, y:Ref :: 
+    //     { P1(frame, x, a), P2(new_g1, a, y) }
+    //     //  { dummy(x,y) }
+    //     // { x in frame, y in g1 }
+    //     // { __trigger_conv_framing_Entries__(x,y) }
+    //         x in frame && y in new_g1 ==> 
+    //             P1(frame, x, a) && P2(new_g1, a, y)
+
+    assert ACYCLIC(new_g)
+    
+    // assert false
+}
+
+
+// method testDisjoint(g:Set[Ref], h:Set[Ref])
+//     requires forall n:Ref :: { n.left } n in g ==> acc(n.left) 
+//     requires forall n:Ref :: { n.left } n in h ==> acc(n.left)
+// {
+//     // exhale forall n:Ref :: { n.left } n in h ==> acc(n.left)
+//     // assert g intersection h == Set()
+//     assert DISJOINT(g,h)
+// }
