@@ -7,6 +7,8 @@ import "../../../_preambles/macros.vpr"
 import "../../../_preambles/memspecs.vpr"
 import "../../_preambles/memspecs.vpr"
 
+define __CONVEXITY_CHECKES true
+
 method test1(g: Set[Ref], g1: Set[Ref])
     requires GRAPH(g) && g1 subset g
     requires ACYCLIC(g) 

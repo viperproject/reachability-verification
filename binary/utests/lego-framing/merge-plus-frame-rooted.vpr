@@ -7,6 +7,8 @@ import "../../../_preambles/macros.vpr"
 import "../../../_preambles/memspecs.vpr"
 import "../../_preambles/memspecs.vpr"
 
+define __CONVEXITY_CHECKES true
+
 method callee(h: Set[Ref], root_h: Ref, s: Set[Ref], root_s: Ref) 
 
     returns (new_h: Set[Ref])

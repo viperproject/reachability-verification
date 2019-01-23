@@ -17,6 +17,8 @@ import "../_preambles/dag.vpr"
 define child left 
 define next_sibling right
 
+define __CONVEXITY_CHECKES true 
+
 define TREE(t) 
     GRAPH(t) && TREE_IMPL(t)
 

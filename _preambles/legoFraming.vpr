@@ -106,7 +106,7 @@ define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB) {
 
 // To be applied before a method call. 
 define PartitionPathsInConvexSubHeap(GLOB, MOD) {
-    if ( CLOSED(MOD) || CLOSED(GLOB setminus MOD) || CONVEX_(MOD, GLOB) ) {
+    if ( !__CONVEXITY_CHECKES || CLOSED(MOD) || CLOSED(GLOB setminus MOD) || CONVEX_(MOD, GLOB) ) {
 
         // (a) In-In:  P(g, _, _) <~~~> P(mod, _, _)
         assume (forall v1:Ref, v2:Ref :: 
