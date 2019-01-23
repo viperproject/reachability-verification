@@ -23,10 +23,6 @@ method testClosedSubFootprint(g: Set[Ref], g1: Set[Ref])
     requires g1 subset g
     requires CLOSED(g1)
     requires ACYCLIC(g) 
-
-
-    //:: ExpectedOutput(postcondition.violated:assertion.false)
-    // ensures false
 {
     var frame:Set[Ref] := g setminus g1
 

@@ -12,19 +12,21 @@ define __CONVEXITY_CHECKES true
 method test1(g: Set[Ref], g1: Set[Ref])
     requires GRAPH(g) && g1 subset g
     requires ACYCLIC(g) 
+    requires CONVEX_(g1, g)
+    requires CONVEX_(g setminus g1, g)
 {
     PartitionPathsInConvexSubHeap(g, g1)
     assert ACYCLIC(g1)
 
     PartitionPathsInConvexSubHeap(g, g setminus g1)
     assert ACYCLIC(g setminus g1)
-
-    // call
 }
 
 method test1_neg(g: Set[Ref], g1: Set[Ref])
     requires GRAPH(g) && g1 subset g
     requires ACYCLIC(g) 
+    requires CONVEX_(g1, g)
+    requires CONVEX_(g setminus g1, g)
     // requires COALIGNED_INTEREDGES(g1, g setminus g1)
 
     //:: ExpectedOutput(postcondition.violated:assertion.false)
