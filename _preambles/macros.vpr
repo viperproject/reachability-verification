@@ -6,29 +6,26 @@
 define DISJOINT(graph_A, graph_B)
     (forall r0:Ref :: 
         { r0 in graph_A, r0 in graph_B } 
-            (r0 in graph_A) ==> !(r0 in graph_B)) &&
-    (forall r0:Ref :: 
-        { r0 in graph_A, r0 in graph_B } 
-            (r0 in graph_B) ==> !(r0 in graph_A))
+            (r0 in graph_A) ==> !(r0 in graph_B)) 
 
 define DISJOINT_EDGES(EG_A, EG_B)
     (forall e0:Edge :: 
         { e0 in EG_A, e0 in EG_B }
-            (e0 in EG_A) ==> !(e0 in EG_B)) && 
-    (forall e0:Edge :: 
-        { e0 in EG_A, e0 in EG_B }
-            (e0 in EG_B) ==> !(e0 in EG_A))
+            (e0 in EG_A) ==> !(e0 in EG_B)) 
 
+// TODO: Check that RHS==>LHS is okay. 
 define GLOBAL_ROOT(graph_A,root)
     (forall n:Ref :: 
         { P_(graph_A, root, n) } 
-            (n in graph_A) ==> P_(graph_A, root, n))
+            (n in graph_A) <==> P_(graph_A, root, n))
 
+// TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SROOT(graph_A, roots)
     (forall n:Ref :: 
         { SP_(graph_A, roots, n) } 
             (n in graph_A) ==> SP_(graph_A, roots, n))
 
+// TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SINK(graph_A,sink)
     (forall n:Ref :: 
         { P_(graph_A, n, sink) } 
