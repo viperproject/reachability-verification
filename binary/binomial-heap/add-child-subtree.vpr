@@ -38,7 +38,7 @@ method addChildSubtree(tree: Set[Ref], node: Ref,
     ensures TREE(new_tree)
     ensures CONST_EDGES(sub_tree)
 
-    ensures linked_node in tree && P_(new_tree, node, linked_node)
+    ensures linked_node in tree 
     ensures forall x:Ref, y:Ref :: 
         { E_(new_tree, x, y) }
             E_(new_tree, x, y) <==> E0(tree, x, y) || E0(sub_tree, x, y) || 
@@ -46,13 +46,10 @@ method addChildSubtree(tree: Set[Ref], node: Ref,
 
     ensures forall n:Ref :: 
         { P_(new_tree, node, n) }
-        { P0(tree, node, n) }
         { P0(sub_tree, ch, n) }
-        { n in sub_tree }
+        { P0(tree, node, n) }
             n in new_tree ==> 
-                ( P_(new_tree, node, n) <==> 
-                    (n in sub_tree) && P0(sub_tree, ch, n) || 
-                    P0(tree, node, n) )
+                (P_(new_tree, node, n) <==> P0(sub_tree, ch, n) || P0(tree, node, n))
 {
     new_tree := tree union sub_tree
     assume apply_TCFraming(tree, sub_tree)
@@ -85,7 +82,7 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
 
     ensures new_tree == tree union sub_tree
     ensures TREE(new_tree)
-    ensures linked_node in tree && P_(new_tree, node, linked_node)
+    ensures linked_node in tree 
     ensures CONST_EDGES(sub_tree)
     
     // We have added precisely one edge. 
@@ -107,8 +104,5 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
         { P_(new_tree, node, n) }
         { P0(tree, node, n) }
         { P0(sub_tree, sib, n) }
-        { n in sub_tree }
             n in new_tree ==> 
-                ( P_(new_tree, node, n) <==> 
-                    (n in sub_tree) && P0(sub_tree, sib, n) || 
-                    P0(tree, node, n) )
+                (P_(new_tree, node, n) <==> P0(sub_tree, sib, n) || P0(tree, node, n))
