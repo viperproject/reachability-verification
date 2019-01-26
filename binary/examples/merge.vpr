@@ -52,6 +52,7 @@ method mergeRight(tree: Set[Ref], root: Ref,
     ensures CONST_EDGES(sub_tree)
 
     ensures linked_node in tree 
+    ensures linked_node.right == root_s
     ensures forall x:Ref, y:Ref :: 
         { E_(new_tree, x, y) }
         { E0(tree, x, y) }
@@ -60,29 +61,41 @@ method mergeRight(tree: Set[Ref], root: Ref,
                                     (x == linked_node && y == root_s) 
 
     ensures old(root.right) == null ==> root == linked_node && root.right == root_s
-    ensures GLOBAL_ROOT(new_tree, root)
-    ensures forall n:Ref :: 
-        { P_(new_tree, root, n) }
-        { P0(sub_tree, root_s, n) }
-        { P0(tree, root, n) }
-            P_(new_tree, root, n) <==> P0(tree, root, n) || P0(sub_tree, root_s, n)
+    // ensures GLOBAL_ROOT(new_tree, root)
+    // ensures forall n:Ref :: 
+    //     { P_(new_tree, root, n) }
+    //     { P0(sub_tree, root_s, n) }
+    //     { P0(tree, root, n) }
+    //         P_(new_tree, root, n) <==> P0(tree, root, n) || P0(sub_tree, root_s, n)
 
     // ensures forall x:Ref, y:Ref :: 
     //     { P_(new_tree, x, y) }
-    //     { P0(tree, x, root), P0(new_tree, y, root_s) }
-    //     { P0(tree, x, y) }
-    //     { P0(sub_tree, x, y) }
+    //     { P0(new_tree, x, y) }
+    //     { P0(new_tree, x, linked_node), P0(new_tree, root_s, y) }
     //         (x in sub_tree && y in tree     ==> !P_(new_tree, x, y)) &&
-    //         (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(sub_tree, x, y))) &&
-    //         (x in tree     && y in tree     ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) &&
-    //         (x in tree     && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(new_tree, x, root) && P0(new_tree, root_s, y)))
+    //         (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(new_tree, x, y))) &&
+    //         (x in tree     && y in tree     ==> (P_(new_tree, x, y) <==> P0(new_tree, x, y))) &&
+    //         (x in tree     && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(new_tree, x, linked_node) && P0(new_tree, root_s, y)))
+
+
+    ensures forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P0(tree, x, linked_node), P0(sub_tree, root_s, y) }
+            { P0(tree, x, y) }
+            { P0(sub_tree, x, y) }
+                (x in sub_tree && y in tree     ==> !P_(new_tree, x, y)) &&
+                (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(sub_tree, x, y))) &&
+                (x in tree     && y in tree     ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) &&
+                (x in tree     && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(tree, x, linked_node) && P0(sub_tree, root_s, y)))
 {
     new_tree := tree union sub_tree
+
+    PartitionPathsInConvexSubHeap(new_tree, tree)
 
     if ( root.right != null ) {
         // assume false
         
-        var ch_node:Ref := root.right
+        var ch_node: Ref := root.right
         var ch_tree: Set[Ref] := subTree(tree, ch_node)
         var frame: Set[Ref] := tree setminus ch_tree
 
@@ -92,11 +105,6 @@ method mergeRight(tree: Set[Ref], root: Ref,
         var new_ch_tree: Set[Ref]
 label l1
         new_ch_tree, linked_node := mergeRight(ch_tree, ch_node, sub_tree, root_s)
-        assume forall x:Ref, y:Ref :: 
-            { P_(new_ch_tree, x, y) }
-            { P0(ch_tree, x, y) }
-                 x in ch_tree && y in ch_tree &&
-                    P0(ch_tree, x, y) ==> P_(new_ch_tree, x, y)
 label l2
 
         new_tree := frame union new_ch_tree
@@ -108,30 +116,199 @@ label l2
         ApplyConvexTCFraming(l1, l2, new_ch_tree, new_tree)
         assume DISJOINT(frame, new_ch_tree)
 
-        // assert GLOBAL_ROOT(new_ch_tree, ch_node)
-        
+        // assume frame == tree setminus ch_tree
+        // assume frame == new_tree setminus new_ch_tree
+        // assume tree == frame union ch_tree
 
         assert P_(new_tree, root, old(root.right))
         // // assert P_(new_tree, old(root.right), old(root.right))
         assert forall n:Ref :: 
             { P_(new_tree, root, n) }
                 n in new_ch_tree ==> P_(new_tree, old(root.right), n)
-        
-        
 
-        assert forall x:Ref, y:Ref :: 
-            { P_(new_tree, x, y) }
-            { P0(tree, x, y) }
-                 x in tree && y in tree &&
-                    P0(tree, x, y) ==> P_(new_tree, x, y)
+        
         // assert forall x:Ref, y:Ref :: 
         //     { P_(new_tree, x, y) }
         //     { P0(tree, x, y) }
-        //          x in tree && y in tree ==> 
+        //          x in ch_tree && y in ch_tree ==>
         //             (P_(new_tree, x, y) <==> P0(tree, x, y))
 
 
+        assert forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P0(new_tree, x, y) }
+            { P0(tree, x, linked_node), P0(sub_tree, root_s, y) }
+                (x in sub_tree && y in ch_tree  ==> !P_(new_tree, x, y)) &&
+                (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(sub_tree, x, y))) &&
+                (x in ch_tree  && y in ch_tree  ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) &&
+                (x in ch_tree  && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(tree, x, linked_node) && P0(sub_tree, root_s, y)))
+
+
+
+
+        // assert forall x:Ref, y:Ref :: 
+        //     { P0(tree, x, y) }
+        //     { P0(new_tree, x, y) }
+        //         P0(tree, x, y) ==> P0(new_tree, x, y)
+
+        // // --- case 2 ---
+        // // (a) In-In:  P(g, _, _) <~~~> P(mod, _, _)
+        // assert forall a:Ref, y:Ref :: 
+        //     { P0(new_ch_tree, a, y) }
+        //     { P0(ch_tree, a, y) }
+        //         a in ch_tree && y in ch_tree ==> (P0(ch_tree, a, y) <==> P0(new_ch_tree, a, y))
+
+        // // assume forall bigger:Set[Ref], smaller:Set[Ref], x:Ref, y:Ref :: 
+        // //     { P_(bigger, x, y), P_(smaller, x, y) }
+        // //         (smaller subset bigger) && 
+        // //         P_(smaller, x, y) ==> P_(bigger, x, y)
+
+        // // TODO: this should follow from PartitionPathsInConvexSubHeap(a)
+        // assert forall x:Ref, y:Ref :: 
+        //     { P0(tree, x, y) }
+        //     { P0(new_tree, x, y) }
+        //         x in frame && y in ch_tree && P0(tree, x, y) ==> P0(new_tree, x, y)
+
+        // // (???)
+        // assume forall x:Ref, y:Ref, a:Ref :: 
+        //     { P0(frame, x, a), P0(new_ch_tree, a, y) }
+        //     { P0(new_tree, x, y), P0(frame, x, a) }
+        //     { P0(new_tree, x, y), P0(new_ch_tree, a, y) }
+        //         x in frame && y in new_ch_tree && a in new_ch_tree && 
+        //         P0(new_tree, x, y) ==> P0(frame, x, a) && P0(new_ch_tree, a, y)
+
+        // // From postcondition of recursive call 
+        // assert forall a:Ref, y:Ref :: 
+        //     { P_(new_ch_tree, a, y) }
+        //     { P0(ch_tree, a, y) }
+        //         // (a in sub_tree && y in ch_tree ==> !P_(new_ch_tree, a, y)) &&                     //case 1
+        //         (a in ch_tree  && y in ch_tree ==> (P_(new_ch_tree, a, y) <==> P0(ch_tree, a, y)))   //case 2
+
+        // assert forall x:Ref, y:Ref, a:Ref :: 
+        //     { P0(frame, x, a), P_(new_ch_tree, a, y) }
+        //     { P_(new_tree, x, y), P0(frame, x, a) }
+        //     { P_(new_tree, x, y), P_(new_ch_tree, a, y) }
+        //         x in frame && y in new_ch_tree && a in new_ch_tree && 
+        //         P0(frame, x, a) && P_(new_ch_tree, a, y) ==> 
+        //             P_(new_tree, x, y)
+
+        // assert forall x:Ref, y:Ref, a:Ref :: 
+        //     { P0(tree, x, y), P0(frame, x, a) }
+        //     { P_(new_tree, x, y), P0(frame, x, a) }
+        //         x in frame && y in ch_tree && a in ch_tree 
+        //          // __learn_trigger__(P0(tree, x, y))  // learned: P0(new_tree, x, y) ; missing: P0(frame, x, a)
+        //          && __learn_trigger__(P0(frame, x, a)) // learned: P0(new_ch_tree, a, y), P0(ch_tree, a, y), P_(new_ch_tree, a, y)
+        //          && P0(tree, x, y) ==> P_(new_tree, x, y)
+        //             //P0(tree, x, y) ==>
+        //             //    P0(frame, x, a) ----------------------- 
+        //             //    P0(new_ch_tree, a, y) ==>               \ __ P_(new_tree, x, y)
+        //             //        P0(ch_tree, a, y) ==>               /     
+        //             //            P_(new_ch_tree, a, y) ---------
+        
+        // assert forall x:Ref, y:Ref :: 
+        //     { P0(tree, x, y) }
+        //     { P_(new_tree, x, y) }
+        //         x in frame && y in ch_tree && P0(tree, x, y) ==> P_(new_tree, x, y)
+
+
+        assert linked_node.right == root_s
+        assert linked_node in ch_tree
+        // assert P0(tree, n, linked_node)
+
+
+        assert forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P_(new_tree, x, linked_node), P_(new_tree, root_s, y) }
+                x in frame && y in sub_tree && 
+                P_(new_tree, x, linked_node) && P_(new_tree, root_s, y) ==> P_(new_tree, x, y)
+
+        // Framing
+        assert forall x:Ref, y:Ref, a:Ref :: 
+            { P0(frame, x, a), P_(new_ch_tree, a, y) }
+            { P_(new_tree, x, y), P0(frame, x, a) }
+            { P_(new_tree, x, y), P_(new_ch_tree, a, y) }
+                x in frame && y in new_ch_tree && a in new_ch_tree && 
+                P0(frame, x, a) && P_(new_ch_tree, a, y) ==> 
+                    P_(new_tree, x, y)
+
+        // From postcondition of recursive call 
+        assert forall a:Ref, y:Ref :: 
+            { P_(new_ch_tree, a, y) }
+            { P0(ch_tree, a, y) }
+                // (a in sub_tree && y in ch_tree ==> !P_(new_ch_tree, a, y)) &&                     //case 1
+                (a in ch_tree  && y in ch_tree ==> (P_(new_ch_tree, a, y) <==> P0(ch_tree, a, y)))   //case 2
+
+        // --- case 2 ---
+        // (a) In-In:  P(g, _, _) <~~~> P(mod, _, _)
+        // Focus
+        assert forall a:Ref, y:Ref :: 
+            { P0(new_ch_tree, a, y) }
+            { P0(ch_tree, a, y) }
+                a in ch_tree && y in ch_tree ==> (P0(ch_tree, a, y) <==> P0(new_ch_tree, a, y))
+
+        // The missing bit
+        assume forall x:Ref, a:Ref :: 
+            { P0(frame, x, a) }
+            { P0(new_tree, x, linked_node), P_(new_ch_tree, a, linked_node) }
+                x in frame /*&& y in sub_tree*/ && a in new_ch_tree && 
+                P0(new_tree, x, linked_node) ==> P0(frame, x, a) && P0(new_ch_tree, a, linked_node)
+
+        // Blur
+        assert forall x:Ref :: 
+            { P0(tree, x, linked_node) }
+            { P0(new_tree, x, linked_node) }
+                x in frame &&
+                P0(tree, x, linked_node) ==> P0(new_tree, x, linked_node)
+
+        // Branch 2
+        assert forall y:Ref :: 
+            { P0(sub_tree, root_s, y) }
+            { P_(new_tree, root_s, y) }
+                y in sub_tree ==> 
+                    (P0(sub_tree, root_s, y) <==> P_(new_tree, root_s, y))
+
+        // Rewritten Proof Goal
+        assert forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P0(tree, x, linked_node), P0(sub_tree, root_s, y) }
+                x in frame && y in sub_tree && 
+                P0(tree, x, linked_node) && P0(sub_tree, root_s, y) && P_(new_tree, linked_node, root_s) ==> P_(new_tree, x, y)
+
+        // Proof Goal
+        assert forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P0(tree, x, linked_node), P0(sub_tree, root_s, y) }
+                x in frame && y in sub_tree && 
+                P0(tree, x, linked_node) && P0(sub_tree, root_s, y) ==> P_(new_tree, x, y)
+
+        // assume false
+
+        assert forall x:Ref, y:Ref :: 
+            { P_(new_tree, x, y) }
+            { P0(tree, x, linked_node), P0(sub_tree, root_s, y) }
+            { P0(tree, x, y) }
+            { P0(sub_tree, x, y) }
+                // (x in sub_tree && y in tree     ==> !P_(new_tree, x, y)) && // should be okay
+                // (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(sub_tree, x, y))) && // should be okay
+                
+                // Split A: 
+                //(x in tree    && y in tree   ==> (P_(new_tree, x, y) <==> P0(tree, x, y)))  // &&
+                // (x in ch_tree && y in ch_tree   ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) && // should be okay
+                // (x in frame   && y in frame     ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) && // should be okay
+                // (x in ch_tree && y in frame     ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) && // should be okay
+                // (x in frame   && y in ch_tree   ==> (P_(new_tree, x, y) <==> P0(tree, x, y)))  && // should be okay
+                // (x in frame   && y in ch_tree   ==> (P0(tree, x, y) ==> P_(new_tree, x, y)))//&& // the hard case
+                
+                // Split B: 
+                //(x in tree   && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(tree, x, linked_node) && P0(sub_tree, root_s, y))) 
+                // (x in ch_tree   && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(tree, x, linked_node) && P0(sub_tree, root_s, y))) // should be okay
+                // (x in frame     && y in sub_tree ==> (P_(new_tree, x, y)  ==> P0(tree, x, linked_node) && P0(sub_tree, root_s, y))) // should be okay
+                (x in frame     && y in sub_tree ==> (P0(tree, x, linked_node) && P0(sub_tree, root_s, y) ==> P_(new_tree, x, y)))  // the hard case - 2
+        
         assume false
+
+
+
     } else {
         assume false
         // PartitionPathsInConvexSubHeap(new_tree, tree)
@@ -198,12 +375,20 @@ label l2
 
         // assert forall x:Ref, y:Ref :: 
         //     { P_(new_tree, x, y) }
-        //     { P0(tree, x, root), P0(new_tree, y, root_s) }
+        //     { P0(tree, x, root), P0(sub_tree, y, root_s) }
+        //          x in tree && y in sub_tree ==> 
+        //             (P_(new_tree, x, y) <==> P0(tree, x, root) && P0(sub_tree, root_s, y))
+
+        // assert forall x:Ref, y:Ref :: 
+        //     { P_(new_tree, x, y) }
+        //     { P0(tree, x, root), P0(sub_tree, root_s, y) }
         //     { P0(tree, x, y) }
         //     { P0(sub_tree, x, y) }
         //         (x in sub_tree && y in tree     ==> !P_(new_tree, x, y)) &&
         //         (x in sub_tree && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(sub_tree, x, y))) &&
         //         (x in tree     && y in tree     ==> (P_(new_tree, x, y) <==> P0(tree, x, y))) &&
-        //         (x in tree     && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(new_tree, x, root) && P0(new_tree, root_s, y)))
+        //         (x in tree     && y in sub_tree ==> (P_(new_tree, x, y) <==> P0(tree, x, root) && P0(sub_tree, root_s, y)))
+        
+        // assume false
     }
 }
