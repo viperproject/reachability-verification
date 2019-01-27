@@ -77,8 +77,8 @@ method mergeRight(g: Set[Ref], // ghost
         { P0(g, x, link), P0(g, root_s, y) }
             (x in sub_tree && y in tree     ==> !P_(g, x, y)) &&
             (x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in tree     && y in tree     ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y) || x==link && y==root_s))
+            (x in tree     && y in tree     && (skolem_alpha(x,y) in tree) ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in tree     && y in sub_tree && (skolem_alpha(x,y) in tree) ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y) || x==link && y==root_s))
 {
     new_tree := tree union sub_tree
 
@@ -111,7 +111,26 @@ label l2
     EnableFocusOnConvexSubHeap(g, g1)
     EnableFocusOnConvexSubHeap(g, frame)
 
-    // assume DISJOINT(frame, new_ch_tree)
+    // assume DISJOINT(frame, g1)
+
+
+    // === Acyclicity === 
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //         y in g1 && x in g1 && E_(g1, y, x) ==> !P_(g1, x, y)
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //         y in g1 && x in g1 && E_(g, y, x) ==> !P_(g, x, y)
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //         y in frame && x in g1 && E_(g, y, x) ==> !P_(g, x, y)
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //         y in frame && x in frame && E_(g, y, x) ==> !P_(g, x, y)
+    // assert ACYCLIC(g)
+
+    // assume false
 
 
     // === part three ===
@@ -168,14 +187,13 @@ label l2
     //         // (x in frame && y in frame && P0(g, x, y) ==> P_(g, x, y)) //&& 
     //         // (x in frame && y in ch_tree && P0(g, x, y) && (skolem_alpha(x,y) in ch_tree) ==> P_(g, x, y))
 
-
     // overall
-    assert forall x:Ref, y:Ref :: 
-        { P_(g, x, y) }
-        { P0(g, x, y) }
-            (x in tree && y in tree && (skolem_alpha(x,y) in ch_tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         (x in tree && y in tree && (skolem_alpha(x,y) in tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
 
-    assume false
+    // assume false
 
     // // === parts one and two ===
 
@@ -195,7 +213,7 @@ label l2
     //         x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
 
     // assert false
-    assume false
+    // assume false
 }
 
 function trig(x: Ref, a:Ref, y:Ref): Bool

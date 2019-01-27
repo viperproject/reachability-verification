@@ -203,6 +203,12 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
             (v1 in MOD) && (v2 in MOD) ==> 
                 (P_(GLOB, v1, v2) <==> P_(MOD, v1, v2)))
 
+    assume (forall v1:Ref, v2:Ref :: 
+            { E_(MOD, v1, v2) }
+            { E_(GLOB, v1, v2) }
+                (v1 in MOD) ==> 
+                    (E_(GLOB, v1, v2) <==> E_(MOD, v1, v2)))
+
     assume (forall u0:Ref, v0:Ref :: 
         { P_(GLOB, u0, v0) }
             u0 in MOD && !(v0 in MOD) && CLOSED(MOD)
