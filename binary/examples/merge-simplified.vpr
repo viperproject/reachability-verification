@@ -1,0 +1,127 @@
+import "../../_preambles/TrCloDomain.vpr"
+
+// import "../../_preambles/legoFraming.vpr"
+
+import "./legoFraming-snapshot-27012019.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+
+// import "../../_preambles/common/graph.vpr"
+
+// import "../../_preambles/common/dag.vpr"
+// import "../_preambles/dag.vpr"
+
+define __CONVEXITY_CHECKES false 
+
+define TREE(t) 
+    GRAPH(t) && TREE_IMPL(t)
+
+define TREE_IMPL(t)
+    CLOSED(t) && ACYCLIC(t) //&& UNSHARED(t)
+
+function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
+    requires TREE(t)
+    requires sub_root in t
+    
+    ensures result subset t
+    ensures TREE_IMPL(result)
+    ensures !(null in result)
+    ensures sub_root in result
+    ensures GLOBAL_ROOT(result, sub_root)
+    // ensures result == subTree(result, sub_root)
+
+
+define TWO_ROOTED_DAG(nodes, root, root_s)
+    (forall n:Ref :: 
+        { P_(nodes, root_s, n) } 
+        { P_(nodes, root, n) }
+            n in nodes <==> P_(nodes, root, n) && !P_(nodes, root_s, n) ||
+                           !P_(nodes, root, n) &&  P_(nodes, root_s, n))
+
+method mergeRight(g: Set[Ref], // ghost
+                tree: Set[Ref], root: Ref, 
+                 sub_tree:Set[Ref], root_s: Ref) 
+                returns (new_tree: Set[Ref], 
+                         link: Ref) // ghost
+    
+    requires root in tree
+    requires root_s in sub_tree
+    requires DISJOINT(tree, sub_tree)
+    requires g == tree union sub_tree
+    requires TREE(g)
+    requires TWO_ROOTED_DAG(g, root, root_s)
+
+
+    ensures new_tree == g
+    ensures TREE(g)
+    ensures CONST_EDGES(sub_tree)
+
+    ensures link in tree 
+    ensures forall x:Ref, y:Ref :: 
+        { E_(new_tree, x, y) }
+        { E0(tree, x, y) }
+        { E0(sub_tree, x, y) }
+            E_(new_tree, x, y) <==> E0(tree, x, y) || E0(sub_tree, x, y) || 
+                                    (x == link && y == root_s) 
+
+    ensures old(root.right) == null ==> root == link && root.right == root_s
+    ensures GLOBAL_ROOT(new_tree, root)
+
+    ensures P_(new_tree, link, root_s)
+    ensures forall x:Ref, y:Ref :: 
+        { P_(g, x, y) }
+        { P0(g, x, y) }
+            (x in sub_tree && y in tree     ==> !P_(g, x, y)) &&
+            (x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+{
+    new_tree := tree union sub_tree
+
+    // Branching
+    assume root.right != null
+
+    assume TREE_IMPL(tree) 
+    assume TREE_IMPL(sub_tree) 
+    
+    
+    var ch_node: Ref := root.right
+    var ch_tree: Set[Ref] := subTree(tree, ch_node)
+    var frame: Set[Ref] := tree setminus ch_tree
+
+    PartitionPathsInConvexSubHeap(g, ch_tree union sub_tree)
+    
+    var g1: Set[Ref]
+label l1
+    assume TREE_IMPL(ch_tree union sub_tree)
+    assume TWO_ROOTED_DAG(ch_tree union sub_tree, ch_node, root_s)
+    g1, link := mergeRight(ch_tree union sub_tree, ch_tree, ch_node, sub_tree, root_s)
+label l2
+    new_tree := frame union g1
+    assert ch_tree union sub_tree == g1
+
+
+    ApplyConvexTCFraming(l1, l2, g1, g)
+    // assume DISJOINT(frame, new_ch_tree)
+
+    // === part one ===
+
+    assert forall x:Ref, y:Ref :: 
+        { P_(g1, x, y) } 
+        { P0(g, x, y) }
+            (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && 
+            (x in sub_tree && y in sub_tree ==> (P_(g1, x, y) <==> P0(g1, x, y)))
+
+    PartitionPathsInConvexSubHeap(g, g1)
+
+    assert (forall x:Ref, y:Ref :: 
+        { P_(g, x, y) } 
+            (x in sub_tree && y in tree ==> !P_(g, x, y)))
+    assert (forall x:Ref, y:Ref :: 
+        { P_(g, x, y) }
+        { P0(g, x, y) }
+            x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+
+    assume false
+}

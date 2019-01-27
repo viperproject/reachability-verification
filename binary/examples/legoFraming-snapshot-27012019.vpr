@@ -1,0 +1,218 @@
+// Overlapping Purification: 
+//  only the beginning of the edges and paths is in the set; 
+//  the ends may or may not be in the set. 
+//  This may be useful for framing. 
+function $$(nodes0: Set[Ref]): Set[Edge]
+    requires READONLY_NODES(nodes0)
+    ensures (forall x0: Ref, y0: Ref :: 
+        { create_edge(x0, y0) } 
+            ((x0 in nodes0) && (CLOSED(nodes0) ==> y0 in nodes0) && HEAP_PARTIAL_ORDER(x0,y0)) <==> (create_edge(x0, y0) in result))
+    // TODO: consider moving these formulas somewhere else to optimize performance. 
+    ensures CLOSED(nodes0) ==> (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0), exists_path(result, x0, y0) }
+            (x0 in nodes0) && exists_path(result, x0, y0) ==> (y0 in nodes0))
+    ensures (forall x0: Ref, y0: Ref :: 
+        { (x0 in nodes0),(y0 in nodes0), exists_path(result, x0, y0) } 
+            (y0 in nodes0) && exists_path(result, x0, y0) ==> (x0 in nodes0))
+    ensures forall h0:Set[Ref] :: 
+        { $$(h0) subset result }
+        { h0 subset nodes0 }
+            (h0 subset nodes0) ==> $$(h0) subset result
+
+// TODO: Check triggers
+define CONVEX(state, local_nodes, global_nodes)
+    (local_nodes subset global_nodes) && 
+    (forall v1:Ref, v2:Ref, u:Ref :: 
+        { P(state, global_nodes, v1, u), P(state, global_nodes, u, v2) } 
+        //{ __impossible_to_trigger__(v1, v2, u) }
+            v1 in local_nodes && v2 in local_nodes && !(u in local_nodes) && u in global_nodes ==> 
+                !(P(state, global_nodes, v1, u) && P(state, global_nodes, u, v2)))
+
+// TODO: Check triggers
+define CONVEX_(local_nodes, global_nodes)
+    (local_nodes subset global_nodes) && 
+    (forall v1:Ref, v2:Ref, u:Ref :: 
+        { P_(global_nodes, v1, u), P_(global_nodes, u, v2) } 
+        //{ __impossible_to_trigger__(v1, v2, u) }
+            v1 in local_nodes && v2 in local_nodes && !(u in local_nodes) && u in global_nodes ==> 
+                !(P_(global_nodes, v1, u) && P_(global_nodes, u, v2)))
+
+function __impossible_to_trigger__(a000:Ref, a001:Ref, a002:Ref): Bool
+
+function __trigger_conv_framing_Entries__(bla_1:Ref, bla_2:Ref): Bool
+    ensures true
+
+function __trigger_conv_framing_eXits__(bla_1:Ref, bla_2:Ref): Bool
+    ensures true
+
+// TODO: Simplify ApplyConvexTCFraming for CLOSED(MOD) and CLOSED(GLOB setminus MOD) ...
+define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB) {
+    assume (forall x0:Ref, y0:Ref :: 
+            { P_(GLOB, x0, y0) }
+            { P(s_new, GLOB, x0, y0) } 
+            { P(s_old, GLOB, x0, y0) } 
+            { P(s_new, MOD, x0, y0) }
+                // I. In-In
+                (x0 in MOD) && (y0 in MOD) ==> (
+                    P(s_new, MOD, x0, y0) <==> P(s_new, GLOB, x0, y0)
+                ))  
+    // assume (forall x0:Ref, y0:Ref :: 
+    //         { P_(GLOB, x0, y0) }
+    //         { P(s_new, GLOB, x0, y0) } 
+    //         { P(s_old, GLOB, x0, y0) } 
+    //             // II. Out-In
+    //             (x0 in GLOB setminus MOD) && 
+    //             (y0 in MOD) &&
+    //             __trigger_conv_framing_Entries__(x0,y0)
+    //                 ==> (
+    //                 !(forall alpha:Ref :: 
+    //                     { P(s_old, GLOB setminus MOD, x0, alpha) }
+    //                     { P(s_new, MOD, alpha, y0) }
+    //                         (alpha in MOD) ==> 
+    //                             !( P(s_old, GLOB setminus MOD, x0, alpha) && P(s_new, MOD, alpha, y0) ))
+    //                 <==> P(s_new, GLOB, x0, y0)
+    //             )) 
+    assume (forall x0:Ref, y0:Ref :: 
+            { P(s_new, GLOB, x0, y0) }
+                // II. Out-In-1
+                (x0 in GLOB setminus MOD) && 
+                (y0 in MOD) && 
+                    P(s_new, GLOB, x0, y0) ==> 
+                        (skolem_alpha(x0,y0) in MOD) &&
+                        P(s_old, GLOB setminus MOD, x0, skolem_alpha(x0,y0)) && 
+                        P(s_new, MOD, skolem_alpha(x0,y0), y0))
+    assume (forall x0:Ref, y0:Ref, alpha:Ref :: 
+            { P(s_old, GLOB setminus MOD, x0, alpha), P(s_new, MOD, alpha, y0) }
+            { P(s_new, GLOB, x0, y0), P(s_new, MOD, alpha, y0) }
+            { P(s_new, GLOB, x0, y0), P(s_old, GLOB setminus MOD, x0, alpha) }
+                // II. Out-In-2
+                (x0 in GLOB setminus MOD) && 
+                (y0 in MOD) && (alpha in MOD) &&
+                    P(s_old, GLOB setminus MOD, x0, alpha) && P(s_new, MOD, alpha, y0) ==>
+                        P(s_new, GLOB, x0, y0))
+
+    // assume (forall x0:Ref, y0:Ref :: 
+    //         { P_(GLOB, x0, y0) }
+    //         { P(s_new, GLOB, x0, y0) } 
+    //         { P(s_old, GLOB, x0, y0) } 
+    //             // III. In-Out
+    //             (x0 in MOD) && 
+    //             !(y0 in MOD) &&
+    //             __trigger_conv_framing_eXits__(x0,y0)
+    //                 ==> (
+    //                 !(forall beta:Ref :: 
+    //                     { P(s_new, MOD, x0, beta) }
+    //                     { P(s_old, GLOB setminus MOD, beta, y0) }
+    //                         (beta in GLOB setminus MOD) ==> 
+    //                             !( P(s_new, MOD, x0, beta) && P(s_old, GLOB setminus MOD, beta, y0) ))
+    //                 <==> P(s_new, GLOB, x0, y0)
+    //             )) 
+    // assume (forall x0:Ref, y0:Ref :: 
+    //         { P_(GLOB, x0, y0) }
+    //         { P(s_new, GLOB, x0, y0) } 
+    //         { P(s_old, GLOB, x0, y0) } 
+    //             // IV. Out-Out
+    //             (x0 in GLOB setminus MOD) && 
+    //             !(y0 in MOD) &&
+    //             __trigger_conv_framing_Entries__(x0,y0) &&
+    //             __trigger_conv_framing_eXits__(x0,y0)
+    //             ==> (
+    //                 P(s_old, GLOB setminus MOD, x0, y0) || 
+    //                 !(forall alpha:Ref, beta:Ref :: 
+    //                     { P(s_new, MOD, alpha, beta) }
+    //                     { P(s_old, GLOB setminus MOD, x0, alpha), P(s_old, GLOB setminus MOD, beta, y0) } 
+    //                         (alpha in MOD) && (beta in GLOB setminus MOD) ==> 
+    //                             !( P(s_old, GLOB setminus MOD, x0, alpha) && P(s_new, MOD, alpha, beta) && P(s_old, GLOB setminus MOD, beta, y0) ))
+    //                 <==> P(s_new, GLOB, x0, y0)
+    //             ))
+}
+
+// To be applied before a method call. 
+define PartitionPathsInConvexSubHeap(GLOB, MOD) {
+    //if ( !__CONVEXITY_CHECKES || CLOSED(MOD) || CLOSED(GLOB setminus MOD) || CONVEX_(MOD, GLOB) ) {
+
+        // (a) In-In:  P(g, _, _) <~~~> P(mod, _, _)
+        assume (forall v1:Ref, v2:Ref :: 
+            { P_(GLOB, v1, v2) }
+            { P_(MOD, v1, v2) } 
+                (v1 in MOD) && (v2 in MOD) ==> 
+                    (P_(GLOB, v1, v2) <==> P_(MOD, v1, v2)))
+
+        // // (b) In-Out:   P(g, _, _) ~~~> P(mod, _, _)
+        // assume (forall v1:Ref, u:Ref, v2:Ref :: 
+        //     { P_(GLOB, v1, u), E_(GLOB, u, v2) }
+        //     { P_(GLOB, v1, u), P_(MOD, v1, v2) }
+        //     { E_(GLOB, u, v2), P_(MOD, v1, v2) }
+        //     { P_(GLOB, v1, v2), E_(GLOB, u, v2) }
+        //         (v1 in MOD) && 
+        //         (u in MOD) &&
+        //         !(v2 in MOD) && (v2 in GLOB) ==> 
+        //             (P_(GLOB, v1, u) && E_(GLOB, u, v2) ==> P_(MOD, v1, v2)))
+
+        // (c) In-Out:   P(g, _, _) <~~~ P(mod, _, _)
+        assume (forall v1:Ref, v2:Ref :: 
+            { P_(MOD, v1, v2) }
+            { P_(GLOB, v1, v2) }
+                (v1 in MOD) && 
+                !(v2 in MOD) && (v2 in GLOB) ==> 
+                    (P_(MOD, v1, v2) ==> P_(GLOB, v1, v2)))
+
+        // (d1) Out-*:   !P(mod, _, _)
+        assume (forall v1:Ref, v2:Ref :: 
+            { P_(MOD, v1, v2) }
+            { P_(GLOB, v1, v2) }
+                !(v1 in MOD) && (v1 in GLOB) && v1 != v2 ==> 
+                    (!P_(MOD, v1, v2)))
+
+        // (d2) Out-In:  P(g, _, _) ~~~> P(frame, _, alpha) P(mod, alpha, _) 
+        assume forall v1:Ref, v2:Ref :: 
+            { P_(GLOB, v1, v2) }
+                v1 in (GLOB setminus MOD) && v2 in MOD &&  
+                P_(GLOB, v1, v2) ==> 
+                    (skolem_alpha(v1,v2) in MOD) &&
+                    P_(GLOB setminus MOD, v1, skolem_alpha(v1,v2)) && 
+                    P_(MOD, skolem_alpha(v1,v2), v2)
+
+        // (e) Partitioning of the egdes
+        assume (forall v1:Ref, v2:Ref :: 
+            { E_(MOD, v1, v2) }
+            { E_(GLOB, v1, v2) }
+                (v1 in MOD) ==> 
+                    (E_(GLOB, v1, v2) <==> E_(MOD, v1, v2)))
+
+        // (f) NoExit[GLOB, MOD]
+        assume (forall u0:Ref, v0:Ref :: 
+            // { u0 in g1, v0 in frame }
+            { P_(MOD, u0, v0) }
+            { P_(GLOB, u0, v0) }
+                u0 in MOD && !(v0 in MOD) && CLOSED(MOD)
+                    ==> !P_(GLOB, u0, v0))
+    //}
+}
+
+define ApplyNoExitWisdom(GLOB, MOD) {
+    assume (forall u0:Ref, v0:Ref :: 
+        { P_(GLOB, u0, v0) }
+            u0 in MOD && !(v0 in MOD) && CLOSED(MOD)
+                ==> !P_(GLOB, u0, v0))
+}
+
+/** Intended way of using these formulas: 
+
+    @mod g
+    {
+label l1
+        // { Assumptions about P1(g, _, _) }
+
+        __Split_P__(g1, g)
+
+        call m1()
+            @mod g1
+            ensures // { P2(g1, _, _) <==> ... }
+
+label l2
+        assume ConvexTCFraming(l1, l2, g1, g)
+        
+        // { Assertions about P2(g, _, _) }
+    }
+ */
