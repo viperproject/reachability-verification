@@ -74,8 +74,11 @@ method mergeRight(g: Set[Ref], // ghost
     ensures forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
         { P0(g, x, y) }
+        { P0(g, x, link), P0(g, root_s, y) }
             (x in sub_tree && y in tree     ==> !P_(g, x, y)) &&
-            (x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+            (x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in tree     && y in tree     ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y) || x==link && y==root_s))
 {
     new_tree := tree union sub_tree
 
@@ -90,7 +93,8 @@ method mergeRight(g: Set[Ref], // ghost
     var ch_tree: Set[Ref] := subTree(tree, ch_node)
     var frame: Set[Ref] := tree setminus ch_tree
 
-    PartitionPathsInConvexSubHeap(g, ch_tree union sub_tree)
+    EnableFocusOnConvexSubHeap(g, ch_tree union sub_tree)
+    EnableFocusOnConvexSubHeap(g, frame)
     
     var g1: Set[Ref]
 label l1
@@ -103,25 +107,98 @@ label l2
 
 
     ApplyConvexTCFraming(l1, l2, g1, g)
+    
+    EnableFocusOnConvexSubHeap(g, g1)
+    EnableFocusOnConvexSubHeap(g, frame)
+
     // assume DISJOINT(frame, new_ch_tree)
 
-    // === part one ===
 
+    // === part three ===
+
+    // pre
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g1, x, y) } 
+    //     { P0(g, x, y) }
+    //         (x in ch_tree       && y in ch_tree     ==> (P_(g1, x, y) <==> P0(g1, x, y)))
+
+    // assert ch_tree subset g1
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P_(g1, x, y) }
+    //         (x in g1 && y in g1 && P_(g, x, y) ==> P_(g1, x, y))
+
+    // left-to-right
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         //Split
+    //         (x in tree && y in tree && skolem_alpha(x,y) in ch_tree && P_(g, x, y) ==> P0(g, x, y))
+    //         // (x in frame && y in ch_tree && P_(g, x, y) ==> P0(g, x, y)) //&&
+    //         //(x in ch_tree && y in ch_tree && P_(g, x, y) ==> P0(g, x, y)) 
+    //         // (x in frame && y in frame && P_(g, x, y) ==> P0(g, x, y)) && 
+    //         // (x in ch_tree && y in frame && P_(g, x, y) ==> P0(g, x, y)) 
+             
+    // frame
+    // assume forall x:Ref, a:Ref, y:Ref :: 
+    //     { x in frame, y in g1, a in g1, P0(g, x, y) }
+    //         x in frame && y in g1 && a in g1 && 
+    //         P0(frame, x, a) && P_(g1, a, y) 
+    //         ==> P_(g, x, y)
+
+    // split 
+    // assume forall x:Ref, y:Ref :: 
+    //     { x in frame, P0(g, x, y) }
+    //         x in frame && y in g1 && P0(g, x, y) ==> 
+    //             P0(frame, x, skol(x,y)) && P0(g1, skol(x,y), y)
+    //             && skol(x,y) in g1
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         x in frame && y in ch_tree && skolem_alpha(x,y) in ch_tree //&& __learn_trigger__( trig(x,y,y) )
+    //             && P0(g, x, y) ==> P_(g, x, y)
+
+    // right-to-left
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         //Split
+    //         (x in tree && y in tree && P0(g, x, y) && skolem_alpha(x,y) in ch_tree ==> P_(g, x, y))
+    //         // (x in frame && y in frame && P0(g, x, y) ==> P_(g, x, y)) //&& 
+    //         // (x in frame && y in ch_tree && P0(g, x, y) && (skolem_alpha(x,y) in ch_tree) ==> P_(g, x, y))
+
+
+    // overall
     assert forall x:Ref, y:Ref :: 
-        { P_(g1, x, y) } 
-        { P0(g, x, y) }
-            (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && 
-            (x in sub_tree && y in sub_tree ==> (P_(g1, x, y) <==> P0(g1, x, y)))
-
-    PartitionPathsInConvexSubHeap(g, g1)
-
-    assert (forall x:Ref, y:Ref :: 
-        { P_(g, x, y) } 
-            (x in sub_tree && y in tree ==> !P_(g, x, y)))
-    assert (forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
         { P0(g, x, y) }
-            x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+            (x in tree && y in tree && (skolem_alpha(x,y) in ch_tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
 
     assume false
+
+    // // === parts one and two ===
+
+    // pre
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g1, x, y) } 
+    //     { P0(g, x, y) }
+    //         (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && 
+    //         (x in sub_tree && y in sub_tree ==> (P_(g1, x, y) <==> P0(g1, x, y))) && 
+
+    // assert (forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         (x in sub_tree && y in tree ==> !P_(g, x, y)))
+    // assert (forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+
+    // assert false
+    assume false
 }
+
+function trig(x: Ref, a:Ref, y:Ref): Bool
+    ensures result == true
+
+function skol(x: Ref, y:Ref): Ref
