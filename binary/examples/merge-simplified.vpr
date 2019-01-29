@@ -83,10 +83,11 @@ method mergeRight(g: Set[Ref], // ghost
         { P0(g, x, link), P0(g, root_s, y) }
             (x in sub_tree && y in tree     ==> !P_(g, x, y)) &&
             (x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in tree     && y in tree     /*&& (skolem_alpha(x,y) in tree)*/ ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in tree     && y in sub_tree /*&& (skolem_alpha(x,y) in tree)*/ ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
+            (x in tree     && y in tree     ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
     
     // ensures GLOBAL_ROOT(new_tree, root)
+
 {
     new_tree := tree union sub_tree
 
@@ -133,12 +134,19 @@ label l2
     //                     !P0(g1, ch_node, n) &&  P0(g1, root_s, n))
     assume forall a:Ref :: 
         { P0(g1, a, link) }
-            a in g1 && P0(g1, a, link) ==> a in ch_tree
+            a in g1 && P0(g1, a, link) ==> a in ch_tree // (1) -- todo: prove as a lemma
+    // assume forall n:Ref :: 
+    //     { P0(g, root, n) }
+    //         P0(g, root, n) <==> n in tree
+    // assume forall n:Ref :: 
+    //     { P0(g, root_s, n) }
+    //         P0(g, root_s, n) <==> n in sub_tree
     assume forall n:Ref, m:Ref :: 
         { P0(g, n, m), n in tree, m in sub_tree }
-            n in tree && m in sub_tree ==> !P0(g, n, m)
+            n in tree && m in sub_tree ==> !P0(g, n, m) &&  // (2)
+                                           !P0(g, m, n)     // (3)
 
-    // preserve 
+    // // preserve 
     // assert forall a:Ref, y:Ref :: 
     //     { P0(g1, a, y) }
     //         (a in sub_tree && y in sub_tree && P0(g1, a, y) ==> P_(g1, a, y)) //&& 
@@ -163,12 +171,11 @@ label l2
     //     { P0(g, root_s, y) }
     //         y in sub_tree && P0(g, root_s, y) ==> P_(g, root_s, y)
 
-    // Needed for triggering transitivity in: (x in frame && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
-    assert forall x:Ref, y:Ref :: 
-        { P_(g, x, y) }
-        // { P_(g, x, link), P_(g, root_s, y) }
-            P_(g, x, link) && P_(g, root_s, y) ==> P_(g, x, y)
-
+    // Needed for triggering transitivity
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P_(g, x, link), P_(g, root_s, y) }
+    //         P_(g, x, link) && P_(g, root_s, y) ==> P_(g, x, y)
 
     // ---- THE HARDESTEST CASE ----
     // Paths to merge: 
@@ -262,17 +269,43 @@ label l2
     //     { P0(g, x, link), P0(g, root_s, y) }
     //         // Split
     //         (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
-    //         //  (x in tree && y in sub_tree && P_(g, x, y) ==> P0(g, x, link) && P0(g, root_s, y)) //&& 
+    //         // (x in tree && y in sub_tree && P_(g, x, y) ==> P0(g, x, link) && P0(g, root_s, y)) //&& 
     //         // (x in ch_tree && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
-    //         //(x in frame && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
+    //         // (x in frame && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
+
+    //         (x in tree     && y in tree ==> (P_(g, x, y) <==> P0(g, x, y)))  
+
+
+
+
+
+    // assert (forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         (x in sub_tree && y in tree ==> !P_(g, x, y)))
+    // assert (forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //         (x in tree && y in tree && (skolem_alpha(x,y) in tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
+    // assert forall x:Ref, y:Ref :: 
+    //     { P0(g, x, link), P0(g, root_s, y) }
+    //         (x in tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
+
 
     // assume false    
+
+
+
+
+
 
     // === Acyclicity === 
     // assert forall x:Ref, y:Ref :: 
     //     { P_(g, x, y) }
     //         y in g1 && x in g1 && E_(g1, y, x) ==> !P_(g1, x, y)
-
     // assert forall x:Ref, y:Ref :: 
     //     { P_(g, x, y) }
     //         y in g1 && x in g1 && E_(g, y, x) ==> !P_(g, x, y)
@@ -283,13 +316,12 @@ label l2
     //     { P_(g, x, y) }
     //         y in frame && x in frame && E_(g, y, x) ==> !P_(g, x, y)
     // assert ACYCLIC(g)
-
     // assume false
 
 
     // === part three ===
 
-    // pre
+    // post
     // assert forall x:Ref, y:Ref :: 
     //     { P_(g1, x, y) } 
     //     { P0(g, x, y) }
@@ -332,6 +364,39 @@ label l2
     //         x in frame && y in ch_tree && skolem_alpha(x,y) in ch_tree //&& __learn_trigger__( trig(x,y,y) )
     //             && P0(g, x, y) ==> P_(g, x, y)
 
+    // var mx:Ref
+    // var my:Ref 
+    // assume mx in frame && my in ch_tree && P0(g, mx, my)
+
+    // // LHS of (split in pre-state)
+    // assert __learn_trigger__(__trigger_conv_framing_Entries__(mx, my, skolem_alpha1(mx,my)))
+    // assert mx in frame
+    // assert my in g1
+    // assert P0(g, mx, my)
+
+    // // RHS of (split in pre-state)
+    // assert skolem_alpha1(mx,my) in g1
+    // assert P0(frame, mx, skolem_alpha1(mx,my))
+    // assert P0(g1, skolem_alpha1(mx,my), my)
+
+    // // assert forall x:Ref, y:Ref :: 
+    // //     { P_(g, x, y) }
+    // //     { P0(g, x, y) }
+    // //         (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && // impossible due to (3)
+    // //         (x in ch_tree && y in ch_tree && P0(g1, x, y) ==> P_(g, x, y))  
+    // //case 1 
+    // // assume skolem_alpha1(mx,my) in ch_tree
+    // //case 2 -- impossible due to (3)
+    // // assume skolem_alpha1(mx,my) in sub_tree
+
+    // assert mx in frame
+    // assert my in g1
+    // assert skolem_alpha1(mx,my) in g1
+    // assert P0(frame, mx, skolem_alpha1(mx,my))
+    // assert P_(g1, skolem_alpha1(mx,my), my)
+    // assert P_(g, mx, my)
+    // assume false
+
     // right-to-left
     // assert forall x:Ref, y:Ref :: 
     //     { P_(g, x, y) }
@@ -339,13 +404,13 @@ label l2
     //         //Split
     //         (x in tree && y in tree && P0(g, x, y) && skolem_alpha(x,y) in ch_tree ==> P_(g, x, y))
     //         // (x in frame && y in frame && P0(g, x, y) ==> P_(g, x, y)) //&& 
-    //         // (x in frame && y in ch_tree && P0(g, x, y) && (skolem_alpha(x,y) in ch_tree) ==> P_(g, x, y))
+    //         // (x in frame && y in ch_tree && P0(g, x, y) ==> P_(g, x, y))
 
     // overall
     // assert forall x:Ref, y:Ref :: 
     //     { P_(g, x, y) }
     //     { P0(g, x, y) }
-    //         (x in tree && y in tree && (skolem_alpha(x,y) in tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
+    //         (x in tree && y in tree ==> (P0(g, x, y) <==> P_(g, x, y)))
 
     // assume false
 
@@ -369,11 +434,3 @@ label l2
     // assert false
     // assume false
 }
-
-function trig(x: Ref, a:Ref, y:Ref): Bool
-    ensures result == true
-
-function skolem$1(x: Ref, y:Ref): Ref
-function skolem$2(x: Ref, y:Ref): Ref
-function skolem$3(x: Ref, y:Ref): Ref
-function skolem$(x: Ref, y:Ref): Ref
