@@ -26,6 +26,9 @@ define COMPLETE(nodes)
 define CLOSED(nodes)
     CLOSED_for(next, nodes)
 
+define RELATIVELY_CLOSED(nodes, against_nodes) 
+    RELATIVELY_CLOSED_for(next, nodes, against_nodes)
+
 define PROTECTED_GRAPH_next(nodes, mutable_node)
     !(null in nodes)
     && PROTECTED_NODES_for(next, nodes, mutable_node, 1/2)

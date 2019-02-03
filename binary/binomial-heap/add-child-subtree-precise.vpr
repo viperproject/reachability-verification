@@ -23,7 +23,7 @@ define TREE(t)
     GRAPH(t) && TREE_IMPL(t)
 
 define TREE_IMPL(t)
-    CLOSED(t) && ACYCLIC(t) && UNSHARED(t)
+    CLOSED(t) && ACYCLIC(t) //&& UNSHARED(t)
 
 function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
     requires TREE(t)
@@ -86,7 +86,7 @@ label l2
 
         PartitionPathsInConvexSubHeap(new_tree, new_ch_tree)
         PartitionPathsInConvexSubHeap(new_tree, frame)
-        PartitionPathsInConvexSubHeap(new_tree, sub_tree)
+        // PartitionPathsInConvexSubHeap(new_tree, sub_tree)
         ApplyConvexTCFraming(l1, l2, new_ch_tree, new_tree)
         // assume DISJOINT(frame, new_ch_tree)
 

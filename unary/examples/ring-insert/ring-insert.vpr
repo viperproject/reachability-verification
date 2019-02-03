@@ -1,4 +1,4 @@
-import "../../_preambles/TrCloDomain.vpr"
+{import "../../_preambles/TrCloDomain.vpr"
 import "../../_preambles/TrCloZopgDomain.vpr"
 
 //import "../../_preambles/purification.vpr"
@@ -51,7 +51,6 @@ method ringInsert(g:Set[Ref], start:Ref, x:Int)
 
     ensures RING(new_g)
     ensures UNSHARED_CONNECTED(new_g)
-    ensures new_start in new_g
     ensures forall n:Ref :: { n.val } n in new_g ==> acc(n.val)
     ensures !(new_node in g) && new_node in new_g
     ensures new_node.val == x

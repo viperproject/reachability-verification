@@ -1,5 +1,6 @@
 import "../../_preambles/TrCloDomain.vpr"
-import "../../_preambles/purification.vpr"
+import "../../_preambles/skolems.vpr"
+import "../../_preambles/legoFraming.vpr"
 import "../_preambles/memspecs.vpr"
 
 import "../../_preambles/macros.vpr"
@@ -19,9 +20,6 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
     ensures READONLY_GRAPH(g) && CLOSED(g)
     ensures forall v:Ref :: {v in marked}{SP_(g,roots,v)} v in g ==> ( v in marked ==> SP_(g,roots,v) )
     ensures forall v:Ref :: {v in marked}{SP_(g,roots,v)} v in g ==> ( SP_(g,roots,v) ==> v in marked )
-
-    //:: ExpectedOutput(postcondition.violated:assertion.false)
-    ensures false
 {
     var x:Ref := get(roots)
     var pending:Set[Ref] := roots
@@ -68,7 +66,5 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
     // Instantiation: NoExit[marked, f]
     // Signature: apply_noExit(EG:Set[Edge], U:Set[Ref], M:Set[Ref]): Bool
     assume apply_noExit($$(g), g, marked)
-
-    // assert false
 }
  

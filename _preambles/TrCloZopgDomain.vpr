@@ -3,146 +3,91 @@ domain ZeroOnePathGraphTCs {
     function exists_DEP(EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref): Bool
     function exists_DEP_alias(EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref): Bool
 
+    function depskolem_U(EG:Set[Edge], x0:Ref, y0:Ref): Ref
+    function depskolem_V(EG:Set[Edge], x0:Ref, y0:Ref): Ref
+
     axiom ax_DEP_alias {
         forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
             { exists_DEP(EG,x0,y0,u0,v0) }
                 exists_DEP(EG,x0,y0,u0,v0) <==> exists_DEP_alias(EG,x0,y0,u0,v0)
     }
 
-    // axiom ax_DEP_0 { -- somehow, it also causes unsoundness...
-    //     forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-    //         { exists_DEP(EG,x0,y0,u0,v0) }
-    //         { exists_path(EG,x0,u0), exists_path(EG,v0,y0) }
-    //             exists_path_(EG,x0,u0) && edge(EG,u0,v0) && exists_path_(EG,v0,y0) ==> exists_DEP_alias(EG,x0,y0,u0,v0)
-    // }
-
-    axiom ax_DEP_0_2 {
-        forall EG:Set[Edge], x0:Ref, y0:Ref ::
-            { exists_DEP(EG,x0,y0,x0,y0) }
-            { edge(EG,x0,y0) }
-                edge(EG, x0, y0) && x0 != y0 <==> exists_DEP_alias(EG,x0,y0,x0,y0)
-    }
-
-    axiom ax_HeadTriangleImposable {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,x0,v0) }
-            { exists_path_(EG,x0,y0), exists_path(EG,v0,y0) }
-            { edge(EG,x0,v0), exists_path(EG,v0,y0) }
-                /*exists_path_(EG,x0,y0) &&*/ edge(EG,x0,v0)  && x0 != v0 && exists_path_(EG,v0,y0) 
-                    //TODO: add condition
-                    //&& !exists_path_(EG,v0,x0)
-
-                        ==> exists_DEP_alias(EG,x0,y0,x0,v0)
-    }
-
-    /*axiom ax_TailTriangleImposable {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,y0) }
-            { exists_path_(EG,x0,y0), exists_path(EG,x0,u0) }
-            { edge(EG,u0,y0), exists_path(EG,x0,u0) }
-                /*exists_path_(EG,x0,y0) &&* exists_path_(EG,x0,u0) && edge(EG,u0,y0) && u0 != y0 ==> exists_DEP_alias(EG,x0,y0,u0,y0)
-    }*/
-
-    axiom ax_NoEdgeNoDEP {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,v0) }
-                // Consider replacing LHS with (!edge(EG,u0,v0) && u0 != v0)
-                !edge(EG,u0,v0) || u0 == v0 ==> !exists_DEP_alias(EG,x0,y0,u0,v0)
-    }
-
-    /*axiom ax_TriangleImposable_Neg {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,v0) }
-            //{ exists_path_(EG,x0,y0), exists_path(EG,v0,y0) }
-            //{ edge(EG,x0,v0), exists_path_(EG,v0,y0) }
-                //BLABLA BLA exists_path_(EG,x0,y0) && edge(EG,x0,v0) && exists_path_(EG,v0,y0) ==> !exists_DEP_alias(EG,x0,y0,u0,v0)
-    }*/
-
-    
-    /*axiom ax_DEP_0_1 {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,v0) }
-            { exists_path(EG,x0,u0), exists_path(EG,v0,y0) }
-                exists_path(EG,x0,u0) && edge(EG,u0,v0) && exists_path(EG,v0,y0) ==> exists_DEP(EG,x0,y0,u0,v0)
-    }*/
-
-    /*axiom ax_DEP_1 { -- incorrect
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,v0) }
-            { exists_path(EG,x0,u0), exists_path(EG,v0,y0) }
-                exists_DEP(EG,x0,y0,u0,v0) <==> exists_path(EG,x0,u0) && edge(EG,u0,v0) && exists_path(EG,v0,y0)
-    }*/
-
-    /*axiom ax_DEP_2 { -- also incorrect
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG,x0,y0,u0,v0) }
-            { exists_path(EG,x0,y0), edge(EG,u0,v0) }
-                exists_DEP(EG,x0,y0,u0,v0) <==> exists_path(EG,x0,y0) && edge(EG,u0,v0)
-    }*/
-
-    // axiom ax_DEP_3 {
-    //     forall EG:Set[Edge], x0:Ref, y0:Ref ::
-    //         { exists_path(EG,x0,y0) }
-    //             exists_path_(EG,x0,y0) <==>
-    //                 x0 == y0 ||
-    //                     !forall u0:Ref, v0:Ref ::
-    //                         { exists_DEP(EG,x0,y0,u0,v0) }
-    //                         { exists_path(EG,x0,y0), edge(EG,u0,v0) }
-    //                             !exists_DEP_alias(EG,x0,y0,u0,v0)
-    // }
-    /*
-    axiom ax_DEP_4 {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            //{ exists_DEP(EG,x0,y0,u0,v0) }
-            { exists_path(EG,x0,y0), edge(EG,u0,v0) }
-            { exists_path(EG,x0,y0), exists_path(EG,u0,v0) }
-                exists_DEP_alias(EG,x0,y0,u0,v0) ==> exists_path_(EG,x0,y0) && edge_(EG,u0,v0)
-    }*/
-
-    /*axiom ax_DEP_5 { less general than ax_DEP_3
-        forall EG:Set[Edge], u0:Ref, v0:Ref ::
-            { exists_path(EG,u0,v0) }
-                !exists_path_(EG,u0,v0) ==> forall x0:Ref, y0:Ref :: { exists_DEP(EG,x0,y0,u0,v0) } !exists_DEP_alias(EG,x0,y0,u0,v0)
-    }*/
-
-    axiom ax_DEP_trigger_magic {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+    axiom ax_DepToTc {
+        forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref :: 
             { exists_DEP(EG, x0, y0, u0, v0) }
-                exists_DEP(EG, x0, y0, u0, v0) ==> exists_path(EG, x0, y0) && edge(EG, u0, v0) && u0 != v0
+                exists_DEP(EG, x0, y0, u0, v0) ==> 
+                    exists_path(EG, x0, y0) && 
+                    edge(EG, u0, v0) && 
+                    (u0 != v0)
     }
 
-    axiom ax_DEP_6_head { // could be a cool lemma that needs a cool proof! :-)
-        forall EG:Set[Edge], x0:Ref, y0:Ref, n:Ref ::
-            { exists_DEP(EG, y0, n, x0, y0) }
-                /*edge(EG, x0, y0) &&*/ n != y0 ==> !exists_DEP_alias(EG, y0, n, x0, y0)
+    axiom ax_TcToDep {
+        forall EG:Set[Edge], x0:Ref, y0:Ref :: 
+            { exists_path(EG, x0, y0) }
+                exists_path(EG, x0, y0) && x0 != y0 ==> 
+                    (depskolem_U(EG, x0, y0) != depskolem_V(EG, x0, y0)) && 
+                    edge(EG, depskolem_U(EG, x0, y0), depskolem_V(EG, x0, y0)) && 
+                    exists_DEP(EG, x0, y0, depskolem_U(EG, x0, y0), 
+                                           depskolem_V(EG, x0, y0))
     }
 
-    axiom ax_DEP_6_tail { // could be a cool lemma that needs a cool proof! :-)
-        forall EG:Set[Edge], x0:Ref, y0:Ref, n:Ref ::
-            { exists_DEP(EG, n, x0, x0, y0) }
-                /*edge(EG, x0, y0) &&*/ n != x0 ==> !exists_DEP_alias(EG, n, x0, x0, y0)
+    axiom ax_NoTrivialDep {
+        forall EG:Set[Edge], x0:Ref, u0:Ref, v0:Ref :: 
+            { exists_DEP(EG, x0, x0, u0, v0) }
+                !exists_DEP(EG, x0, x0, u0, v0)
     }
 
-    axiom ax_DEP_7 {
-        forall EG:Set[Edge], nu0:Ref, n:Ref, mu0:Ref, sigma:Ref ::
-            { exists_DEP(EG, nu0, n, mu0, sigma) }
-                nu0 != n && n != sigma && nu0 != mu0 && edge(EG, nu0, sigma) && edge(EG, mu0, sigma)
-                    ==> !exists_DEP_alias(EG, nu0, n, mu0, sigma) || mu0 == sigma
-    }
 
-    /* -- Isn't being triggered without the right term. (Needs manual assertions?)
-    axiom ax_UnrollFromHead {
-        forall EG:Set[Edge], x0:Ref, y0:Ref, n:Ref ::
-            //{ exists_path(EG, x0, n), edge(EG, x0, y0) }
-            { exists_DEP(EG, x0, n, x0, y0) }
-                exists_DEP(EG, x0, n, x0, y0) ==> exists_path(EG, x0, n)
-    }*/
+// axiom ax_DEP_0_2 {
+//         forall EG:Set[Edge], x0:Ref, y0:Ref ::
+//             { exists_DEP(EG,x0,y0,x0,y0) }
+//             { edge(EG,x0,y0) }
+//                 edge(EG, x0, y0) && x0 != y0 <==> exists_DEP_alias(EG,x0,y0,x0,y0)
+//     }
+
+//     axiom ax_HeadTriangleImposable {
+//         forall EG:Set[Edge], x0:Ref, y0:Ref, v0:Ref ::
+//             { exists_DEP(EG,x0,y0,x0,v0) }
+//             { exists_path_(EG,x0,y0), exists_path(EG,v0,y0) }
+//             { edge(EG,x0,v0), exists_path(EG,v0,y0) }
+//                 /*exists_path_(EG,x0,y0) &&*/ edge(EG,x0,v0)  && x0 != v0 && exists_path_(EG,v0,y0) 
+//                     //TODO: add condition
+//                     //&& !exists_path_(EG,v0,x0)
+
+//                         ==> exists_DEP_alias(EG,x0,y0,x0,v0)
+//     }
+
+//     axiom ax_NoEdgeNoDEP {
+//         forall EG:Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+//             { exists_DEP(EG,x0,y0,u0,v0) }
+//                 // Consider replacing LHS with (!edge(EG,u0,v0) && u0 != v0)
+//                 !edge(EG,u0,v0) || u0 == v0 ==> !exists_DEP_alias(EG,x0,y0,u0,v0)
+//     }
+
+//     axiom ax_DEP_6_head { // could be a cool lemma that needs a cool proof! :-)
+//         forall EG:Set[Edge], x0:Ref, y0:Ref, n:Ref ::
+//             { exists_DEP(EG, y0, n, x0, y0) }
+//                 /*edge(EG, x0, y0) &&*/ n != y0 ==> !exists_DEP_alias(EG, y0, n, x0, y0)
+//     }
+
+//     axiom ax_DEP_6_tail { // could be a cool lemma that needs a cool proof! :-)
+//         forall EG:Set[Edge], x0:Ref, y0:Ref, n:Ref ::
+//             { exists_DEP(EG, n, x0, x0, y0) }
+//                 /*edge(EG, x0, y0) &&*/ n != x0 ==> !exists_DEP_alias(EG, n, x0, x0, y0)
+//     }
+
+//     axiom ax_DEP_7 {
+//         forall EG:Set[Edge], nu0:Ref, n:Ref, mu0:Ref, sigma:Ref ::
+//             { exists_DEP(EG, nu0, n, mu0, sigma) }
+//                 nu0 != n && n != sigma && nu0 != mu0 && edge(EG, nu0, sigma) && edge(EG, mu0, sigma)
+//                     ==> !exists_DEP_alias(EG, nu0, n, mu0, sigma) || mu0 == sigma
+//     }
     
-    axiom ax_DepNeedsCOALIGNED_INTEREDGESPathAndEdge {
-        forall EG: Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(EG, x0, y0, u0, v0) } 
-            { exists_path(EG, x0, u0), exists_path(EG, v0, y0) }
-                !exists_path_(EG, x0, u0) || !exists_path_(EG, v0, y0) ==> !exists_DEP_alias(EG, x0, y0, u0, v0)
-    }
+//     axiom ax_DepNeedsCOALIGNED_INTEREDGESPathAndEdge {
+//         forall EG: Set[Edge], x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+//             { exists_DEP(EG, x0, y0, u0, v0) } 
+//             { exists_path(EG, x0, u0), exists_path(EG, v0, y0) }
+//                 !exists_path_(EG, x0, u0) || !exists_path_(EG, v0, y0) ==> !exists_DEP_alias(EG, x0, y0, u0, v0)
+//     }
 }
 

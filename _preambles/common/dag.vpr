@@ -20,27 +20,32 @@ define TC_G_MINUS_DELTA(smaller_EG, larger_EG, alpha, beta)
             !(exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0))
                 ==> 
                 (exists_path(larger_EG, x0, y0) <==> exists_path(smaller_EG, x0, y0)))
-    /**
-        We currently do not have evidence that the precise update formula is ever needed. 
-     */
     && 
     (forall x0:Ref, y0:Ref ::
         { exists_path(smaller_EG,x0,y0) }
             ((x0 != alpha) && (y0 != beta) && exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0)) 
                 ==> 
                 (exists_path(smaller_EG, x0, y0) <==> (x0 == y0) ||
-                    ( exists u0:Ref :: 
-                        exists_path(larger_EG, x0, u0) && exists_path(larger_EG, u0, y0) &&
-                        (!exists_path(larger_EG, u0, beta) && !exists_path(larger_EG, beta, u0) 
-                        || !exists_path(larger_EG, u0, alpha) && !exists_path(larger_EG, alpha, u0)))
+                    !( forall u0:Ref :: 
+                        { exists_path(larger_EG, x0, u0) }
+                        { exists_path(larger_EG, u0, y0) }
+                            !(exists_path(larger_EG, x0, u0) && exists_path(larger_EG, u0, y0) &&
+                            (!exists_path(larger_EG, u0, beta) && !exists_path(larger_EG, beta, u0) 
+                            || !exists_path(larger_EG, u0, alpha) && !exists_path(larger_EG, alpha, u0))))
                     ||
-                    ( exists u0:Ref :: 
-                        u0 != alpha && u0 != beta && exists_path(larger_EG, alpha, u0) && exists_path(larger_EG, u0, beta))
+                    !( forall u0:Ref :: 
+                        { exists_path(larger_EG, alpha, u0) }
+                        { exists_path(larger_EG, u0, beta) }
+                            !(u0 != alpha && u0 != beta && exists_path(larger_EG, alpha, u0) && exists_path(larger_EG, u0, beta)))
                     ||
-                    ( exists u0:Ref, v0:Ref :: 
-                        (u0 != alpha || v0 != beta) && edge(larger_EG,u0,v0) 
-                        && exists_path(larger_EG,x0,u0) && exists_path(larger_EG,u0,alpha) 
-                        && exists_path(larger_EG,beta,v0) && exists_path(larger_EG,v0,y0))))
+                    !( forall u0:Ref, v0:Ref :: 
+                        { exists_path(larger_EG,x0,u0), exists_path(larger_EG,beta,v0) }
+                        { exists_path(larger_EG,u0,alpha), exists_path(larger_EG,beta,v0) }
+                        { exists_path(larger_EG,x0,u0), exists_path(larger_EG,v0,y0) }
+                        { exists_path(larger_EG,u0,alpha), exists_path(larger_EG,v0,y0) }
+                            !((u0 != alpha || v0 != beta) && edge(larger_EG,u0,v0) 
+                            && exists_path(larger_EG,x0,u0) && exists_path(larger_EG,u0,alpha) 
+                            && exists_path(larger_EG,beta,v0) && exists_path(larger_EG,v0,y0)))))
     // The imprecise formula for exists_path may decrease performance in some cases. 
     // && (forall x0: Ref, y0: Ref ::
     //     { exists_path(smaller_EG, x0, y0) }

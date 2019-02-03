@@ -11,10 +11,10 @@ import "../_preambles/memspecs.vpr"
 import "../../_preambles/skolems.vpr"
 
 
-// import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/graph.vpr"
 
-// import "../../_preambles/common/dag.vpr"
-// import "../_preambles/dag.vpr"
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
 
 define __CONVEXITY_CHECKES false 
 
@@ -25,15 +25,14 @@ define TREE_IMPL(t)
     CLOSED(t) && ACYCLIC(t) //&& UNSHARED(t)
 
 function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
-    requires TREE(t)
-    requires sub_root in t
-    
+    // requires TREE(t)
+    requires GRAPH(t)
+    requires sub_root in t    
     ensures result subset t
-    ensures TREE_IMPL(result)
+    ensures RELATIVELY_CLOSED(result, t)
     ensures !(null in result)
     ensures sub_root in result
     ensures GLOBAL_ROOT(result, sub_root)
-    // ensures result == subTree(result, sub_root)
 
 
 define TWO_ROOTED_DAG(nodes, root, root_s)
@@ -42,12 +41,6 @@ define TWO_ROOTED_DAG(nodes, root, root_s)
         { P_(nodes, root, n) }
             n in nodes <==> P_(nodes, root, n) && !P_(nodes, root_s, n) ||
                            !P_(nodes, root, n) &&  P_(nodes, root_s, n))
-
-define ROOTED_DAG(nodes, root)
-    (forall n:Ref :: 
-        { P_(nodes, root, n) }
-            n in nodes <==> P_(nodes, root, n))
-
 
 method mergeRight(g: Set[Ref], // ghost
                 tree: Set[Ref], root: Ref, 
@@ -61,8 +54,7 @@ method mergeRight(g: Set[Ref], // ghost
     requires g == tree union sub_tree
     requires TREE(g)
     requires TWO_ROOTED_DAG(g, root, root_s)
-    // requires ROOTED_DAG(tree, root)
-    // requires ROOTED_DAG(sub_tree, root_s)
+    requires CLOSED(tree) && CLOSED(sub_tree) // Can be learned from TWO_ROOTED_DAG + (anti-NoExit)
 
     ensures new_tree == g
     ensures TREE(g)
@@ -78,7 +70,6 @@ method mergeRight(g: Set[Ref], // ghost
 
     ensures old(root.right) == null ==> root == link && root.right == root_s
 
-    ensures P_(new_tree, link, root_s)
     ensures forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
         { P0(g, x, y) }
@@ -88,351 +79,49 @@ method mergeRight(g: Set[Ref], // ghost
             (x in tree     && y in tree     ==> (P_(g, x, y) <==> P0(g, x, y))) && 
             (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
     
-    // ensures GLOBAL_ROOT(new_tree, root)
-
+    ensures GLOBAL_ROOT(new_tree, root)
 {
     new_tree := tree union sub_tree
 
-    // Branching
-    assume root.right != null
+    // Partitioning paths in disjoint structures of (g): tree, sub_tree
+    EnableFocusOnConvexSubHeap(g, tree)
+    EnableFocusOnConvexSubHeap(g, sub_tree)
 
-    assume TREE_IMPL(tree) 
-    assume TREE_IMPL(sub_tree) 
+    if ( root.right != null ) {
+
+        var ch_node: Ref := root.right
+        var ch_tree: Set[Ref] := subTree(tree, ch_node)
+        var frame: Set[Ref] := tree setminus ch_tree
+
+        // Footprint of the sub-call: 
+        var g1: Set[Ref] := ch_tree union sub_tree
+
+        // Partitioning paths before sub-call: (ch_tree union sub_tree), frame
+        EnableFocusOnConvexSubHeap(g, g1)
+        EnableFocusOnConvexSubHeap(g, frame)
+        
+        // Partitioning paths in disjoint structures of (g1): ch_tree, sub_tree
+        EnableFocusOnConvexSubHeap(g1, ch_tree)
+        EnableFocusOnConvexSubHeap(g1, sub_tree)
+
+    label l1
+        g1, link := mergeRight(g1, ch_tree, ch_node, sub_tree, root_s)
+    label l2
+
+        new_tree := frame union g1
+
+        // Recompute the reachability in (g) after the sub-call. 
+        ApplyConvexTCFraming(l1, l2, g1, g, frame)
+        
+        // Partition paths after the sub-call. 
+        EnableFocusOnConvexSubHeap(g, g1)
+        EnableFocusOnConvexSubHeap(g, frame)
+
+        // assert false
     
-    
-    var ch_node: Ref := root.right
-    var ch_tree: Set[Ref] := subTree(tree, ch_node)
-    var frame: Set[Ref] := tree setminus ch_tree
-
-    EnableFocusOnConvexSubHeap(g, ch_tree union sub_tree)
-    EnableFocusOnConvexSubHeap(g, frame)
-    
-    var g1: Set[Ref]
-label l1
-    assume TREE_IMPL(ch_tree union sub_tree)
-    assume TWO_ROOTED_DAG(ch_tree union sub_tree, ch_node, root_s)
-    g1, link := mergeRight(ch_tree union sub_tree, ch_tree, ch_node, sub_tree, root_s)
-label l2
-    new_tree := frame union g1
-    assert ch_tree union sub_tree == g1
-
-
-    ApplyConvexTCFraming(l1, l2, g1, g, frame)
-    
-    EnableFocusOnConvexSubHeap(g, g1)
-    EnableFocusOnConvexSubHeap(g, frame)
-    assert frame == g setminus g1
-
-    // assume DISJOINT(frame, g1)
-
-    // === part four ===
-
-    // disconnected 
-
-    // assert (forall n:Ref :: 
-    //     { P0(g1, root_s, n) } 
-    //     { P0(g1, ch_node, n) }
-    //         n in g1 <==> P0(g1, ch_node, n) && !P0(g1, root_s, n) ||
-    //                     !P0(g1, ch_node, n) &&  P0(g1, root_s, n))
-    assume forall a:Ref :: 
-        { P0(g1, a, link) }
-            a in g1 && P0(g1, a, link) ==> a in ch_tree // (1) -- todo: prove as a lemma
-    // assume forall n:Ref :: 
-    //     { P0(g, root, n) }
-    //         P0(g, root, n) <==> n in tree
-    // assume forall n:Ref :: 
-    //     { P0(g, root_s, n) }
-    //         P0(g, root_s, n) <==> n in sub_tree
-    assume forall n:Ref, m:Ref :: 
-        { P0(g, n, m), n in tree, m in sub_tree }
-            n in tree && m in sub_tree ==> !P0(g, n, m) &&  // (2)
-                                           !P0(g, m, n)     // (3)
-
-    // // preserve 
-    // assert forall a:Ref, y:Ref :: 
-    //     { P0(g1, a, y) }
-    //         (a in sub_tree && y in sub_tree && P0(g1, a, y) ==> P_(g1, a, y)) //&& 
-    //         // This connot happen, because ch_tree and sub_tree are disconnected.
-    //         //(a in ch_tree  && y in sub_tree ==> ( P_(g1, a, y) <==> P0(g1, a, link) && P0(g1, root_s, y) )) 
-    
-    // assert link in ch_tree
-    // assert g1 == sub_tree union ch_tree
-    // assert forall a:Ref :: 
-    //     { P0(g1, a, link) }
-    //         (a in ch_tree && P0(g1, a, link) ==> P_(g1, a, link)) && 
-    //         (a in sub_tree ==> !P_(g1, a, link)) 
-    //         // (a in ch_tree && y in sub_tree && P0(g1, a, link) && P0(g1, root_s, y) ==> (P_(g1, a, y)))
-
-    // // split
-    // assert forall x:Ref :: 
-    //     { P0(g, x, link) }
-    //         x in frame && P0(g, x, link) ==> P_(g, x, link)
-
-    // // split
-    // assert forall y:Ref :: 
-    //     { P0(g, root_s, y) }
-    //         y in sub_tree && P0(g, root_s, y) ==> P_(g, root_s, y)
-
-    // Needed for triggering transitivity
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P_(g, x, link), P_(g, root_s, y) }
-    //         P_(g, x, link) && P_(g, root_s, y) ==> P_(g, x, y)
-
-    // ---- THE HARDESTEST CASE ----
-    // Paths to merge: 
-    // 1) P0(frame, x, a), P0(g1, a, link)
-    // 2) impossible case: P0(frame, x, a), P0(g1, a, y) ==> P0(g, x, y) && x in tree && y in sub_tree ==> false
-    // var my_a:Ref
-    // var my_y:Ref
-    // var my_x:Ref
-    // assume my_x in frame
-    // assume my_y in sub_tree
-    // assert my_y in sub_tree 
-    // assume P_(g, my_x, my_y)
-    // assert P_(g1, skolem_alpha2(my_x,my_y), my_y)
-    // assert skolem_alpha2(my_x,my_y) in g1
-    // assert P0(frame, my_x, skolem_alpha2(my_x,my_y))
-    // assume my_a == skolem_alpha2(my_x,my_y)
-    // assume my_a in sub_tree
-    // assume P_(g1, my_a, my_y)
-    // assert P0(g1, my_a, my_y)
-    // assert P0(g, my_x, my_y) 
-    // assert false
-
-    // contradicting case: 
-    // assume forall x:Ref, y:Ref, a:Ref :: 
-    //     { P0(frame, x, a), P0(g1, a, y) }
-    //         x in frame && y in g1 && a in g1 &&
-    //         P0(frame, x, a) && P0(g1, a, y) ==> P0(g, x, y)
-
-    // // blur
-    // assert forall y:Ref :: 
-    //     { P0(g1, root_s, y) }
-    //         y in g1 && P0(g1, root_s, y) ==> P0(g, root_s, y)
-
-    // // preserve [a, y]
-    // assert forall a:Ref, y:Ref :: 
-    //     { P_(g1, a, y) }
-    //         (a in sub_tree && y in sub_tree && P_(g1, a, y) ==> P0(g1, a, y)) && 
-    //         (a in ch_tree && y in sub_tree && P_(g1, a, y) ==> P0(g1, a, link) && P0(g1, root_s, y))
-
-    // split
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in frame && y in sub_tree && a in g1 && P0(frame, x, a) && P_(g1, a, y) ==> 
-
-    // sub-goal 1-1
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in frame && y in sub_tree && P_(g, x, y) ==> P0(g, root_s, y)
-    
-    // Paths still to merge: 
-    // 1) P0(frame, x, a), P0(g1, a, link)
-    // var mx:Ref
-    // var my:Ref
-    // var ma:Ref
-    // assume mx in frame && my in sub_tree && P_(g, mx, my)
-    // assert P_(g1, skolem_alpha2(mx,my), my)
-    // assert skolem_alpha2(mx,my) in g1
-    // assert P0(frame, mx, skolem_alpha2(mx,my))
-    
-    // assert P0(g1, skolem_alpha2(mx,my), link)
-
-    // // LHS of 'merge in pre-state'
-    // assert (mx in frame) && 
-    //             (link in g1) && (skolem_alpha2(mx,my) in g1) &&
-    //                 P0(frame, mx, skolem_alpha2(mx,my)) && P0(g1, skolem_alpha2(mx,my), link)
-    // // RHS
-    // assert P0(g, mx, link)
-
-    // assert P0(g, mx, link)
-
-    // assume false
-    // sub-goal 1-2
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in ch_tree && y in sub_tree && P_(g, x, y) ==> P0(g, x, link)
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in frame && y in sub_tree && P_(g, x, y) ==> P0(g, x, link)
-    // // sub-goal 2
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in tree && y in sub_tree && P_(g, x, y) ==> P0(g, root_s, y)
-
-    // sub-goal
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         x in tree && y in sub_tree && P_(g, x, y) ==> P0(g, x, link) && P0(g, root_s, y)
-
-
-    // assert forall x:Ref, y:Ref :: 
-    //     { P0(g, x, link), P0(g, root_s, y) }
-    //         // Split
-    //         (x in tree     && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
-    //         // (x in tree && y in sub_tree && P_(g, x, y) ==> P0(g, x, link) && P0(g, root_s, y)) //&& 
-    //         // (x in ch_tree && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
-    //         // (x in frame && y in sub_tree && P0(g, x, link) && P0(g, root_s, y) ==> P_(g, x, y))
-
-    //         (x in tree     && y in tree ==> (P_(g, x, y) <==> P0(g, x, y)))  
-
-
-
-
-
-    // assert (forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) } 
-    //         (x in sub_tree && y in tree ==> !P_(g, x, y)))
-    // assert (forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         (x in tree && y in tree && (skolem_alpha(x,y) in tree) ==> (P0(g, x, y) <==> P_(g, x, y)))
-    // assert forall x:Ref, y:Ref :: 
-    //     { P0(g, x, link), P0(g, root_s, y) }
-    //         (x in tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, root_s, y)))
-
-
-    // assume false    
-
-
-
-
-
-
-    // === Acyclicity === 
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         y in g1 && x in g1 && E_(g1, y, x) ==> !P_(g1, x, y)
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         y in g1 && x in g1 && E_(g, y, x) ==> !P_(g, x, y)
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         y in frame && x in g1 && E_(g, y, x) ==> !P_(g, x, y)
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //         y in frame && x in frame && E_(g, y, x) ==> !P_(g, x, y)
-    // assert ACYCLIC(g)
-    // assume false
-
-
-    // === part three ===
-
-    // post
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g1, x, y) } 
-    //     { P0(g, x, y) }
-    //         (x in ch_tree       && y in ch_tree     ==> (P_(g1, x, y) <==> P0(g1, x, y)))
-
-    // assert ch_tree subset g1
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P_(g1, x, y) }
-    //         (x in g1 && y in g1 && P_(g, x, y) ==> P_(g1, x, y))
-
-    // left-to-right
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         //Split
-    //         (x in tree && y in tree && skolem_alpha(x,y) in ch_tree && P_(g, x, y) ==> P0(g, x, y))
-    //         // (x in frame && y in ch_tree && P_(g, x, y) ==> P0(g, x, y)) //&&
-    //         //(x in ch_tree && y in ch_tree && P_(g, x, y) ==> P0(g, x, y)) 
-    //         // (x in frame && y in frame && P_(g, x, y) ==> P0(g, x, y)) && 
-    //         // (x in ch_tree && y in frame && P_(g, x, y) ==> P0(g, x, y)) 
-             
-    // frame
-    // assume forall x:Ref, a:Ref, y:Ref :: 
-    //     { x in frame, y in g1, a in g1, P0(g, x, y) }
-    //         x in frame && y in g1 && a in g1 && 
-    //         P0(frame, x, a) && P_(g1, a, y) 
-    //         ==> P_(g, x, y)
-
-    // split 
-    // assume forall x:Ref, y:Ref :: 
-    //     { x in frame, P0(g, x, y) }
-    //         x in frame && y in g1 && P0(g, x, y) ==> 
-    //             P0(frame, x, skol(x,y)) && P0(g1, skol(x,y), y)
-    //             && skol(x,y) in g1
-
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         x in frame && y in ch_tree && skolem_alpha(x,y) in ch_tree //&& __learn_trigger__( trig(x,y,y) )
-    //             && P0(g, x, y) ==> P_(g, x, y)
-
-    // var mx:Ref
-    // var my:Ref 
-    // assume mx in frame && my in ch_tree && P0(g, mx, my)
-
-    // // LHS of (split in pre-state)
-    // assert __learn_trigger__(__trigger_conv_framing_Entries__(mx, my, skolem_alpha1(mx,my)))
-    // assert mx in frame
-    // assert my in g1
-    // assert P0(g, mx, my)
-
-    // // RHS of (split in pre-state)
-    // assert skolem_alpha1(mx,my) in g1
-    // assert P0(frame, mx, skolem_alpha1(mx,my))
-    // assert P0(g1, skolem_alpha1(mx,my), my)
-
-    // // assert forall x:Ref, y:Ref :: 
-    // //     { P_(g, x, y) }
-    // //     { P0(g, x, y) }
-    // //         (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && // impossible due to (3)
-    // //         (x in ch_tree && y in ch_tree && P0(g1, x, y) ==> P_(g, x, y))  
-    // //case 1 
-    // // assume skolem_alpha1(mx,my) in ch_tree
-    // //case 2 -- impossible due to (3)
-    // // assume skolem_alpha1(mx,my) in sub_tree
-
-    // assert mx in frame
-    // assert my in g1
-    // assert skolem_alpha1(mx,my) in g1
-    // assert P0(frame, mx, skolem_alpha1(mx,my))
-    // assert P_(g1, skolem_alpha1(mx,my), my)
-    // assert P_(g, mx, my)
-    // assume false
-
-    // right-to-left
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         //Split
-    //         (x in tree && y in tree && P0(g, x, y) && skolem_alpha(x,y) in ch_tree ==> P_(g, x, y))
-    //         // (x in frame && y in frame && P0(g, x, y) ==> P_(g, x, y)) //&& 
-    //         // (x in frame && y in ch_tree && P0(g, x, y) ==> P_(g, x, y))
-
-    // overall
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         (x in tree && y in tree ==> (P0(g, x, y) <==> P_(g, x, y)))
-
-    // assume false
-
-    // // === parts one and two ===
-
-    // pre
-    // assert forall x:Ref, y:Ref :: 
-    //     { P_(g1, x, y) } 
-    //     { P0(g, x, y) }
-    //         (x in sub_tree && y in ch_tree ==> !P_(g1, x, y)) && 
-    //         (x in sub_tree && y in sub_tree ==> (P_(g1, x, y) <==> P0(g1, x, y))) && 
-
-    // assert (forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) } 
-    //         (x in sub_tree && y in tree ==> !P_(g, x, y)))
-    // assert (forall x:Ref, y:Ref :: 
-    //     { P_(g, x, y) }
-    //     { P0(g, x, y) }
-    //         x in sub_tree && y in sub_tree ==> (P_(g, x, y) <==> P0(g, x, y)))
-
-    // assert false
-    // assume false
+    } else {
+        // Encoding root.right := root_s ...
+        link_DAG_right(new_tree, root, root_s)
+        link := root
+    }
 }

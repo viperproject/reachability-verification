@@ -1,6 +1,6 @@
 import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
 
-//import "../../_preambles/purification.vpr"
 import "../../_preambles/legoFraming.vpr"
 
 import "../../_preambles/memspecs.vpr"
@@ -94,22 +94,17 @@ method reverse(g: Set[Ref], xe: Ref)  returns (mrk: Set[Ref], y: Ref)
 
         invariant ACYCLIC(g)
     {
-        // assert (forall v1:Ref, v2:Ref :: { E_(g,v1,v2) }{ P_(g,v2,v1) } E_(g,v1,v2) ==> !P_(g,v2,v1))
-
         mrk := mrk union Set(x)
-        // assert x.next != null && x != x.next ==> E_(g, x, x.next)
         t := x.next
-
 
         // Encoding x.next := y
         unlink_DAG_next(g, x)
 
-        // Found the missing bit (needed for acyclicity): 
+        // Needed to prove acyclicity: 
         assume apply_noExit($$(g), g, g setminus Set(x))
 
         link_DAG_next(g, x, y)
         
-
         y := x
         x := t
     }

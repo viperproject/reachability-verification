@@ -13,6 +13,7 @@ function $$(nodes0: Set[Ref]): Set[Edge]
             (v1 in nodes0) && exists_path(result, v1, v2) ==> (v2 in nodes0))
     ensures (forall v1: Ref, v2: Ref :: 
         { (v1 in nodes0),(v2 in nodes0), exists_path(result, v1, v2) } 
+        // { exists_path(result, v1, v2) }
             (v2 in nodes0) && exists_path(result, v1, v2) ==> (v1 in nodes0))
     ensures forall h0:Set[Ref] :: 
         { $$(h0) subset result }
@@ -94,13 +95,13 @@ define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
                         P(s_new, GLOB, v1, v2))
 
     // split in post-state (frame=const)
-    // assume forall v1:Ref, v2:Ref :: 
-    //     { v1 in FRAME, P(s_new, GLOB, v1, v2) }
-    //         v1 in FRAME && v2 in MOD &&  
-    //         P(s_new, GLOB, v1, v2) ==> 
-    //             (skolem_alpha(v1,v2) in MOD) &&
-    //             P(s_old, GLOB setminus MOD, v1, skolem_alpha(v1,v2)) && 
-    //             P(s_new, MOD, skolem_alpha(v1,v2), v2)
+    assume forall v1:Ref, v2:Ref :: 
+        { v1 in FRAME, P(s_new, GLOB, v1, v2) }
+            v1 in FRAME && v2 in MOD &&  
+            P(s_new, GLOB, v1, v2) ==> 
+                (skolem_alpha(v1,v2) in MOD) &&
+                P(s_old, GLOB setminus MOD, v1, skolem_alpha(v1,v2)) && 
+                P(s_new, MOD, skolem_alpha(v1,v2), v2)
 
     assume (forall v1:Ref, v2:Ref :: 
             
@@ -163,7 +164,7 @@ define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
 define EnableFocusOnConvexSubHeap(GLOB, MOD) {
     assume (forall v1:Ref, v2:Ref :: 
         { P_(GLOB, v1, v2) }
-        // { P_(MOD, v1, v2) } 
+        { P_(MOD, v1, v2) } 
             (v1 in MOD) && (v2 in MOD) ==> 
                 (P_(GLOB, v1, v2) <==> P_(MOD, v1, v2)))
 
@@ -173,13 +174,6 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
                 (v1 in MOD) ==> 
                     (E_(GLOB, v1, v2) <==> E_(MOD, v1, v2)))
 
-    assume (forall u0:Ref, v0:Ref :: 
-        { P_(GLOB, u0, v0) }
-            u0 in MOD && !(v0 in MOD) && CLOSED(MOD)
-                ==> !P_(GLOB, u0, v0))
-}
-
-define ApplyNoExitWisdom(GLOB, MOD) {
     assume (forall u0:Ref, v0:Ref :: 
         { P_(GLOB, u0, v0) }
             u0 in MOD && !(v0 in MOD) && CLOSED(MOD)

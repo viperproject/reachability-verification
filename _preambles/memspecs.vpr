@@ -37,6 +37,12 @@ define CLOSED_for($field$, nodes)
         { n in nodes, n.$field$ }
             n in nodes && n.$field$ != null ==> n.$field$ in nodes)
 
+define RELATIVELY_CLOSED_for($field$, nodes, against_nodes)
+    (forall n:Ref :: 
+        { n.$field$ in against_nodes }
+        {  n in nodes, n.$field$ }
+            n in nodes ==> !(n.$field$ in against_nodes))
+
 define COMPLETE_for($field$, nodes)
     (forall n:Ref :: 
         { n.$field$ in nodes }

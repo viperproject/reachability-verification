@@ -1,0 +1,246 @@
+import "../../../_preambles/TrCloDomain.vpr"
+import "../../../_preambles/TrCloZopgDomain.vpr"
+
+import "../../../_preambles/framing.vpr"
+import "../../../_preambles/legoFraming.vpr"
+
+import "../../../_preambles/memspecs.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../../../_preambles/common/graph.vpr"
+import "../../../_preambles/common/zopg.vpr"
+import "../../_preambles/zopg.vpr"
+
+
+import "../../../_preambles/macros.vpr"
+
+
+define UNSHARED_CONNECTED(g)
+    ( forall v1:Ref, v2:Ref, v:Ref :: { v in g, v1.next, v2.next } v1 in g && v2 in g && v in g ==> ( v1.next == v && v2.next == v ==> v1 == v2 ) )
+    && ( forall v:Ref :: { v.next } v in g ==> ( v == v.next <==> g == Set(v) ) )
+
+define RING(g)
+    ( GRAPH(g) && COMPLETE(g) )
+
+method create_node(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
+    ensures !( new_node in graph )
+    ensures new_graph == graph union Set(new_node)
+    ensures acc(new_node.next) 
+    ensures new_node.next == null
+// {
+//     new_node := new(*)
+//     assume !( new_node in graph )
+//     new_node.next := null
+//     new_node.val := init_val
+//     new_graph := graph union Set(new_node)
+// }
+
+// method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
+//     requires PROTECTED_GRAPH_next(g,from) 
+//     requires from in g
+//     requires from.next == null
+//     requires to != null ==> to in g 
+//     ensures PROTECTED_GRAPH_next(g,from)
+//     ensures from.next == to
+//     ensures (to == null) ==> $$(g) == old($$(g))
+//     ensures P_(g, from, to)
+//     ensures (to != null) ==> //LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
+//         (forall x0:Ref, y0:Ref ::
+//             { E_(g, x0, y0) }
+//                 E_(g, x0, y0) <==> E0(g, x0, y0) || (x0==from && y0==to))
+//     ensures (to != null) ==> //DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+//         (forall x0:Ref, y0:Ref ::
+//             { P_(g, x0, y0) }
+//                 P_(g, x0, y0) <==> P0(g, x0, y0) || (P0(g, x0, from) && P0(g, to, y0)))
+
+//     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
+
+//     // Automatic reasoning support
+//     // a. Arity-independent
+//     ensures forall n:Ref, m:Ref :: 
+//         { P_(g, n, m) } 
+//             n in g && m in g ==> 
+//                 __learn_trigger__( P_(g, n, from) ) && 
+//                 __learn_trigger__( P_(g, from, m) )
+//     ensures (to != null) ==> forall n:Ref, m:Ref :: 
+//         { P_(g, n, m) } 
+//             n in g && m in g ==> 
+//                 __learn_trigger__( P_(g, n, to) ) && 
+//                 __learn_trigger__( P_(g, to, m) )
+
+//     // b. Arity-dependent
+//     ensures forall n0:Ref :: 
+//         { P_(g, to, n0) }
+//         { P_(g, from, n0) } 
+//             n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, from, n0, from, from.next))
+//     ensures (to != null) ==> forall n0:Ref :: 
+//         { P_(g, to, n0) }
+//         { P_(g, from, n0) } 
+//             n0 in g && n0 != to ==> __learn_trigger__(DEP_(g, to, n0, to, to.next))
+//     ensures forall n0: Ref :: 
+//         { P_(g, n0, to) }
+//         { P_(g, n0, from) } 
+//             n0 in g && n0 != from ==> __learn_trigger__(DEP_(g, n0, from, n0, n0.next))
+//     ensures (to != null) ==> forall n0:Ref :: 
+//         { P_(g, n0, to) }
+//         { P_(g, n0, from) } 
+//             n0 in g && n0 != to ==> __learn_trigger__(DEP_(g, n0, to, n0, n0.next)) // never helped so far
+
+//     ensures (to != null) ==> forall n0:Ref :: 
+//         { DEP_(g, to, n0, to, to.next) }
+//         { DEP_(g, from, n0, from, from.next) } 
+//             n0 in g ==> 
+//                 __learn_trigger__( P_(g, from, n0) ) && 
+//                 __learn_trigger__( P0(g, from, n0) ) // never helped so far
+
+//     ensures (to != null) ==> forall n0:Ref :: 
+//         { DEP_(g, to, n0, to, to.next) }
+//         { DEP_(g, from, n0, from, from.next) } 
+//             n0 in g ==> 
+//                 __learn_trigger__( P_(g, to, n0) ) && 
+//                 __learn_trigger__( P0(g, to, n0) )
+
+
+
+// method unlink_ZOPG_next(g:Set[Ref], node:Ref)
+//     requires PROTECTED_GRAPH_next(g,node)
+//     requires node in g
+//     ensures PROTECTED_GRAPH_next(g,node)
+//     ensures node.next == null
+//     ensures old(node.next) == null ==> $$(g) == old($$(g))
+//     ensures old(node.next) != null ==> //UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g, node, old(node.next))
+//         (forall x0:Ref, y0:Ref ::
+//             { E_(g, x0, y0) }
+//                 E_(g, x0, y0) <==> E0(g, x0, y0) && !(x0==node && y0==old(node.next)))
+//     ensures old(node.next) != null ==> ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, node, old(node.next))
+//         // (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
+//         //     { DEP_(g, x0, y0, u0, v0) }
+//         //     { DEP0(g, x0, y0, u0, v0) }
+//         //         DEP0(g, x0, y0, u0, v0) && !DEP0(g, x0, y0, node, old(node.next)) <==> DEP_(g, x0, y0, u0, v0))
+    
+
+
+// domain FunnilyEnough {
+//     function fummy(n:Ref): Bool
+//     function blabla(x:Ref): Bool
+//     function theCheckCheck(y:Ref): Bool
+
+//     axiom ax_Foo{
+//         forall m: Ref :: 
+//             { fummy(m) }
+//                 false
+//     }
+// }
+
+method ringInsert(g: Set[Ref], pre_node: Ref, post_node: Ref)
+    returns (new_g: Set[Ref], new_node: Ref)
+
+    requires RING(g)
+    requires UNSHARED_CONNECTED(g)
+    requires pre_node in g && post_node in g
+    requires pre_node.next == post_node
+    requires forall n:Ref, m:Ref ::
+        { P_(g,n,m) }
+            n in g && m in g ==> P_(g,n,m)
+
+    ensures RING(new_g)
+    ensures UNSHARED_CONNECTED(new_g)
+    ensures !(new_node in g) && new_node in new_g
+    ensures new_g == g union Set(new_node)
+    ensures pre_node.next == new_node && new_node.next == post_node
+    // ensures 
+    ensures forall n:Ref, m:Ref ::
+        { P_(new_g,n,m) }
+            n in new_g && m in new_g
+                ==> P_(new_g,n,m)
+{
+    new_g, new_node := create_node(g)
+
+    assume apply_AtomicTCFraming(g, new_node)
+    assume apply_DepToTcWisdom(g, Set(new_node))
+
+    // Encoding new_node.next := post_node ...
+    link_ZOPG_next(new_g, new_node, post_node)
+
+    assert forall n: Ref :: 
+        { P_(new_g, new_node, n) }
+            n in new_g ==> P_(new_g, new_node, n)
+    assert forall n:Ref, m:Ref ::
+        { P_(new_g,n,m) }
+            n in new_g && m in new_g && m != new_node ==> P_(new_g, n, m)
+
+    assert P_(new_g, pre_node, post_node)
+    // assert !P_(new_g, pre_node, new_node)
+
+
+
+    assert forall n: Ref, u:Ref, v:Ref :: 
+        { DEP_(new_g, n, n, u, v) }
+            n in new_g && u in new_g && v in new_g ==> !DEP_(new_g, n, n, u, v)
+
+    assert forall n: Ref, u:Ref, v:Ref :: 
+        { DEP_(new_g, n, new_node, u, v) }
+            !DEP_(new_g, n, new_node, u, v)
+
+    assert !P_(new_g, pre_node, new_node)
+
+
+    // assume false
+    // assert forall n: Ref :: 
+    //     { DEP_(new_g, pre_node, n, pre_node, pre_node.next) }
+    //         n in new_g && pre_node.next != pre_node && n != pre_node ==> DEP_(new_g, pre_node, n, pre_node, pre_node.next)
+
+    // Encoding pre_node.next := new_node ...
+    if ( pre_node.next != null ) {
+        unlink_ZOPG_next(new_g, pre_node)
+    }
+
+    assert forall n: Ref, u:Ref, v:Ref :: 
+        { DEP_(new_g, pre_node, n, u, v) }
+            n in new_g ==> !DEP_(new_g, pre_node, n, u, v)
+    
+    // assert false
+    // assume false
+    
+    assert forall n: Ref :: 
+        { P_(new_g, pre_node, n) }
+            n in new_g && pre_node != n ==> !P_(new_g, pre_node, n)
+
+    // assert !P_(new_g, pre_node, new_node)
+    // assert foral
+
+    link_ZOPG_next(new_g, pre_node, new_node)
+
+    // assert P_(new_g, pre_node, post_node)
+
+
+    // assert forall n:Ref :: 
+    //     { P_(new_g, pre_node, n) } 
+    //         n in new_g ==> P_(new_g, post_node, n)
+
+    // assert forall n:Ref :: 
+    //     { P_(new_g, pre_node, n) } 
+    //         n in new_g ==> P_(new_g, pre_node, n)
+
+}
+
+
+
+// function apply_DepToTcWisdom(g0:Set[Ref], g1:Set[Ref]): Bool
+//     requires NODES(g0, 1/2)
+//     requires NODES(g1, 1/2)
+//     ensures forall u0:Ref, v0:Ref :: 
+//         { DEP_(g0 union g1, u0, v0, u0, u0.next) }
+//         { DEP_(g0 union g1, u0, v0.next, v0, v0.next) } 
+//             u0 in g0 && v0 in g0 ==> __learn_trigger__( P_(g0 union g1,u0,v0) )
+//     ensures forall u0:Ref, v0:Ref :: 
+//         { DEP_(g1 union g0, u0, v0, u0, u0.next) }
+//         { DEP_(g1 union g0, u0, v0.next, v0, v0.next) } 
+//             u0 in g1 && v0 in g1 ==> __learn_trigger__( P_(g1 union g0,u0,v0) )
+//     ensures forall u0:Ref, v0:Ref :: 
+//         { DEP_(g0 union g1, u0, v0, u0, u0.next) }
+//         { DEP_(g0 union g1, u0, v0.next, v0, v0.next) } 
+//             u0 in g0 && v0 in g0 ==> __learn_trigger__( P_(g0 union g1,u0,v0) )
+//     ensures forall u0:Ref, v0:Ref :: 
+//         { DEP_(g1 union g0, u0, v0, u0, u0.next) }
+//         { DEP_(g1 union g0, u0, v0.next, v0, v0.next) } 
+//             u0 in g1 && v0 in g1 ==> __learn_trigger__( P_(g1 union g0,u0,v0) )

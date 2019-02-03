@@ -1,0 +1,80 @@
+import "../../_preambles/TrCloDomain.vpr"
+
+import "../../_preambles/legoFraming.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+// method test(g:Set[Ref], g1:Set[Ref]) 
+//     requires GRAPH(g)
+//     requires g1 subset g
+// {
+//     // assume forall h1:Set[Ref], h2:Set[Ref] :: 
+//     //     { $$(h1) subset $$(h2) }
+//     //         (h1 subset h2) ==> $$(h1) subset $$(h2)
+
+//     // SubHeapPathsPreservedInHeap
+
+//     assert forall x:Ref, y:Ref :: 
+//         { P_(g1, x, y) }
+//         { P_(g, x, y) }
+//             P_(g1, x, y) ==> P_(g, x, y)
+
+//     // assert false
+// }
+
+// method unroll(g:Set[Ref], g1:Set[Ref], g2:Set[Ref])
+//     requires GRAPH(g)
+//     requires g1 subset g
+//     requires g2 subset g
+//     requires DISJOINT(g1, g2)
+// {
+//     var link: Ref
+//     assume link in g1
+
+//     assume link.right in g2
+    
+//     // assert E_(g1, link, link.right)
+//     assert P_(g1, link, link.right)
+
+//     var m:Ref 
+//     assume m in g1
+//     assume P_(g1, m, link)
+
+//     // assert P_(g1, m, link.right)
+    
+
+//     assert forall n: Ref :: 
+//         { P_(g1, n, link) }
+//             n in g1 && P_(g1, n, link) && E_(g1, link, link.right) && P_(g1, link.right, link.right)
+//                 ==> 
+//                     P_(g1, n, link.right)
+
+
+//     assert false
+// }
+
+method foobar(g:Set[Ref], g1:Set[Ref]) 
+    requires GRAPH(g)
+    requires g1 subset g
+{
+    assume forall n:Ref :: 
+        { n in g1 }
+            n in g1 ==> 
+                foo( skol(n) )
+
+    assume forall m:Ref, a:Ref :: 
+        { bar(m), foo(a) }
+            foo(a) ==> bar(m)
+
+    assert forall x:Ref :: 
+        { bar(x) }
+            x in g1 ==> bar(x)
+}
+
+function foo(x:Ref): Bool
+
+function bar(x:Ref): Bool
+
+function skol(x: Ref): Ref

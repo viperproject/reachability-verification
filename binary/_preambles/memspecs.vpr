@@ -32,6 +32,10 @@ define CLOSED(nodes)
     CLOSED_for(left, nodes)
     && CLOSED_for(right, nodes)
 
+define RELATIVELY_CLOSED(nodes, against_nodes) 
+    RELATIVELY_CLOSED_for(left, nodes, against_nodes)
+    && RELATIVELY_CLOSED_for(right, nodes, against_nodes)
+
 define PROTECTED_GRAPH_left(nodes, mutable_node)
     !(null in nodes)
     && PROTECTED_NODES_for(left, nodes, mutable_node, 1/2)
