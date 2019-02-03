@@ -59,11 +59,6 @@ domain TrClo {
     function edge_(EG:Set[Edge], p0:Ref, s0:Ref): Bool
 
     function succs(EG:Set[Edge], pred:Ref): Set[Ref]
-    function skolem_w(EG: Set[Edge], from: Ref, to: Ref): Ref
-
-    /** Scolem functions for LegoFraming */
-    function skolem_alpha(x0: Ref, y0: Ref): Ref
-    function skolem_beta(x0: Ref, y0: Ref): Ref
 
     //TODO: Rename quantified variables 
     axiom ax_Succs {
@@ -144,25 +139,40 @@ domain TrClo {
                 (from == to || (edge(EG, from, middle) && exists_path_(EG, middle, to))) ==> exists_path_(EG, from, to) )
     }
 
-    /** Edge partitioning requires legoFraming. */
-    axiom LinearEdgePartitioning { 
-        forall BiggerEG:Set[Edge], SmallerEG:Set[Edge], x:Ref, y:Ref :: 
-            { exists_path(SmallerEG, x, y), exists_path(BiggerEG, x, y) }
-            { SmallerEG subset BiggerEG, exists_path(SmallerEG, x, y) }
-            { SmallerEG subset BiggerEG, exists_path(BiggerEG, x, y) }
-                (SmallerEG subset BiggerEG) && 
-                exists_path(SmallerEG, x, y) ==> exists_path(BiggerEG, x, y)
-    }
-
     /** Follows from T1 && IND */
     //TODO: Rename quantified variables 
     axiom ax_ExistsPathTrans {
         forall EG:Set[Edge], u0:Ref, v0:Ref, w0:Ref ::
-            { exists_path(EG,u0,w0), exists_path(EG,w0,v0) }    //TODO multipattern
-            // { exists_path(EG,u0,v0), exists_path(EG,w0,v0) } 
-            // { exists_path(EG,u0,v0), exists_path_(EG,u0,w0) }
+            { exists_path(EG,u0,w0), exists_path(EG,w0,v0) } //TODO multipattern
+            //{ exists_path_(EG,u0,w0), exists_path(EG,w0,v0) }
+                // TODO: u0 != w0 && w0 != v0 &&
                 exists_path_(EG,u0,w0) && exists_path_(EG,w0,v0) ==> exists_path_(EG,u0,v0)
     }
+
+    // axiom ax_ExistsJump {
+    //     forall EG:Set[Edge], u0:Ref, v0:Ref ::
+    //         { exists_path(EG,u0,v0) }
+    //             exists_path_(EG, u0, skolem_tran(EG,u0,v0)) && exists_path_(EG, skolem_tran(EG,u0,v0), v0) ==> exists_path_(EG, u0, v0)
+    // }
+
+    // TODO: try out
+    // axiom ax_ExistsPathTrans_2 {
+    //     forall EG:Set[Edge], u0:Ref, v0:Ref, w0:Ref ::
+    //         { exists_path_(EG,u0,w0), exists_path(EG,w0,v0) } //TODO multipattern
+    //         //{ exists_path(EG,u0,w0), exists_path_(EG,w0,v0) }
+    //             u0 != w0 && w0 != v0 &&
+    //             exists_path_(EG,u0,w0) && exists_path_(EG,w0,v0) ==> exists_path_(EG,u0,v0)
+    // }
+
+    /** Edge partitioning requires legoFraming. */
+    // axiom LinearEdgePartitioning {
+    //     forall BiggerEG:Set[Edge], SmallerEG:Set[Edge], x:Ref, y:Ref ::
+    //         { exists_path(SmallerEG, x, y), exists_path(BiggerEG, x, y) }
+    //         { SmallerEG subset BiggerEG, exists_path(SmallerEG, x, y) }
+    //         { SmallerEG subset BiggerEG, exists_path(BiggerEG, x, y) }
+    //             (SmallerEG subset BiggerEG) &&
+    //                 exists_path(SmallerEG, x, y) ==> exists_path(BiggerEG, x, y)
+    // }
 
     //TODO: Rename quantified variables 
     axiom ax_AcyclicGraph {
