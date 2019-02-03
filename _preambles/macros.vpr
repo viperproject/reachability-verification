@@ -15,21 +15,22 @@ define DISJOINT_EDGES(EG_A, EG_B)
 
 // TODO: Check that RHS==>LHS is okay. 
 define GLOBAL_ROOT(graph_A,root)
-    (forall n:Ref :: 
-        { P_(graph_A, root, n) } 
-            (n in graph_A) <==> P_(graph_A, root, n))
+    (forall n0:Ref :: 
+        { P_(graph_A, root, n0) } 
+        // { n0 in graph_A }
+            (n0 in graph_A) <==> P_(graph_A, root, n0))
 
 // TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SROOT(graph_A, roots)
-    (forall n:Ref :: 
-        { SP_(graph_A, roots, n) } 
-            (n in graph_A) ==> SP_(graph_A, roots, n))
+    (forall n0:Ref :: 
+        { SP_(graph_A, roots, n0) } 
+            (n0 in graph_A) ==> SP_(graph_A, roots, n0))
 
 // TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SINK(graph_A,sink)
-    (forall n:Ref :: 
-        { P_(graph_A, n, sink) } 
-            (n in graph_A) ==> P_(graph_A, n, sink))
+    (forall n0:Ref :: 
+        { P_(graph_A, n0, sink) } 
+            (n0 in graph_A) ==> P_(graph_A, n0, sink))
     
 define UNSHARED(graph_A)
     unshared_graph($$(graph_A))
