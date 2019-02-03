@@ -1,0 +1,15 @@
+domain $SkolemFunctions$ {
+
+    /** Used in _preambles/TrCloDomain.vpr */
+    function skolem_w(EG: Set[Edge], from: Ref, to: Ref): Ref
+
+    /** USed in _preambles/legoFraming.vpr */
+    function skolem_alpha(x0: Ref, y0: Ref): Ref
+    function skolem_alpha1(x0: Ref, y0: Ref): Ref
+    function skolem_alpha2(x0: Ref, y0: Ref): Ref
+    function skolem_alpha3(x0: Ref, y0: Ref): Ref
+    
+    /** Unused */
+    function skolem_alpha4(x0: Ref, y0: Ref): Ref
+    function skolem_tran(EG: Set[Edge], x0: Ref, y0: Ref): Ref
+}
