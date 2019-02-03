@@ -4,6 +4,9 @@ function $$(nodes0: Set[Ref]): Set[Edge]
     ensures (forall x0: Ref, y0: Ref :: 
         { create_edge(x0, y0) } 
             ((x0 in nodes0) && (CLOSED(nodes0) ==> y0 in nodes0) && HEAP_PARTIAL_ORDER(x0,y0)) <==> (create_edge(x0, y0) in result))
+    ensures (forall x0: Ref, y0: Ref :: 
+        { edge(result, x0, y0) } 
+            (edge(result, x0, y0) ==> exists_path(result, x0, y0)))
     // TODO: consider moving these formulas somewhere else to optimize performance. 
     ensures CLOSED(nodes0) ==> (forall x0: Ref, y0: Ref :: 
         { (x0 in nodes0),(y0 in nodes0), exists_path(result, x0, y0) }

@@ -29,7 +29,22 @@ function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
     requires GRAPH(t)
     requires sub_root in t    
     ensures result subset t
-    ensures RELATIVELY_CLOSED(result, t)
+    // ensures TREE_IMPL(result)
+
+    ensures CLOSED(t) ==> CLOSED(result)
+    // Didn't work
+    // ensures forall u:Ref, v:Ref :: 
+    //     { E_(result, u, v) }
+    //         u in result && v in t ==> !E_(result, u, v)
+    // ensures forall n:Ref :: 
+    //     { n.left in t }
+    //     { n in result, n.left }
+    //         n in result ==> !(n.left in t)
+    // ensures forall n:Ref :: 
+    //     { n.right in t }
+    //     { n in result, n.right }
+    //         n in result ==> !(n.right in t)
+    // ensures RELATIVELY_CLOSED(result, t)
     ensures !(null in result)
     ensures sub_root in result
     ensures GLOBAL_ROOT(result, sub_root)
@@ -116,8 +131,6 @@ method mergeRight(g: Set[Ref], // ghost
         // Partition paths after the sub-call. 
         EnableFocusOnConvexSubHeap(g, g1)
         EnableFocusOnConvexSubHeap(g, frame)
-
-        // assert false
     
     } else {
         // Encoding root.right := root_s ...
