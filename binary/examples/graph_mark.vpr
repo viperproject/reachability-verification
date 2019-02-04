@@ -18,8 +18,10 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
     ensures roots subset marked
     ensures marked subset g
     ensures READONLY_GRAPH(g) && CLOSED(g)
-    ensures forall v:Ref :: {v in marked}{SP_(g,roots,v)} v in g ==> ( v in marked ==> SP_(g,roots,v) )
-    ensures forall v:Ref :: {v in marked}{SP_(g,roots,v)} v in g ==> ( SP_(g,roots,v) ==> v in marked )
+
+    // SP_(g,roots,v) denotes the existence of at least one path from any of the nodes in roots to v. 
+    ensures forall v:Ref :: {SP_(g,roots,v)} v in g ==> ( v in marked ==> SP_(g,roots,v) )
+    ensures forall v:Ref :: {SP_(g,roots,v)} v in g ==> ( SP_(g,roots,v) ==> v in marked )
 {
     var x:Ref := get(roots)
     var pending:Set[Ref] := roots
@@ -39,13 +41,17 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
         && ( x.left != null ==> E_(g,x,x.left) && P_(g,x.left,x.left) ==> P_(g,x,x.left) )
 
         invariant
-        ( forall n:Ref :: {n in pending}{n in roots} n in roots <==> n in pending ) &&                                                                   /// (5.22)
+        ( roots == pending ) && 
+        // ( forall n:Ref :: {n in pending}{n in roots} n in roots <==> n in pending ) &&                                                                   /// (5.22)
         ( forall n:Ref :: {n in marked} n in g ==> !(n in marked) )                                                                                      /// (5.23)
         ||
-        ( forall n:Ref :: {n in pending}{n in marked} n in roots ==> n in marked || n in pending ) &&                                                    /// (5.24)
+        // ( forall n:Ref :: {n in pending}{n in marked} n in roots ==> n in marked || n in pending ) &&                                                    /// (5.24)
+        ( roots subset (pending union marked) ) && 
         ( forall n:Ref :: {n in pending} n in g ==> !(n in marked && n in pending) ) &&                                                                  /// (5.25)
-        ( forall n:Ref :: {SP_(g,roots,n)} n in pending || n in marked ==> SP_(g,roots,n) ) &&                                                           /// (5.26)
-        ( forall n1:Ref, n2:Ref :: {n1 in marked, n2 in marked} n1 in marked && n2 in g && !(n2 in marked) && !(n2 in pending) ==> !E_(g,n1,n2) )        /// (5.27)
+        ( forall n:Ref :: {SP_(g,roots,n)} n in (pending union marked) ==> SP_(g,roots,n) ) &&                                                           /// (5.26)
+        ( forall n1:Ref, n2:Ref :: {E_(g,n1,n2)} n1 in marked && n2 in g && !(n2 in marked) && !(n2 in pending) ==> !E_(g,n1,n2) )        /// (5.27)
+    
+        invariant DISJOINT(pending, marked)
     {
         // x <- pop(pending)
         x := get(pending)
@@ -61,6 +67,25 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
             pending := pending union Set(x.right)
         }
     }
+
+
+    // TODO: figure out how to automatically trigger the following formulas: 
+    assert (forall n:Ref :: 
+        {  n in marked, n.left }
+            n in marked && n.left in g && !(n.left in marked) ==> __learn_trigger__( E_(g, n, n.left) ))
+
+    assert (forall n:Ref :: 
+        {  n in marked, n.right }
+            n in marked && n.right in g && !(n.right in marked) ==> __learn_trigger__( E_(g, n, n.right) ))
+
+
+    assert RELATIVELY_CLOSED(marked, g setminus marked)
+    // assume false
+
+    // assume (forall u0:Ref, v0:Ref :: 
+    //     { P_(g, u0, v0) }
+    //         u0 in marked && !(v0 in marked) && RELATIVELY_CLOSED(marked, g)
+    //             ==> !P_(g, u0, v0))
 
     // The color axiom. This is one way to dynamically instantiate axioms.
     // Instantiation: NoExit[marked, f]
