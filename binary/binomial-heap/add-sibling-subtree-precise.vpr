@@ -1,8 +1,7 @@
 import "../../_preambles/TrCloDomain.vpr"
-import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/skolems.vpr"
 
-import "../../_preambles/framing.vpr"
-import "../../_preambles/legoFraming.vpr"
+import "../examples/legoFraming-snapshot-27012019.vpr"
 
 import "../../_preambles/macros.vpr"
 import "../../_preambles/memspecs.vpr"
@@ -14,26 +13,12 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../_preambles/dag.vpr"
 
+
 define child left 
 define next_sibling right
 
 define __CONVEXITY_CHECKES true 
 
-define TREE(t) 
-    GRAPH(t) && TREE_IMPL(t)
-
-define TREE_IMPL(t)
-    CLOSED(t) && ACYCLIC(t) && UNSHARED(t)
-
-function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
-    requires TREE(t)
-    requires sub_root in t
-    
-    ensures result subset t
-    ensures TREE_IMPL(result)
-    ensures !(null in result)
-    ensures sub_root in result
-    ensures GLOBAL_ROOT(result, sub_root)
 
 /**
  * Add `sub_tree` with root `sib` as the last sibling of `node` in `tree`. 
@@ -104,8 +89,8 @@ method addSiblingSubtree(tree: Set[Ref], node: Ref,
     new_tree := tree union sub_tree
     
     // Partitioning the paths ...
-    PartitionPathsInConvexSubHeap(new_tree, tree)
-    PartitionPathsInConvexSubHeap(new_tree, sub_tree)
+    EnableFocusOnConvexSubHeap(new_tree, tree)
+    EnableFocusOnConvexSubHeap(new_tree, sub_tree)
 
     // Encoding curr_node.next_sibling := sib ...
     link_DAG_right(new_tree, curr_node, sib)

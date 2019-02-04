@@ -1,13 +1,11 @@
 import "../../_preambles/TrCloDomain.vpr"
-import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/skolems.vpr"
 
-import "../../_preambles/framing.vpr"
-import "../../_preambles/legoFraming.vpr"
+import "../examples/legoFraming-snapshot-27012019.vpr"
 
 import "../../_preambles/macros.vpr"
 import "../../_preambles/memspecs.vpr"
 import "../_preambles/memspecs.vpr"
-
 
 import "../../_preambles/common/graph.vpr"
 
@@ -18,23 +16,6 @@ define child left
 define next_sibling right
 
 define __CONVEXITY_CHECKES true 
-
-define TREE(t) 
-    GRAPH(t) && TREE_IMPL(t)
-
-define TREE_IMPL(t)
-    CLOSED(t) && ACYCLIC(t) //&& UNSHARED(t)
-
-function subTree(t: Set[Ref], sub_root: Ref): Set[Ref]
-    requires TREE(t)
-    requires sub_root in t
-    
-    ensures result subset t
-    ensures TREE_IMPL(result)
-    ensures !(null in result)
-    ensures sub_root in result
-    ensures GLOBAL_ROOT(result, sub_root)
-
 
 method addChildSubtree(tree: Set[Ref], node: Ref, 
                        sub_tree:Set[Ref], ch: Ref) 
@@ -71,11 +52,11 @@ method addChildSubtree(tree: Set[Ref], node: Ref,
 
     if ( node.child != null ) {
         var ch_node:Ref := node.child
-        var ch_tree: Set[Ref] := subTree(tree, ch_node)
+        var ch_tree: Set[Ref] := sub(tree, ch_node)
         var frame: Set[Ref] := tree setminus ch_tree
 
-        PartitionPathsInConvexSubHeap(tree, ch_tree)
-        PartitionPathsInConvexSubHeap(tree, frame)
+        EnableFocusOnConvexSubHeap(tree, ch_tree)
+        EnableFocusOnConvexSubHeap(tree, frame)
         
         var new_ch_tree: Set[Ref]
 label l1
@@ -84,15 +65,14 @@ label l2
 
         new_tree := frame union new_ch_tree
 
-        PartitionPathsInConvexSubHeap(new_tree, new_ch_tree)
-        PartitionPathsInConvexSubHeap(new_tree, frame)
-        // PartitionPathsInConvexSubHeap(new_tree, sub_tree)
-        ApplyConvexTCFraming(l1, l2, new_ch_tree, new_tree)
-        // assume DISJOINT(frame, new_ch_tree)
+        EnableFocusOnConvexSubHeap(new_tree, new_ch_tree)
+        EnableFocusOnConvexSubHeap(new_tree, frame)
+        ApplyConvexTCFraming(l1, l2, new_ch_tree, new_tree, frame)
+
 
     } else {
-        PartitionPathsInConvexSubHeap(new_tree, tree)
-        PartitionPathsInConvexSubHeap(new_tree, sub_tree)
+        EnableFocusOnConvexSubHeap(new_tree, tree)
+        EnableFocusOnConvexSubHeap(new_tree, sub_tree)
 
         // Encoding node.child := ch ...
         link_DAG_left(new_tree, node, ch)
