@@ -198,32 +198,6 @@ function $$__next(nodes0: Set[Ref]): Set[Edge__next]
 
 
 
-
-define NODES_for($field$, nodes, p)
-    (forall n:Ref :: 
-        { n.$field$ } 
-            n in nodes ==> acc(n.$field$, p))
-
-define PROTECTED_NODES_for($field$, nodes, mutable_node, p)
-    ((mutable_node in nodes)
-    && acc(mutable_node.$field$, write)
-    && (forall n:Ref :: 
-        { n.$field$ } 
-            n in nodes && n != mutable_node ==> acc(n.$field$, p)))
-
-define CLOSED_for($field$, nodes)  
-    (forall n:Ref :: 
-        { n.$field$ in nodes }
-        { n in nodes, n.$field$ }
-            n in nodes && n.$field$ != null ==> n.$field$ in nodes)
-
-define COMPLETE_for($field$, nodes)
-    (forall n:Ref :: 
-        { n.$field$ in nodes }
-        { n in nodes, n.$field$ }
-            n in nodes ==> n.$field$ in nodes)
-
-
 field next: Ref
 
 define HEAP_PARTIAL_ORDER__next(p, s)
@@ -340,28 +314,7 @@ method link_DAG__next(g:Set[Ref], from:Ref, to:Ref)
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA__next(g, from, to)
     ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA__next(g, from, to)
 
-define DISJOINT(graph_A, graph_B)
-    (forall r:Ref :: 
-        { r in graph_A, r in graph_B } 
-            (r in graph_A) ==> !(r in graph_B)) &&
-    (forall r:Ref :: 
-        { r in graph_A, r in graph_B } 
-            (r in graph_B) ==> !(r in graph_A))
 
-// define GLOBAL_ROOT(graph_A,root)
-//     (forall n:Ref :: 
-//         { P_(graph_A, root, n) } 
-//             (n in graph_A) ==> P_(graph_A, root, n))
-
-// define GLOBAL_SROOT(graph_A, roots)
-//     (forall n:Ref :: 
-//         { SP_(graph_A, roots, n) } 
-//             (n in graph_A) ==> SP_(graph_A, roots, n))
-
-// define GLOBAL_SINK(graph_A,sink)
-//     (forall n:Ref :: 
-//         { P_(graph_A, n, sink) } 
-//             (n in graph_A) ==> P_(graph_A, n, sink))
     
 define UNSHARED__next(graph_A)
     unshared_graph__next($$__next(graph_A))
