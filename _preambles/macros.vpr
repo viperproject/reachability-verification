@@ -3,6 +3,18 @@
  * Basically, syntactic sugar. 
  */
 
+define TREE(tr000) 
+    GRAPH(tr000) && TREE_IMPL(tr000)
+
+define TREE_IMPL(t001)
+    CLOSED(t001) && ACYCLIC(t001) && UNSHARED(t001)
+
+define DAG(dg000)
+    GRAPH(dg000) && DAG_IMPL(dg000)
+
+define DAG_IMPL(dg000)
+    CLOSED(dg000) && ACYCLIC(dg000)
+
 define DISJOINT(graph_A, graph_B)
     (forall r0:Ref :: 
         { r0 in graph_A, r0 in graph_B } 
