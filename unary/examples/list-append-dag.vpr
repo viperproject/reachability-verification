@@ -66,10 +66,6 @@ method append(g:Set[Ref],  x:Ref,  y:Ref) returns (res:Ref,  last:Ref)
 
         //last.next := y
         link_DAG_next(g, last, y)
-
-        // Negated definition of TC[f] and the follow-up lemma 
-        // assert forall u:Ref,  v:Ref :: !P_(g, u, v) ==> u != v && forall w:Ref :: !E_(g, u, w) || !P_(g, w, v)
-        // assert forall u:Ref,  v:Ref :: { E_(g, u, v) } u in g && v in g ==> __learn_trigger__( P_(g, u, v) )
     }
     res := x
 }
