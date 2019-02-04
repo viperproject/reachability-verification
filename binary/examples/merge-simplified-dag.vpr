@@ -1,0 +1,104 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "./legoFraming-snapshot-27012019.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
+
+define __CONVEXITY_CHECKES false 
+
+
+define TWO_ROOTED_DAG(nodes, lr, rr)
+    (forall n:Ref :: 
+        { P_(nodes, rr, n) } 
+        { P_(nodes, lr, n) }
+            n in nodes <==> P_(nodes, lr, n) && !P_(nodes, rr, n) ||
+                           !P_(nodes, lr, n) &&  P_(nodes, rr, n))
+
+method mergeRight(g: Set[Ref], // ghost
+                ldag: Set[Ref], lr: Ref, 
+                rdag:Set[Ref],  rr: Ref) 
+    returns (new_dag: Set[Ref], 
+                link: Ref) // ghost
+    
+    requires lr in ldag
+    requires rr in rdag
+    requires DISJOINT(ldag, rdag)
+    requires g == ldag union rdag
+    requires DAG(g)
+    requires TWO_ROOTED_DAG(g, lr, rr)
+    requires CLOSED(ldag) && CLOSED(rdag) // Can be learned from TWO_ROOTED_DAG + (anti-NoExit)
+
+    ensures new_dag == g
+    ensures DAG(g)
+    ensures CONST_EDGES(rdag)
+
+    ensures link in ldag 
+    ensures forall x:Ref, y:Ref :: 
+        { E_(new_dag, x, y) }
+        { E0(ldag, x, y) }
+        { E0(rdag, x, y) }
+            E_(new_dag, x, y) <==> E0(ldag, x, y) || E0(rdag, x, y) || (x == link && y == rr) 
+
+    ensures old(lr.right) == null ==> lr == link && lr.right == rr
+
+    ensures forall x:Ref, y:Ref :: 
+        { P_(g, x, y) }
+        { P0(g, x, y) }
+        { P0(g, x, link), P0(g, rr, y) }
+            (x in rdag && y in ldag ==> !P_(g, x, y)) &&
+            (x in rdag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in ldag && y in ldag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+            (x in ldag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, rr, y)))
+    
+    ensures GLOBAL_ROOT(new_dag, lr)
+{
+    new_dag := ldag union rdag
+
+    // Partitioning paths in disjoint structures of (g): ldag, rdag
+    EnableFocusOnConvexSubHeap(g, ldag)
+    EnableFocusOnConvexSubHeap(g, rdag)
+
+    if ( lr.right != null ) {
+
+        var ch_node: Ref := lr.right
+        var ch_dag: Set[Ref] := sub(ldag, ch_node)
+        var frame: Set[Ref] := ldag setminus ch_dag
+
+        // Footprint of the sub-call: 
+        var g1: Set[Ref] := ch_dag union rdag
+
+        // Partitioning paths before sub-call: (ch_dag union rdag), frame
+        EnableFocusOnConvexSubHeap(g, g1)
+        EnableFocusOnConvexSubHeap(g, frame)
+        
+        // Partitioning paths in disjoint structures of (g1): ch_dag, rdag
+        EnableFocusOnConvexSubHeap(g1, ch_dag)
+        EnableFocusOnConvexSubHeap(g1, rdag)
+
+    label l1
+        g1, link := mergeRight(g1, ch_dag, ch_node, rdag, rr)
+    label l2
+
+        new_dag := frame union g1
+
+        // Recompute the reachability in (g) after the sub-call. 
+        ApplyConvexTCFraming(l1, l2, g1, g, frame)
+        
+        // Partition paths after the sub-call. 
+        EnableFocusOnConvexSubHeap(g, g1)
+        EnableFocusOnConvexSubHeap(g, frame)
+    
+    } else {
+        // Encoding lr.right := rr ...
+        link_DAG_right(new_dag, lr, rr)
+        link := lr
+    }
+}
