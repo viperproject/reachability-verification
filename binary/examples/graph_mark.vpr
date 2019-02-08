@@ -79,12 +79,12 @@ method mark(g:Set[Ref], roots:Set[Ref]) returns (marked:Set[Ref])
             n in marked && n.right in g && !(n.right in marked) ==> __learn_trigger__( E_(g, n, n.right) ))
 
 
-    assert RELATIVELY_CLOSED(marked, g setminus marked)
+    assert CLOSED_IN(marked, g setminus marked)
     // assume false
 
     // assume (forall u0:Ref, v0:Ref :: 
     //     { P_(g, u0, v0) }
-    //         u0 in marked && !(v0 in marked) && RELATIVELY_CLOSED(marked, g)
+    //         u0 in marked && !(v0 in marked) && CLOSED_IN(marked, g)
     //             ==> !P_(g, u0, v0))
 
     // The color axiom. This is one way to dynamically instantiate axioms.

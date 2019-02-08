@@ -53,10 +53,16 @@ method mergeRight(g: Set[Ref], // ghost
         { P_(g, x, y) }
         { P0(g, x, y) }
         { P0(g, x, link), P0(g, rr, y) }
-            (x in rdag && y in ldag ==> !P_(g, x, y)) &&
-            (x in rdag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in ldag && y in ldag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
-            (x in ldag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, rr, y)))
+            P_(g, x, y) <==> P0(g, x, y) || P0(g, x, link) && P0(g, rr, y)
+
+    // ensures forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) }
+    //     { P0(g, x, y) }
+    //     { P0(g, x, link), P0(g, rr, y) }
+    //         (x in rdag && y in ldag ==> !P_(g, x, y)) &&
+    //         (x in rdag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+    //         (x in ldag && y in ldag ==> (P_(g, x, y) <==> P0(g, x, y))) && 
+    //         (x in ldag && y in rdag ==> (P_(g, x, y) <==> P0(g, x, link) && P0(g, rr, y)))
     
     ensures GLOBAL_ROOT(new_dag, lr)
 {

@@ -1,9 +1,9 @@
-define LINK__PRECISE_EDGE_UPDATE_FORMULA(g0, alpha, beta)
+define LINK__PRECISE_EDGE_UPDATE_FORMULA(g033, alpha, beta)
     (forall x0:Ref, y0:Ref ::
-        { edge($$(g0),x0,y0) }
-            edge($$(g0),x0,y0) <==> edge(old($$(g0)),x0,y0) || (x0==alpha && y0==beta))
+        { edge($$(g033),x0,y0) }
+            edge($$(g033),x0,y0) <==> edge(old($$(g033)),x0,y0) || (x0==alpha && y0==beta))
 
-define UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g0, alpha, beta)
+define UNLINK__PRECISE_EDGE_UPDATE_FORMULA(g033, alpha, beta)
     (forall x0:Ref, y0:Ref ::
-        { edge($$(g0),x0,y0) }
-            edge($$(g0),x0,y0) <==> edge(old($$(g0)),x0,y0) && !(x0==alpha && y0==beta))
+        { edge($$(g033),x0,y0) }
+            edge($$(g033),x0,y0) <==> edge(old($$(g033)),x0,y0) && !(x0==alpha && y0==beta))

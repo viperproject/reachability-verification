@@ -6,7 +6,7 @@ function $$(nodes0: Set[Ref]): Set[Edge]
     requires READONLY_NODES(nodes0)
     ensures (forall v1: Ref, v2: Ref :: 
         { create_edge(v1, v2) } 
-            ((v1 in nodes0) && (CLOSED(nodes0) ==> v2 in nodes0) && HEAP_PARTIAL_ORDER(v1,v2)) <==> (create_edge(v1, v2) in result))
+            ((v1 in nodes0) && (CLOSED(nodes0) ==> (v2 in nodes0)) && HEAP_PARTIAL_ORDER(v1,v2)) <==> (create_edge(v1, v2) in result))
     // TODO: consider moving these formulas somewhere else to optimize performance. 
     ensures CLOSED(nodes0) ==> (forall v1: Ref, v2: Ref :: 
         { (v1 in nodes0),(v2 in nodes0), exists_path(result, v1, v2) }
@@ -19,6 +19,11 @@ function $$(nodes0: Set[Ref]): Set[Edge]
         { $$(h0) subset result }
         { h0 subset nodes0 }
             (h0 subset nodes0) ==> $$(h0) subset result
+    // ensures forall n0:Ref :: 
+    //     // { n0 in nodes0, subheap subset nodes0, n0.left }
+    //         {__trigger_path(n0)}
+    //         // false && 
+    //          n0 in nodes0 && n0.left != null ==> edge(result, n0, n0.left)
 
 // TODO: Check triggers
 define CONVEX(state, local_nodes, global_nodes)
@@ -38,6 +43,26 @@ define CONVEX_(local_nodes, global_nodes)
             v1 in local_nodes && v2 in local_nodes && !(u in local_nodes) && u in global_nodes ==> 
                 !(P_(global_nodes, v1, u) && P_(global_nodes, u, v2)))
 
+define CHECK_CONVEXITY(local_nodes, global_nodes) {
+    // while (__CONVEXITY_CHECKES )
+    //     invariant NODES(global_nodes, 1/2)
+    //     invariant local_nodes subset global_nodes
+    // {
+    //     var q045:Ref 
+    //     var p045:Ref
+    //     var o045:Ref
+    //     assume q045 in local_nodes && p045 in local_nodes && o045 in (global_nodes setminus local_nodes)
+    //     assert P_(global_nodes, q045, o045) ==> !P_(global_nodes, o045, p045) 
+    // }
+
+    if (__CONVEXITY_CHECKES) { assert 
+        CLOSED(local_nodes) || 
+        CLOSED(global_nodes setminus local_nodes) || 
+        CLOSED_IN(local_nodes, global_nodes) || 
+        CONVEX_(local_nodes, global_nodes)
+    }
+}
+
 function __impossible_to_trigger__(a000:Ref, a001:Ref, a002:Ref): Bool
 
 function __trigger_conv_framing_Entries__(bla_1:Ref, bla_2:Ref, bla_3:Ref): Bool
@@ -52,10 +77,16 @@ function sub(t: Set[Ref], sub_root: Ref): Set[Ref]
     requires GRAPH(t)
     requires sub_root in t    
     ensures result subset t
-    ensures RELATIVELY_CLOSED(result, t)
+    ensures CLOSED_IN(result, t)
     ensures !(null in result)
     ensures sub_root in result
     ensures GLOBAL_ROOT(result, sub_root)
+    ensures forall n:Ref :: 
+        { n in result, P_(t, sub_root, n) }
+            n in result ==> P_(t, sub_root, n)
+    ensures forall n:Ref :: 
+        { P_(t, sub_root, n) }
+            P_(t, sub_root, n) ==> n in result 
 
 define EnableFocusOnConvexSubHeap(GLOB, MOD) {
     assume (forall v1:Ref, v2:Ref :: 
@@ -65,10 +96,10 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
                 (P_(GLOB, v1, v2) <==> P_(MOD, v1, v2)))
 
     assume (forall v1:Ref, v2:Ref :: 
-            { E_(MOD, v1, v2) }
-            { E_(GLOB, v1, v2) }
-                (v1 in MOD) ==> 
-                    (E_(GLOB, v1, v2) <==> E_(MOD, v1, v2)))
+        { E_(MOD, v1, v2) }
+        { E_(GLOB, v1, v2) }
+            (v1 in MOD) ==> 
+                (E_(GLOB, v1, v2) <==> E_(MOD, v1, v2)))
 
     assume (forall u0:Ref, v0:Ref :: 
         { P_(GLOB, u0, v0) }
@@ -78,78 +109,74 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
 
 // TODO: Simplify ApplyConvexTCFraming for CLOSED(MOD) and CLOSED(FRAME) ...
 define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
-    
+
+    // -------- O. Frame=const --------
+
+    assume old[s_old]( $$(FRAME) ) == old[s_new]( $$(FRAME) )
+
+    // -------- II. Out-In --------
+
     // split in pre-state
-    assume forall v1:Ref, v2:Ref :: 
+    assume (forall v1:Ref, v2:Ref :: 
 
         { P(s_old, GLOB, v1, v2) }
            
             v1 in FRAME && v2 in MOD &&  
             P(s_old, GLOB, v1, v2) ==> 
                 (skolem_alpha1(v1,v2) in MOD) &&
-                P(s_old, GLOB setminus MOD, v1, skolem_alpha1(v1,v2)) && 
-                P(s_old, MOD, skolem_alpha1(v1,v2), v2)
+                P(s_old, FRAME, v1, skolem_alpha1(v1,v2)) && 
+                P(s_old, MOD, skolem_alpha1(v1,v2), v2))
 
     // merge in pre-state
     assume (forall v1:Ref, v2:Ref, alpha:Ref :: 
 
-            { P(s_old, GLOB setminus MOD, v1, alpha), P(s_old, MOD, alpha, v2) } 
+            { P(s_old, FRAME, v1, alpha), P(s_old, MOD, alpha, v2) } 
 
-                (v1 in GLOB setminus MOD) && 
+                (v1 in FRAME) && 
                 (v2 in MOD) && (alpha in MOD) &&
-                    P(s_old, GLOB setminus MOD, v1, alpha) && P(s_old, MOD, alpha, v2) ==>
+                    P(s_old, FRAME, v1, alpha) && P(s_old, MOD, alpha, v2) ==>
                         P(s_old, GLOB, v1, v2))
 
-    // split in post-state (frame=const)
-    assume forall v1:Ref, v2:Ref :: 
+    // // split in post-state (frame=const)
+    // assume forall v1:Ref, v2:Ref :: 
 
-        { v1 in FRAME, P(s_new, GLOB, v1, v2) }
+    //     { v1 in FRAME, P(s_new, GLOB, v1, v2) }
            
-            v1 in FRAME && v2 in MOD &&  
-            P(s_new, GLOB, v1, v2) ==> 
-                (skolem_alpha2(v1,v2) in MOD) &&
-                P(s_old, GLOB setminus MOD, v1, skolem_alpha2(v1,v2)) && 
-                P(s_new, MOD, skolem_alpha2(v1,v2), v2)
+    //         v1 in FRAME && v2 in MOD &&  
+    //         P(s_new, GLOB, v1, v2) ==> 
+    //             (skolem_alpha2(v1,v2) in MOD) &&
+    //             P(s_old, FRAME, v1, skolem_alpha2(v1,v2)) && 
+    //             P(s_new, MOD, skolem_alpha2(v1,v2), v2)
 
-    // merge in post-state
-    assume (forall v1:Ref, v2:Ref, alpha:Ref :: 
+    // // merge in post-state
+    // assume (forall v1:Ref, v2:Ref, alpha:Ref :: 
         
-            { P(s_old, GLOB setminus MOD, v1, alpha), P(s_new, MOD, alpha, v2) }
+    //         { P(s_old, FRAME, v1, alpha), P(s_new, MOD, alpha, v2) }
 
-                (v1 in GLOB setminus MOD) && 
-                (v2 in MOD) && (alpha in MOD) &&
-                    P(s_old, GLOB setminus MOD, v1, alpha) && P(s_new, MOD, alpha, v2) ==>
-                        P(s_new, GLOB, v1, v2))
+    //             (v1 in FRAME) && 
+    //             (v2 in MOD) && (alpha in MOD) &&
+    //                 P(s_old, FRAME, v1, alpha) && P(s_new, MOD, alpha, v2) ==>
+    //                     P(s_new, GLOB, v1, v2))
 
-    // split in post-state (frame=const)
-    assume forall v1:Ref, v2:Ref :: 
-        { v1 in FRAME, P(s_new, GLOB, v1, v2) }
-            v1 in FRAME && v2 in MOD &&  
-            P(s_new, GLOB, v1, v2) ==> 
-                (skolem_alpha(v1,v2) in MOD) &&
-                P(s_old, GLOB setminus MOD, v1, skolem_alpha(v1,v2)) && 
-                P(s_new, MOD, skolem_alpha(v1,v2), v2)
-
+    // frame-split 
     assume (forall v1:Ref, v2:Ref :: 
             
             { P(s_new, GLOB, v1, v2) }
 
-                // II. Out-In-1
-                (v1 in GLOB setminus MOD) && 
+                (v1 in FRAME) && 
                 (v2 in MOD) && P(s_new, GLOB, v1, v2) ==> 
                     (skolem_alpha3(v1,v2) in MOD) &&
-                    P(s_old, GLOB setminus MOD, v1, skolem_alpha3(v1,v2)) && 
+                    P(s_old, FRAME, v1, skolem_alpha3(v1,v2)) && 
                     P(s_new, MOD, skolem_alpha3(v1,v2), v2))
 
+    // frame-merge
     assume (forall v1:Ref, v2:Ref, alpha:Ref :: 
 
-            { P(s_old, GLOB setminus MOD, v1, alpha), P(s_new, MOD, alpha, v2) }
-            { P(s_new, GLOB, v1, v2), alpha in MOD }
+            { P(s_old, FRAME, v1, alpha), P(s_new, MOD, alpha, v2) }
 
-                // II. Out-In-2
-                (v1 in GLOB setminus MOD) && 
+                (v1 in FRAME) && 
                 (v2 in MOD) && (alpha in MOD) &&
-                    P(s_old, GLOB setminus MOD, v1, alpha) && P(s_new, MOD, alpha, v2) ==> 
+                    P(s_old, FRAME, v1, alpha) && P(s_new, MOD, alpha, v2) ==> 
                         P(s_new, GLOB, v1, v2))
 
     // assume (forall v1:Ref, v2:Ref :: 
@@ -158,34 +185,68 @@ define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
     //         { P(s_old, GLOB, v1, v2) } 
     //             // III. In-Out
     //             (v1 in MOD) && 
-    //             !(v2 in MOD) &&
-    //             __trigger_conv_framing_eXits__(v1,v2)
+    //             !(v2 in MOD) 
     //                 ==> (
     //                 !(forall beta:Ref :: 
     //                     { P(s_new, MOD, v1, beta) }
-    //                     { P(s_old, GLOB setminus MOD, beta, v2) }
-    //                         (beta in GLOB setminus MOD) ==> 
-    //                             !( P(s_new, MOD, v1, beta) && P(s_old, GLOB setminus MOD, beta, v2) ))
-    //                 <==> P(s_new, GLOB, v1, v2)
-    //             )) 
-    // assume (forall v1:Ref, v2:Ref :: 
-    //         { P_(GLOB, v1, v2) }
-    //         { P(s_new, GLOB, v1, v2) } 
-    //         { P(s_old, GLOB, v1, v2) } 
-    //             // IV. Out-Out
-    //             (v1 in GLOB setminus MOD) && 
-    //             !(v2 in MOD) &&
-    //             __trigger_conv_framing_Entries__(v1,v2) &&
-    //             __trigger_conv_framing_eXits__(v1,v2)
-    //             ==> (
-    //                 P(s_old, GLOB setminus MOD, v1, v2) || 
-    //                 !(forall alpha:Ref, beta:Ref :: 
-    //                     { P(s_new, MOD, alpha, beta) }
-    //                     { P(s_old, GLOB setminus MOD, v1, alpha), P(s_old, GLOB setminus MOD, beta, v2) } 
-    //                         (alpha in MOD) && (beta in GLOB setminus MOD) ==> 
-    //                             !( P(s_old, GLOB setminus MOD, v1, alpha) && P(s_new, MOD, alpha, beta) && P(s_old, GLOB setminus MOD, beta, v2) ))
+    //                     { P(s_old, FRAME, beta, v2) }
+    //                         (beta in FRAME) ==> 
+    //                             !( P(s_new, MOD, v1, beta) && P(s_old, FRAME, beta, v2) ))
     //                 <==> P(s_new, GLOB, v1, v2)
     //             ))
+
+
+
+    // -------- IV. Out-Out --------
+
+
+    // // split in pre-state (frame=const) 
+    // assume (forall v1:Ref, v2:Ref :: 
+
+    //     { P(s_old, GLOB, v1, v2) }
+
+    //             (v1 in FRAME) && (v2 in FRAME) && 
+    //             P(s_new, GLOB, v1, v2) ==> 
+    //                 P(s_old, FRAME, v1, v2) || 
+    //                 ((skolem_alpha11(v1,v2) in MOD) && 
+    //                  (skolem_beta11(v1,v2) in FRAME) && 
+    //                  P(s_old, FRAME, v1, skolem_alpha11(v1,v2)) && P(s_old, MOD, skolem_alpha11(v1,v2), skolem_beta11(v1,v2)) && P(s_old, FRAME, skolem_beta11(v1,v2), v2)))
+                    
+
+    // // merge in pre-state
+    // assume (forall v1:Ref, v2:Ref, alpha:Ref, beta:Ref :: 
+        
+    //     { P(s_old, FRAME, v1, alpha), P(s_old, MOD, alpha, beta), P(s_old, FRAME, beta, v2) }
+
+    //             (v1 in FRAME) && (v2 in FRAME) && 
+    //             (alpha in MOD) && (beta in FRAME) &&
+    //                 (P(s_old, FRAME, v1, v2) || P(s_old, FRAME, v1, alpha) && P(s_old, MOD, alpha, beta) && P(s_old, FRAME, beta, v2)) ==> 
+    //                     P(s_new, GLOB, v1, v2))
+
+    // // frame-split 
+    // assume (forall v1:Ref, v2:Ref :: 
+
+    //     { P(s_new, GLOB, v1, v2) }
+
+    //             (v1 in FRAME) && (v2 in FRAME) && 
+    //             P(s_new, GLOB, v1, v2) ==> 
+    //                 P(s_old, FRAME, v1, v2) || 
+    //                 ((skolem_alpha12(v1,v2) in MOD) && 
+    //                  (skolem_beta12(v1,v2) in FRAME) && 
+    //                  P(s_old, FRAME, v1, skolem_alpha12(v1,v2)) && P(s_new, MOD, skolem_alpha12(v1,v2), skolem_beta12(v1,v2)) && P(s_old, FRAME, skolem_beta12(v1,v2), v2)))
+                    
+
+    // // frame-merge 
+    // assume (forall v1:Ref, v2:Ref, alpha:Ref, beta:Ref :: 
+        
+    //     { P(s_old, FRAME, v1, alpha), P(s_new, MOD, alpha, beta), P(s_old, FRAME, beta, v2) }
+
+    //             (v1 in FRAME) && (v2 in FRAME) && 
+    //             (alpha in MOD) && (beta in FRAME) &&
+    //                 (P(s_old, FRAME, v1, v2) || P(s_old, FRAME, v1, alpha) && P(s_new, MOD, alpha, beta) && P(s_old, FRAME, beta, v2)) ==> 
+    //                     P(s_new, GLOB, v1, v2))
+                
+f
 }
 
 /** Intended way of using these formulas: 
@@ -207,3 +268,10 @@ label l2
         // { Assertions about P2(g, _, _) }
     }
  */
+
+define DeduceRelationshipBetweenSubHeaps(SUBHEAP001, HEAP001) {
+    assert SUBHEAP001 subset HEAP001
+    if ( CLOSED(HEAP001) && CLOSED_IN(HEAP001, SUBHEAP001) ) { 
+        assume CLOSED(SUBHEAP001)
+    }
+}

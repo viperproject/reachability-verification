@@ -25,6 +25,7 @@ method link_DAG_left(g:Set[Ref], from:Ref, to:Ref)
     requires from in g
     requires from.left == null
     requires to != null ==> to in g 
+    requires from.right != null ==> P_(g, from, from.right) // for triggering
     ensures PROTECTED_GRAPH_left(g,from)
     ensures from.left == to
     ensures (to == null) || (old(from.right) == to) ==> ($$(g) == old($$(g)))
@@ -36,6 +37,7 @@ method link_DAG_right(g:Set[Ref], from:Ref, to:Ref)
     requires from in g
     requires from.right == null
     requires to != null ==> to in g
+    requires from.left != null ==> P_(g, from, from.left) // for triggering
     ensures PROTECTED_GRAPH_right(g,from)
     ensures from.right == to
     ensures (to == null) || (old(from.left) == to) ==> ($$(g) == old($$(g)))

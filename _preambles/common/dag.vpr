@@ -61,6 +61,7 @@ define TC_G_PLUS_DELTA(smaller_EG, larger_EG, alpha, beta)
     //         exists_path(smaller_EG, x0, y0) ==> exists_path(larger_EG, x0, y0))
 
 define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
+    // impossible(alpha)
     TC_G_PLUS_DELTA(old($$(g)), $$(g), alpha, beta)
     && TC_G_MINUS_DELTA(old($$(g)), $$(g), alpha, beta)
 

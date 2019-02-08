@@ -8,8 +8,21 @@ domain $SkolemFunctions$ {
     function skolem_alpha1(x0: Ref, y0: Ref): Ref
     function skolem_alpha2(x0: Ref, y0: Ref): Ref
     function skolem_alpha3(x0: Ref, y0: Ref): Ref
-    
-    /** Unused */
     function skolem_alpha4(x0: Ref, y0: Ref): Ref
+    function skolem_alpha5(x0: Ref, y0: Ref): Ref
+    function skolem_alpha6(x0: Ref, y0: Ref): Ref
+    function skolem_alpha7(x0: Ref, y0: Ref): Ref
+    function skolem_alpha8(x0: Ref, y0: Ref): Ref
+    function skolem_alpha9(x0: Ref, y0: Ref): Ref
+    function skolem_alpha10(x0: Ref, y0: Ref): Ref
+    function skolem_alpha11(x0: Ref, y0: Ref): Ref
+    function skolem_alpha12(x0: Ref, y0: Ref): Ref
+
+    function skolem_beta9(x0: Ref, y0: Ref): Ref
+    function skolem_beta10(x0: Ref, y0: Ref): Ref
+    function skolem_beta11(x0: Ref, y0: Ref): Ref
+    function skolem_beta12(x0: Ref, y0: Ref): Ref
+
+    /** Unused */
     function skolem_tran(EG: Set[Edge], x0: Ref, y0: Ref): Ref
 }

@@ -29,8 +29,10 @@ define DISJOINT_EDGES(EG_A, EG_B)
 define GLOBAL_ROOT(graph_A,root)
     (forall n0:Ref :: 
         { P_(graph_A, root, n0) } 
-        // { n0 in graph_A }
-            (n0 in graph_A) <==> P_(graph_A, root, n0))
+            (P_(graph_A, root, n0) ==> n0 in graph_A))
+    && (forall n0:Ref :: 
+        { P_(graph_A, root, n0), n0 in graph_A } 
+            (n0 in graph_A) ==> P_(graph_A, root, n0))
 
 // TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SROOT(graph_A, roots)

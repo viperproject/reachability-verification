@@ -7,15 +7,26 @@
 domain TriggerWisdoms {
     function __learn_trigger__($b$: Bool): Bool
     function __trigger_ref__($r$: Ref): Bool
+    function __learn_edge__($e$: Edge): Bool
+    function __trigger_path($p$: Ref): Bool
 
     axiom ax_Dummy {
         forall $b$:Bool :: 
             { __learn_trigger__($b$) } 
                 __learn_trigger__($b$)
     }
+
+    // axiom ax_LearnEdge { 
+    //     forall $e$: Edge :: 
+    //         { __learn_edge__($e$) }
+    //             __learn_edge__($e$)
+    // }
 }
 
 domain Edge {
+    function getnext1(no:Ref): Ref
+    function getnext2(no:Ref): Ref
+
     function edge_pred(e0: Edge): Ref
     function edge_succ(e0: Edge): Ref
 
@@ -144,7 +155,8 @@ domain TrClo {
     axiom ax_ExistsPathTrans {
         forall EG:Set[Edge], u0:Ref, v0:Ref, w0:Ref ::
             { exists_path(EG,u0,w0), exists_path(EG,w0,v0) } //TODO multipattern
-            //{ exists_path_(EG,u0,w0), exists_path(EG,w0,v0) }
+            { exists_path_(EG,u0,w0), exists_path(EG,w0,v0) }
+            { exists_path(EG,u0,w0), exists_path_(EG,w0,v0) }
                 // TODO: u0 != w0 && w0 != v0 &&
                 exists_path_(EG,u0,w0) && exists_path_(EG,w0,v0) ==> exists_path_(EG,u0,v0)
     }

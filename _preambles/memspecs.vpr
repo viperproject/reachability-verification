@@ -35,13 +35,18 @@ define CLOSED_for($field$, nodes)
     (forall n:Ref :: 
         { n.$field$ in nodes }
         { n in nodes, n.$field$ }
+            // __trigger_path(n) && 
+            // bla(P_(nodes, n, n.$field$)) && 
+            // __learn_edge__(create_edge(n, n.$field$)) &&
             n in nodes && n.$field$ != null ==> n.$field$ in nodes)
 
-define RELATIVELY_CLOSED_for($field$, nodes, against_nodes)
+define CLOSED_IN_for($field$, nodes, against_nodes)
     (forall n:Ref :: 
         { n.$field$ in against_nodes }
         {  n in nodes, n.$field$ }
-            n in nodes ==> !(n.$field$ in against_nodes))
+            n in nodes 
+            // __learn_trigger__( fdsa ) && 
+            ==> !(n.$field$ in against_nodes setminus nodes))
 
 define COMPLETE_for($field$, nodes)
     (forall n:Ref :: 
