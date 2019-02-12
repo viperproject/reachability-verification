@@ -1,0 +1,149 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "./legoFraming-snapshot-27012019.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/dag.vpr"
+import "../_preambles/dag.vpr"
+
+define __CONVEXITY_CHECKES false 
+
+
+
+method mergeRight(g: Set[Ref], // ghost
+                ldag: Set[Ref], lr: Ref, 
+                rdag:Set[Ref],  rr: Ref) 
+    returns (link: Ref) // ghost
+    
+    requires lr in ldag
+    requires rr in rdag
+    requires DISJOINT(ldag, rdag)
+    requires g == ldag union rdag
+    requires DAG(g)
+    
+    requires forall n:Ref :: 
+        { P_(g, lr, n) }
+        //{ n in g, P_(g, lr.right, n) }
+            P_(g, lr, n) ==> n in ldag
+    requires forall n:Ref :: 
+        { n in ldag, P_(g, lr, n) }
+            n in ldag ==> P_(g, lr, n)
+    requires forall n:Ref :: 
+        { P_(g, rr, n) }
+            P_(g, rr, n) ==> n in rdag
+    requires forall n:Ref :: 
+        { n in rdag, P_(g, rr, n) }
+            n in rdag ==> P_(g, rr, n)
+
+    ensures DAG(g)
+
+    ensures link in ldag 
+    ensures forall x:Ref, y:Ref :: 
+        { E_(g, x, y) }
+            E_(g, x, y) ==> E0(g, x, y) || (x == link && y == rr) 
+    ensures forall x:Ref, y:Ref :: 
+        { E0(g, x, y) }
+        { E_(g, x, y) }
+            E0(g, x, y) || (x == link && y == rr) ==> E_(g, x, y)
+
+    ensures old(lr.right) == null ==> lr == link && lr.right == rr
+
+    ensures forall x:Ref, y:Ref :: 
+        { P_(g, x, y) }
+        { P0(g, x, y) }
+        { P0(g, x, link), P0(g, rr, y) }
+            x in g && y in g ==> // optional
+                ( P_(g, x, y) <==> P0(g, x, y) || P0(g, x, link) && P0(g, rr, y) )
+{
+    // Single-to-Double 
+    assert forall m:Ref, n:Ref :: 
+        { P_(g, m, n) }
+            P_(g, m, n) ==> 
+                __learn_trigger__(P_(g, lr, m)) && 
+                __learn_trigger__(P_(g, lr, n)) && 
+                __learn_trigger__(P_(g, rr, m)) && 
+                __learn_trigger__(P_(g, rr, n))
+
+
+    // Partitioning paths in disjoint structures of (g): ldag, rdag
+    CHECK_CONVEXITY(ldag, g)
+    EnableFocusOnConvexSubHeap(g, ldag)
+    CHECK_CONVEXITY(rdag, g)
+    EnableFocusOnConvexSubHeap(g, rdag)
+
+    if ( lr.right != null ) {
+        // assume false
+        var ch_node: Ref := lr.right
+        assert P_(g, lr, ch_node) // traversing the heap
+        
+        var ch_dag: Set[Ref] := sub(ldag, ch_node)
+
+        // Footprint of the sub-call: 
+        var g1: Set[Ref] := ch_dag union rdag
+        
+        // The following deduction is applied to FOOTRPINT vs. FRAME
+        DeduceRelationshipBetweenSubHeaps(g1, g)
+        
+        var frame: Set[Ref] := g setminus g1 // ldag setminus ch_dag
+
+        // This part is tricky: 
+        // var q:Ref 
+        // assume q in rdag && q.left != null
+        // assume q.right != null
+        // assert __learn_trigger__(P_(g, q, q.left))
+        // assert P_(g, rr, q)
+        // assert P_(g, rr, q.left)
+        // assert q.left in rdag
+        // assert q.right in rdag
+        // assert forall n:Ref :: 
+        //     { P_(g, n, n.left) }
+        //         n in rdag && n.left != null ==> P_(g, rr, n.left)
+        // assert forall n:Ref :: 
+        //     { n.left in rdag }
+        //     { n in rdag, n.left }
+        //         n in rdag && n.left != null ==> n.left in rdag
+        
+
+        // Partitioning paths before sub-call: (ch_dag union rdag), frame
+        EnableFocusOnConvexSubHeap(g, g1)
+        if ( CONVEX_(frame, g) ) {
+            EnableFocusOnConvexSubHeap(g, frame)
+        }
+        
+        // Partitioning paths in disjoint structures of (g1): ch_dag, rdag
+        CHECK_CONVEXITY(ch_dag, g1)
+        // EnableFocusOnConvexSubHeap(g1, ch_dag)
+        CHECK_CONVEXITY(rdag, g1)
+        EnableFocusOnConvexSubHeap(g1, rdag)
+        
+
+    label l1
+        link := mergeRight(g1, ch_dag, ch_node, rdag, rr)
+    label l2
+        // assume false
+        // assume false
+
+        // Recompute the reachability in (g) after the sub-call. 
+        CHECK_CONVEXITY(g1, g)
+        EnableFocusOnConvexSubHeap(g, g1)
+        // Partition paths after the sub-call. 
+        if ( CONVEX_(frame, g) ) {
+            EnableFocusOnConvexSubHeap(g, frame)
+        }
+        
+        // TODO: assert CONVEX_(g1, g) -- do we check this? and how? 
+        ApplyConvexTCFraming(l1, l2, g1, g, frame)
+    
+    
+    } else {
+        // Encoding lr.right := rr ...
+        link_DAG_right(g, lr, rr)
+        link := lr
+    }
+}

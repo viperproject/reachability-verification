@@ -246,7 +246,7 @@ define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
     //                 (P(s_old, FRAME, v1, v2) || P(s_old, FRAME, v1, alpha) && P(s_new, MOD, alpha, beta) && P(s_old, FRAME, beta, v2)) ==> 
     //                     P(s_new, GLOB, v1, v2))
                 
-f
+
 }
 
 /** Intended way of using these formulas: 
