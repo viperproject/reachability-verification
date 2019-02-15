@@ -1,0 +1,88 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "./legoFraming-snapshot-27012019.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../_preambles/memspecs.vpr"
+
+method callee(h: Set[Ref])
+    requires GRAPH(h)
+    ensures GRAPH(h)
+    ensures forall x:Ref, y:Ref :: 
+        { P_(h, x, y) } 
+        { P0(h, x, y) }
+            x in h ==> (P_(h, x, y) <==> P0(h, x, y))
+
+method caller(g: Set[Ref])
+    requires GRAPH(g)
+    ensures GRAPH(g)
+    ensures forall x:Ref, y:Ref :: 
+        { P_(g, x, y) } 
+            x in g ==> (P_(g, x, y) <==> P0(g, x, y))
+{
+    var g1:Set[Ref]
+    assume g1 subset g
+    assume CONVEX_(g1, g)
+
+    var frame:Set[Ref] := g setminus g1
+    
+    EnableFocusOnConvexSubHeap(g, g1)
+    // EnableFocusOnConvexSubHeap(g, frame)
+    EnableFocus(g, frame)
+
+    label l1
+    callee(g1)
+    label l2
+
+    EnableFocusOnConvexSubHeap(g, g1)
+    // EnableFocusOnConvexSubHeap(g, frame)
+    EnableFocus(g, frame)
+    
+    ApplyConvexTCFraming(l1, l2, g1, g, frame)
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //     { P0(g, x, y) }
+    //         x in frame && !(y in g) && P0(frame, x, y) ==> P_(frame, x, y)
+
+    // var mx:Ref
+    // var my:Ref
+
+    // assume mx in frame && !(my in g) && P0(frame, mx, my) 
+    // assert P_(frame, mx, my)
+
+    // // assert P
+    // assert frame subset g
+    // assert $$(frame) subset $$(g)
+    // // assert 
+
+    // assert P_(g, mx, my)
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //     { P0(g, x, y) }
+    //         x in frame && !(y in g) && P0(g, x, y) ==> P_(g, x, y)
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in frame && !(y in g) ==> (P_(g, x, y) <==> P0(g, x, y))
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in frame && (y in g) ==> (P_(g, x, y) <==> P0(g, x, y))
+
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in frame ==> (P_(g, x, y) <==> P0(g, x, y))
+    // assume false
+    
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in g1 ==> (P_(g, x, y) <==> P0(g, x, y))
+    // assert forall x:Ref, y:Ref :: 
+    //     { P_(g, x, y) } 
+    //         x in g ==> (P_(g, x, y) <==> P0(g, x, y))
+}
+
