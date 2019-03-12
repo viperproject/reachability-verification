@@ -20,6 +20,17 @@ define DISJOINT(graph_A, graph_B)
         { r0 in graph_A, r0 in graph_B } 
             (r0 in graph_A) ==> !(r0 in graph_B)) 
 
+define DISJOINT3(graph_A, graph_B, graph_C)
+    (forall r0:Ref :: 
+        { r0 in graph_A, r0 in graph_B } 
+        { r0 in graph_B, r0 in graph_C } 
+        { r0 in graph_C, r0 in graph_A } 
+            !(r0 in graph_A) && !(r0 in graph_B) && !(r0 in graph_C) ||
+             (r0 in graph_A) && !(r0 in graph_B) && !(r0 in graph_C) ||
+            !(r0 in graph_A) &&  (r0 in graph_B) && !(r0 in graph_C) ||
+            !(r0 in graph_A) && !(r0 in graph_B) &&  (r0 in graph_C))
+
+
 define DISJOINT_EDGES(EG_A, EG_B)
     (forall e0:Edge :: 
         { e0 in EG_A, e0 in EG_B }
