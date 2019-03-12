@@ -180,8 +180,6 @@ domain TrClo {
     // axiom LinearEdgePartitioning {
     //     forall BiggerEG:Set[Edge], SmallerEG:Set[Edge], x:Ref, y:Ref ::
     //         { exists_path(SmallerEG, x, y), exists_path(BiggerEG, x, y) }
-    //         { SmallerEG subset BiggerEG, exists_path(SmallerEG, x, y) }
-    //         { SmallerEG subset BiggerEG, exists_path(BiggerEG, x, y) }
     //             (SmallerEG subset BiggerEG) &&
     //                 exists_path(SmallerEG, x, y) ==> exists_path(BiggerEG, x, y)
     // }
