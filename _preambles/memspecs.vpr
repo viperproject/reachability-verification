@@ -43,7 +43,7 @@ define CLOSED_for($field$, nodes)
 define CLOSED_IN_for($field$, nodes, against_nodes)
     (forall n:Ref :: 
         { n.$field$ in against_nodes }
-        {  n in nodes, n.$field$ }
+        { n in nodes, n.$field$ }
             n in nodes 
             // __learn_trigger__( fdsa ) && 
             ==> !(n.$field$ in against_nodes setminus nodes))
