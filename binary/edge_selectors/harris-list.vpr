@@ -55,6 +55,9 @@ method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
     ensures res != null ==> P_next(g, start, res)
     ensures res == start
 
+    // TODO: the following postcondition is redundant
+    ensures $$__next(g) == old( $$__next(g) )
+
 method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
     ensures !( new_node in graph )
     ensures new_graph == graph union Set(new_node)
@@ -132,9 +135,9 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
     new_g := g
 
     var l: Ref := mh
-    
     var r: Ref
     r := getUnmarked(g, l.next)
+
 
     var nondet: Bool 
     nondet := havoc()
@@ -143,6 +146,7 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
         invariant l in g
         invariant r != null ==> r in g
         invariant HARRIS(g)
+
 
         invariant r != null ==> P_next(g, mh, l) && P_next(g, l, r)
         // fnext edges are unchanged by the loop body
