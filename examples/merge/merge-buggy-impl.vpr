@@ -72,13 +72,14 @@ method mergeRight(g: Set[Ref], // ghost
     if ( lr.right == null ) { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THE BUG
         var ch_node: Ref := lr.right
         // assert P_(g, lr, ch_node) // traversing the heap
-        
+        //:: ExpectedOutput(application.precondition:assertion.false)
         var ch_dag: Set[Ref] := sub(ldag, ch_node)
 
         // Footprint of the sub-call: 
         var g1: Set[Ref] := ch_dag union rdag
         
         // The following is applied to FOOTRPINT vs. GLOB
+        //:: ExpectedOutput(assert.failed:assertion.false)
         DeduceRelationshipBetweenSubHeaps(g1, g)
         
         var frame: Set[Ref] := g setminus g1 // ldag setminus ch_dag        
@@ -93,6 +94,7 @@ method mergeRight(g: Set[Ref], // ghost
         
 
     label l1
+        //:: ExpectedOutput(call.precondition:assertion.false)
         link := mergeRight(g1, ch_dag, ch_node, rdag, rr)
     label l2
 
@@ -104,6 +106,7 @@ method mergeRight(g: Set[Ref], // ghost
     
     } else {
         // Encoding lr.right := rr ...
+        //:: ExpectedOutput(call.precondition:assertion.false)
         link_DAG_right(g, lr, rr)
         link := lr
     }

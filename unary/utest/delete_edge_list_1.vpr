@@ -1,4 +1,6 @@
 import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
 import "../../_preambles/TrCloZopgDomain.vpr"
 
 import "../../_preambles/framing.vpr"

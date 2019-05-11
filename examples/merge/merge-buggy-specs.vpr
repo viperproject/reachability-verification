@@ -66,7 +66,9 @@ method mergeRight(g: Set[Ref], // ghost
                 ( P_(g, x, y) <==> P0(g, x, y) || P0(g, x, link) && P0(g, rr, y) )
 {
     // Partitioning paths in disjoint structures of (g): ldag, rdag
+    //:: ExpectedOutput(assert.failed:assertion.false)
     EnableFocusOnConvexSubHeap(g, ldag)
+    //:: ExpectedOutput(assert.failed:assertion.false)
     EnableFocusOnConvexSubHeap(g, rdag)
 
     if ( lr.right != null ) {
@@ -93,6 +95,7 @@ method mergeRight(g: Set[Ref], // ghost
         
 
     label l1
+        //:: ExpectedOutput(call.precondition:assertion.false)
         link := mergeRight(g1, ch_dag, ch_node, rdag, rr)
     label l2
 

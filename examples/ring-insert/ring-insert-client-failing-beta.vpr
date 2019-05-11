@@ -62,6 +62,7 @@ label l2
 
     assume old[l1]($$(frame)) == $$(frame)
 
+    //:: ExpectedOutput(assert.failed:assertion.false)
     assert CHECK_ZOPG_AFTER_CONVEX_CALL(l1, l2, g1, g, frame)
 }
 

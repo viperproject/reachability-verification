@@ -34,7 +34,7 @@ define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
                             // { ??? }
                             __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
 
-                    || (\u0==from) && (v0==to) && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
+                    || (u0==from) && (v0==to) && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
                             // TODO: add triggers
                             // { ??? }
                             __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
