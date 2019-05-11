@@ -45,7 +45,6 @@ method link_ZOPG_left(g:Set[Ref], from:Ref, to:Ref)
     ensures to == null ==> $$(g) == old($$(g))
     ensures to != null ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures to != null ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
-    // TODO: Automatic reasoning support
 
 method unlink_ZOPG_right(g:Set[Ref], node:Ref)
     requires node in g
@@ -65,4 +64,3 @@ method link_ZOPG_right(g:Set[Ref], from:Ref, to:Ref)
     ensures (to == null) ==> $$(g) == old($$(g))
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
-    // TODO: Automatic reasoning support

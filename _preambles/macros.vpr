@@ -36,7 +36,6 @@ define DISJOINT_EDGES(EG_A, EG_B)
         { e0 in EG_A, e0 in EG_B }
             (e0 in EG_A) ==> !(e0 in EG_B)) 
 
-// TODO: Check that RHS==>LHS is okay. 
 define GLOBAL_ROOT(graph_A,root)
     (forall n0:Ref :: 
         { P_(graph_A, root, n0) } 
@@ -45,13 +44,11 @@ define GLOBAL_ROOT(graph_A,root)
         { P_(graph_A, root, n0), n0 in graph_A } 
             (n0 in graph_A) ==> P_(graph_A, root, n0))
 
-// TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SROOT(graph_A, roots)
     (forall n0:Ref :: 
         { SP_(graph_A, roots, n0) } 
             (n0 in graph_A) ==> SP_(graph_A, roots, n0))
 
-// TODO: Check if we should add RHS==>LHS.
 define GLOBAL_SINK(graph_A,sink)
     (forall n0:Ref :: 
         { P_(graph_A, n0, sink) } 
@@ -179,6 +176,37 @@ define SP8(graph_A, X0, y0)
     exists_spath(old[l8]($$(graph_A)), X0, y0)
 
 
+define PS_(graph_A, x0, Y0)
+    exists_paths($$(graph_A), x0, Y0)
+
+define PS0(graph_A, x0, Y0)
+    exists_paths(old($$(graph_A)), x0, Y0)
+
+define PS1(graph_A, x0, Y0)
+    exists_paths(old[l1]($$(graph_A)), x0, Y0)
+
+define PS2(graph_A, x0, Y0)
+    exists_paths(old[l2]($$(graph_A)), x0, Y0)
+
+define PS3(graph_A, x0, Y0)
+    exists_paths(old[l3]($$(graph_A)), x0, Y0)
+
+define PS4(graph_A, x0, Y0)
+    exists_paths(old[l4]($$(graph_A)), x0, Y0)
+
+define PS5(graph_A, x0, Y0)
+    exists_paths(old[l5]($$(graph_A)), x0, Y0)
+
+define PS6(graph_A, x0, Y0)
+    exists_paths(old[l6]($$(graph_A)), x0, Y0)
+
+define PS7(graph_A, x0, Y0)
+    exists_paths(old[l7]($$(graph_A)), x0, Y0)
+
+define PS8(graph_A, x0, Y0)
+    exists_paths(old[l8]($$(graph_A)), x0, Y0)
+
+
 define DEP(state_label, graph_A, x0, y0, u0, v0)
     exists_DEP(old[state_label]($$(graph_A)), x0, y0, u0, v0)
 
@@ -211,3 +239,8 @@ define DEP7(graph_A, x0, y0, u0, v0)
 
 define DEP8(graph_A, x0, y0, u0, v0)
     exists_DEP(old[l8]($$(graph_A)), x0, y0, u0, v0)
+
+
+// Synonyms
+define synP_(graph_A, x0, y0)
+    exists_path_($$(graph_A), x0, y0)

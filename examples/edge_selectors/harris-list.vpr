@@ -1,0 +1,186 @@
+import "next_reachability.vpr"
+import "fnext_reachability.vpr"
+import "trig.vpr"
+
+
+
+/** Common part of the preamble */
+
+define NODES_for($field$, nodes, p)
+    (forall n:Ref :: 
+        { n.$field$ } 
+            n in nodes ==> acc(n.$field$, p))
+
+define PROTECTED_NODES_for($field$, nodes, mutable_node, p)
+    ((mutable_node in nodes)
+    && acc(mutable_node.$field$, write)
+    && (forall n:Ref :: 
+        { n.$field$ } 
+            n in nodes && n != mutable_node ==> acc(n.$field$, p)))
+
+define CLOSED_for($field$, nodes)  
+    (forall n:Ref :: 
+        { n.$field$ in nodes }
+        { n in nodes, n.$field$ }
+            n in nodes && n.$field$ != null ==> n.$field$ in nodes)
+
+define COMPLETE_for($field$, nodes)
+    (forall n:Ref :: 
+        { n.$field$ in nodes }
+        { n in nodes, n.$field$ }
+            n in nodes ==> n.$field$ in nodes)
+
+define DISJOINT(graph_A, graph_B)
+    (forall r:Ref :: 
+        { r in graph_A, r in graph_B } 
+            (r in graph_A) ==> !(r in graph_B)) &&
+    (forall r:Ref :: 
+        { r in graph_A, r in graph_B } 
+            (r in graph_B) ==> !(r in graph_A))
+
+
+
+
+define CONST_EDGES__fnext(graph0)
+    ($$__fnext(graph0) == old($$__fnext(graph0)))
+
+field mrk: Bool
+
+method havoc() returns (res: Bool)
+
+method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
+    requires NODES_for(next, g, 1/2)
+    requires start != null ==> start in g
+    ensures NODES_for(next, g, 1/2)
+    ensures start == null ==> res == null
+    ensures res != null ==> res in g
+    ensures res != null ==> P_next(g, start, res)
+    ensures res == start
+
+    // TODO: the following postcondition is redundant
+    ensures $$__next(g) == old( $$__next(g) )
+
+method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
+    ensures !( new_node in graph )
+    ensures new_graph == graph union Set(new_node)
+    ensures acc(new_node.next) && acc(new_node.fnext) && acc(new_node.mrk)
+    ensures new_node.next == null
+    ensures new_node.fnext == null
+    ensures !new_node.mrk
+
+method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
+    requires node in graph
+    requires acc(node.next) && acc(node.fnext) && acc(node.mrk)
+    ensures new_graph == graph setminus Set(node)
+    ensures !( node in new_graph )
+
+
+define HARRIS(G)
+    // Memory specs: 
+    (!(null in G) && NODES_for(next, G, write) && NODES_for(fnext, G, write) &&
+    // Closedness via both types of edges: 
+    (CLOSED_for(next, G) && CLOSED_for(fnext, G))) &&
+    // Access permissions to auxiliary marker field: 
+    (forall n:Ref :: { n.mrk } n in G ==> acc(n.mrk)) &&
+    //
+    //                === Harris List Functional Invariant ===
+    //
+    // (a) ``The data structure consists of two (potentially overlapping) functional graphs: 
+    //       a list on next edges beginning at mh and one on fnext edges beginning at fh.''
+    //     Note:  
+    //         1) `n` in reachable from `mh` via `next` or from `fh` via `fnext`: 
+    (forall n:Ref :: 
+        { P_next(G, mh, n) }
+        { P_fnext(G, fh, n) }
+            n in G ==> P_next(G, mh, n) || P_fnext(G, fh, n)) &&
+    //         2) The nodes reachable from `fh` form an unshared graph (following only 
+    //            `fnext` edges) --- sharing is only due to `next` fields!
+    (forall x:Ref, y:Ref :: 
+        { E_fnext(G, x, y) }
+        { P_fnext(G, fh, x), y in g }
+            x in G && y in G && E_fnext(G, x, y) ==> P_fnext(G, fh, x)) &&
+    //         3) The list starting from `mh` is acyclic (following only `next` edges): 
+    (forall x:Ref, y:Ref :: 
+        { E_next(G, y, x) }
+        { P_next(G, x, y) }
+            x in G && y in G ==> 
+                (!P_next(G, x, y) || !E_next(G, y, x))) &&
+    //         4) The list starting from `fh` is acyclic (following only `fnext` edges): 
+    (forall x:Ref, y:Ref :: 
+        { P_fnext(G, x, y) }
+        { E_fnext(G, y, x) }
+            x in G && y in G && P_fnext(G, fh, x) && P_fnext(G, fh, y) ==> // consider dropping (P_fnext(G, fh, x) && P_fnext(G, fh, y))
+                (!P_fnext(G, x, y) || !E_fnext(G, y, x))) &&
+    // (b) ``The two lists are null terminated and ft is an element in the free list.''
+    //       Lists are null-terminated due to acyclicity (and finiteness) and CLOSED(G). 
+    P_fnext(G, fh, ft) &&
+    // (c) ``The next edges from nodes in the free list point to nodes in the 
+    //       free list or main list.'' (I.e., they are in `G`).
+    //     We get this trivially from CLOSED_for(fnext, G).
+    (forall n:Ref :: 
+        { P_fnext(G, fh, n) }
+        { P_next(G, mh, n) }
+            n in G && P_fnext(G, fh, n) /*&& n.next != null*/ ==> n.next in G) &&
+    // (d) ``All nodes in the free list are marked.'' 
+    //     Additionally, we strengthen the invariant by adding that ``all other nodes are unmarked.''
+    (forall n:Ref :: 
+        { n.mrk } 
+        { P_fnext(G, fh, n) }
+            n in G ==> (P_fnext(G, fh, n) <==> n.mrk))
+
+
+method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
+    requires HARRIS(g)
+    requires mh in g && fh in g && ft in g
+    ensures HARRIS(new_g)
+{
+    new_g := g
+
+    var l: Ref := mh
+    var r: Ref
+    r := getUnmarked(g, l.next)
+
+
+    var nondet: Bool 
+    nondet := havoc()
+
+    while ( r != null && nondet ) 
+        invariant l in g
+        invariant r != null ==> r in g
+        invariant HARRIS(g)
+
+        invariant r != null ==> P_next(g, mh, l) && P_next(g, l, r)
+        // fnext edges are unchanged by the loop body
+        invariant CONST_EDGES__fnext(g)
+
+        invariant r == l.next
+    {
+        l := r 
+        r := getUnmarked(g, l.next)
+        nondet := havoc()
+    }
+
+    if ( r == null || !r.mrk ) {
+        var nu: Ref 
+        new_g, nu := createNode(g)
+        assume apply_AtomicTCFraming__next(g, nu)
+        assume apply_AtomicTCFraming__fnext(g, nu)
+                
+        link_DAG__next(new_g, nu, r)
+
+        // CAS(l.next, r, nu)
+        // Note: to focus on the reachability aspect, we verify a single-thread version of the algorithm. 
+        //       Therefore, we already have  the lock to the (l.next) resource. 
+        assert acc(l.next)
+        if ( l.next == r ) {
+            // l.next := nu
+            unlink_DAG__next(new_g, l)
+            link_DAG__next(new_g, l, nu)
+
+        } else { // CAS failed
+            assert false
+            new_g := deleteNode(new_g, nu)
+            new_g := insert(new_g, mh, fh, ft) // try again
+        }
+    }
+}

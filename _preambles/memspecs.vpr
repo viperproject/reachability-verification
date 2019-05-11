@@ -31,7 +31,7 @@ define PROTECTED_NODES_for($field$, nodes, mutable_node, p)
         { n.$field$ } 
             n in nodes && n != mutable_node ==> acc(n.$field$, p)))
 
-define CLOSED_for($field$, nodes)  
+define CLOSED_for($field$, nodes)
     (forall n:Ref :: 
         { n.$field$ in nodes }
         { n in nodes, n.$field$ }

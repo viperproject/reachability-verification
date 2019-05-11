@@ -1,3 +1,5 @@
+// Used for memory allocation
+
 function apply_TCFraming(graph_A:Set[Ref], graph_B:Set[Ref]): Bool
     requires READONLY_NODES(graph_A)
     requires READONLY_NODES(graph_B)

@@ -29,13 +29,6 @@ define COMPLETE(nodes)
     && COMPLETE_for(right, nodes)
 
 define CLOSED(nodes)
-    // forall m:Ref, n:Ref :: 
-    //     // { n.left in nodes }
-    //     // { n in nodes, n.left }
-    //     // { n.right in nodes }
-    //     // { n in nodes, n.right }
-    //     { n in nodes, E_(nodes, n, m) }
-    //         n in nodes && E_(nodes, n, m) ==> m in nodes
     CLOSED_for(left, nodes)
     && CLOSED_for(right, nodes)
 

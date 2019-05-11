@@ -23,7 +23,7 @@ define TC_G_MINUS_DELTA(smaller_EG, larger_EG, alpha, beta)
     && 
     (forall x0:Ref, y0:Ref ::
         { exists_path(smaller_EG,x0,y0) }
-            ((x0 != alpha) && (y0 != beta) && exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0)) 
+            (/*(x0 != alpha) && (y0 != beta) &&*/ exists_path(larger_EG, x0, alpha) && exists_path(larger_EG, beta, y0)) 
                 ==> 
                 (exists_path(smaller_EG, x0, y0) <==> (x0 == y0) ||
                     !( forall u0:Ref :: 
@@ -46,22 +46,13 @@ define TC_G_MINUS_DELTA(smaller_EG, larger_EG, alpha, beta)
                             !((u0 != alpha || v0 != beta) && edge(larger_EG,u0,v0) 
                             && exists_path(larger_EG,x0,u0) && exists_path(larger_EG,u0,alpha) 
                             && exists_path(larger_EG,beta,v0) && exists_path(larger_EG,v0,y0)))))
-    // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path(smaller_EG, x0, y0) }
-    //         !exists_path(larger_EG, x0, y0) ==> !exists_path(smaller_EG, x0, y0))
 
 define TC_G_PLUS_DELTA(smaller_EG, larger_EG, alpha, beta)
     (forall x0:Ref, y0:Ref ::
         { exists_path(larger_EG,x0,y0) }
             exists_path(larger_EG,x0,y0) <==> exists_path(smaller_EG,x0,y0) || (exists_path(smaller_EG,x0,alpha) && exists_path(smaller_EG,beta,y0)))
-    // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path(larger_EG, x0, y0) }
-    //         exists_path(smaller_EG, x0, y0) ==> exists_path(larger_EG, x0, y0))
 
 define DAG_LINK__PRECISE_TC_UPDATE_FORMULA(g, alpha, beta)
-    // impossible(alpha)
     TC_G_PLUS_DELTA(old($$(g)), $$(g), alpha, beta)
     && TC_G_MINUS_DELTA(old($$(g)), $$(g), alpha, beta)
 

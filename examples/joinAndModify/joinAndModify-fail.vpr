@@ -1,0 +1,270 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "../../_preambles/legoFraming.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../../binary/_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/dag.vpr"
+import "../../binary/_preambles/dag.vpr"
+
+define __CONVEXITY_CHECKES false
+
+method disconnectAll(h: Set[Ref])
+    requires GRAPH(h)
+    ensures GRAPH(h)
+    ensures forall x:Ref, y:Ref :: 
+        { P_(h, x, y) }
+            x in h && y in h ==> (P_(h, x, y) <==> x == y)
+    ensures forall x:Ref, y:Ref :: 
+        { E_(h, x, y) }
+            x in h && !(y in h) ==> (E_(h, x, y) <==> E0(h, x, y))
+
+define ACYCLIC_IN(g, h)
+    (h subset g) && 
+    (forall v1:Ref, v2:Ref :: 
+        { E_(g, v1, v2) }
+        { P_(g, v2, v1) } 
+            v1 in h && v2 in h && E_(g, v1, v2) ==> !P_(g, v2, v1))
+
+
+define HAMMOCK_IN(g, h, s, t) 
+    (h subset g) && 
+    CLOSED(h) && 
+    // ACYCLIC_IN(g, h) && 
+    ACYCLIC(h) && 
+    (s != t) && 
+    (s in h && t in h) && 
+    (forall n: Ref :: 
+        { P_(g, s, n) }
+        { P_(g, n, t) }
+            n in h ==> P_(g, s, n) && P_(g, n, t))
+
+function dummy000(t:Bool): Bool
+{
+    true
+}
+
+function dummy111(t:Bool): Bool
+
+function false1rr(a:Ref, b:Ref): Bool
+{
+    false
+}
+
+function dummy1rr(a:Ref, b:Ref): Bool
+
+define EXPLORE_ONE_LEVEL_LEFT(g, n) {
+    assert n.left != null ==> E_(g, n, n.left)// && P_(g, n, n.left)
+}
+
+define EXPLORE_ONE_LEVEL_RIGHT(g, n) {
+    assert n.right != null ==> E_(g, n, n.right)// && P_(g, n, n.right)
+}
+
+define EXPLORE_ONE_LEVEL(g, n) {
+    EXPLORE_ONE_LEVEL_LEFT(g, n)
+    EXPLORE_ONE_LEVEL_RIGHT(g, n)
+}
+
+method caller(g: Set[Ref], 
+              h1: Set[Ref], s1: Ref, t1: Ref,  
+              h2: Set[Ref], s2: Ref, t2: Ref)
+    
+    requires GRAPH(g)
+    requires g == h1 union h2 
+    requires DISJOINT(h1, h2)
+    requires HAMMOCK_IN(g, h1, s1, t1)
+    requires HAMMOCK_IN(g, h2, s2, t2)
+    requires s1.left == null
+    requires t2.right == null
+
+    // ensures GRAPH(g)
+    // ensures !P_(g, s2, t2)
+    // ensures P_(g, s1, t1)
+{
+    // needed for triggering
+
+    if ( CHECK_CONVEXITY_CONDITION(h1, g) ) {
+        EnableFocusOnConvexSubHeap(g, h1)
+    } else {
+        EnableFocus(g, h1)
+    }
+    if ( CHECK_CONVEXITY_CONDITION(h2, g) ) {
+        EnableFocusOnConvexSubHeap(g, h2)
+    } else {
+        EnableFocus(g, h2)
+    } 
+
+    // assert P_(h1, s1, t1)
+
+    // assert P_(g, s1, t1)
+    // assume false
+    link_DAG_left(g, s1, s2)
+    assert s2 != null ==> P_(g, s1, s2) // added for triggering
+    // EXPLORE_ONE_LEVEL_LEFT(g, s1)
+
+    link_DAG_right(g, t2, t1)
+    assert t1 != null ==> P_(g, t2, t1) // added for triggering
+    // EXPLORE_ONE_LEVEL_RIGHT(g, t2)
+
+    label l1
+
+
+    
+    
+    
+    var frame:Set[Ref] := g setminus h2
+    
+    assume forall v1:Ref, v2:Ref :: 
+        
+        { P_(frame, v1, v2) } 
+        // { P_(g, v1, v2) } 
+        
+            // false1rr(v1, v2) &&
+            v1 in frame && v2 in frame && 
+            (forall z:Ref :: 
+                { P_(g, v1, z) }
+                { P_(g, z, v2) } 
+                    z in h2 ==> !P_(g, v1, z) || !P_(g, z, v2))
+            ==> (P_(frame, v1, v2) == P_(g, v1, v2))
+        
+    assume forall v1:Ref, v2:Ref :: 
+        
+        { P_(frame, v1, v2) }
+        // { P_(g, v1, v2) }
+
+            v1 in frame && v2 in frame && 
+            !(forall z:Ref :: 
+                { P_(g, v1, z) }
+                { P_(g, z, v2) } 
+                    z in h2 ==> !P_(g, v1, z) || !P_(g, z, v2))
+            ==> (P_(frame, v1, v2) <==> (
+
+                !(forall sigma:Ref, tau:Ref :: 
+
+                    { P_(g, v1, sigma), P_(g, tau, v2) } 
+                    { E_(g, sigma, tau) }
+
+                        !(  sigma in frame && !(forall z: Ref :: { P_(g, sigma, z) } z in h2 ==> !P_(g, sigma, z)) && 
+                              tau in frame &&  (forall z: Ref :: { P_(g, tau, z)   } z in h2 ==> !P_(g, tau,   z)) && 
+                            P_(g, v1, sigma) && E_(g, sigma, tau) && P_(g, tau, v2)))
+            ))
+
+    // Peek into the frame
+    EXPLORE_ONE_LEVEL(g, s1)
+    EXPLORE_ONE_LEVEL(g, s2)
+    EXPLORE_ONE_LEVEL(g, t1)
+    EXPLORE_ONE_LEVEL(g, t2)
+    
+    // assert P_(g, t2, t1)
+    // assert !(forall z:Ref :: 
+    //             { P_(g, s1, z) }
+    //             { P_(g, z, t1) } 
+    //                 z in h2 ==> !P_(g, s1, z) || !P_(g, z, t1))
+    // assert P_(frame, s1, t1)
+
+    // assume false
+
+
+
+    // assume forall v1:Ref, v2:Ref :: 
+        
+    //     { P_(frame, v1, v2) }
+    //     // { P_(g, v1, v2) }
+
+    //         v1 in frame && v2 in frame && 
+    //         !(forall z:Ref :: 
+    //             { P_(g, v1, z), P_(g, z, v2) } 
+    //                 z in h2 ==> !P_(g, v1, z) || !P_(g, z, v2))
+    //         ==> ((
+
+    //             !(forall sigma:Ref, tau:Ref :: 
+
+    //                 { P_(g, v1, sigma), E_(g, sigma, tau), P_(g, tau, v2) } 
+
+    //                     !(  sigma in frame && !(forall z: Ref :: { P_(g, sigma, z) } z in h2 ==> !P_(g, sigma, z)) && 
+    //                           tau in frame &&  (forall z: Ref :: { P_(g, tau, z)   } z in h2 ==> !P_(g, tau,   z)) && 
+    //                         P_(g, v1, sigma) && E_(g, sigma, tau) && P_(g, tau, v2)))
+    //         ) ==> P_(frame, v1, v2))
+    
+    /// Enclose the frame ...
+    assume forall v1:Ref, v2:Ref :: 
+        { P_(frame, v1, v2) }
+            v1 in frame && !(v2 in frame) && P_(frame, v1, v2) ==> 
+                !(forall z:Ref :: 
+                    { E_(frame, z, v2) } 
+                        !(z in frame && P_(frame, v1, z) && E_(frame, z, v2)))
+    
+    assume forall v1:Ref, v2:Ref, z:Ref :: 
+        { P_(g, v1, z), E_(g, z, v2) }
+            v1 in frame && !(v2 in frame) &&  
+            z in frame && P_(frame, v1, z) && E_(frame, z, v2) ==> P_(frame, v1, v2)
+
+
+    // assert 
+
+    // assume false
+
+    // Test A
+    // var x:Ref 
+    // var y:Ref
+    // assume x in frame && y in frame 
+    // assume !(forall z:Ref :: 
+    //     { P_(g, x, z), P_(g, z, y) } 
+    //         z in h2 ==> !P_(g, x, z) || !P_(g, z, y))
+    
+    // var s:Ref
+    // var t:Ref 
+    // assume s in frame && t in frame
+    // assume P_(g, x, s) && E_(g, s, t) && P_(g, t, y)
+    // assume !(forall z:Ref :: { P_(g, s, z) } z in h2 ==> !P_(g, s, z))
+    // assume forall z:Ref :: { P_(g, t, z) } z in h2 ==> !P_(g, t, z)
+    // assert P_(frame, x, y)
+
+    // Test B    
+    
+    // Needed trigger: option (a)
+    // assert P0(h1, s1, t1)
+    // assert s1.right in frame
+
+    // Needed trigger: option (b)
+    // assert !forall z: Ref :: !(z in h2 && P_(g, s1, z) && P_(g, z, t1)) // somewhy we need the following trigger: { z in h2 }
+
+    // Needed trigger: option (c)
+    // assert forall z:Ref :: { P_(g, s1.right, z) } z in h2 ==> !P_(g, s1.right, z)
+
+
+    // assert P_(g, s1, t1)
+    // assert P_(frame, s1, t1)
+    // assume false
+
+    disconnectAll(h2)
+    label l2
+
+    EnableFocusOnConvexSubHeap(g, h2)
+    ApplyConvexTCFraming(l1, l2, h2, g, frame)
+
+    assert !P_(h2, s2, t2)
+    // assert !P_(g, s2, t2)
+
+    // assert P_(frame, s1, t1)
+
+    // assert (forall z:Ref :: 
+    //     { P_(g, s1, z), P_(g, z, t1) } 
+    //         z in h2 ==> !P_(g, s1, z) || !P_(g, z, t1))
+
+    // assert P_(h1, s1, t1)
+    // assert P_(frame, s1, t1)
+    assert !P_(g, s1, t1)
+
+    // assert P_(frame, s1, t1)
+    assert false
+}
+
+function getU(x:Ref): Ref
+function getV(x:Ref): Ref
+

@@ -1,0 +1,89 @@
+// import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../../binary/_preambles/memspecs.vpr"
+
+domain Edge {
+    function edge_pred(e0: Edge): Ref
+    function edge_succ(e0: Edge): Ref
+
+    function create_edge(x0:Ref, y0:Ref): Edge
+    function create_edge_(x0:Ref, y0:Ref): Edge
+
+    axiom edge_injectivity {
+        forall x0:Ref, y0:Ref ::
+            { create_edge(x0,y0) }
+                edge_pred( create_edge(x0,y0) ) == x0 &&
+                edge_succ( create_edge(x0,y0) ) == y0
+    }
+}
+
+domain TrClo {
+    function exists_path(EG:Set[Edge], from:Ref, to:Ref): Bool
+    function exists_path_(EG:Set[Edge], from:Ref, to:Ref): Bool
+    function edge(EG:Set[Edge], p0:Ref, s0:Ref): Bool
+    function edge_(EG:Set[Edge], p0:Ref, s0:Ref): Bool
+
+    axiom ax_EdgeSynonim {
+        forall EG:Set[Edge], p0:Ref, s0:Ref ::
+            { edge(EG,p0,s0) }
+                edge(EG,p0,s0) <==> edge_(EG,p0,s0)
+    }
+    axiom ax_Edge {
+        forall EG:Set[Edge], p0:Ref, s0:Ref ::
+            { create_edge(p0,s0) in EG }
+            { edge(EG,p0,s0) }
+                edge_(EG,p0,s0) <==> create_edge(p0,s0) in EG
+    }
+    axiom ax_Alias {
+        forall EG:Set[Edge], from:Ref, to:Ref ::
+            { exists_path(EG,from,to) }
+                exists_path(EG,from,to) <==> exists_path_(EG,from,to)
+    }
+    axiom ax_EdgeMeansPath {
+        forall EG:Set[Edge], from:Ref, to:Ref ::
+            { exists_path(EG, from, to) }
+                edge(EG, from, to) ==> exists_path(EG, from, to)
+    }
+    axiom ax_ExistsPath {
+        (forall EG: Set[Edge], from: Ref, to: Ref ::
+            { exists_path(EG, from, to) }
+                exists_path_(EG, from, to) ==> (from == to || (edge(EG, from, skolem_w(EG,from,to)) && exists_path_(EG, skolem_w(EG,from,to), to))))
+    }
+}
+
+define __CONVEXITY_CHECKES false
+    
+function $$(nodes0: Set[Ref]): Set[Edge]
+    requires READONLY_NODES(nodes0)
+    ensures (forall v001: Ref, v002: Ref :: 
+        { create_edge(v001, v002) } 
+            ((v001 in nodes0) && (v002 != null) && (HEAP_PARTIAL_ORDER(v001,v002))) <==> (create_edge(v001, v002) in result))
+    // ensures (forall v001: Ref, v002:Ref :: 
+    //     { create_edge(v001, v002) }
+    //         (create_edge(v001, v002) in result) && CLOSED(nodes0) ==> v002 in nodes0)
+
+method caller(h: Set[Ref], t: Ref)
+    
+    requires GRAPH(h)
+    requires CLOSED(h)
+    // requires forall v1:Ref, v2:Ref :: 
+    //     { E_(h, v1, v2) }
+    //         E_(h, v1, v2) ==> v2 in h
+    requires forall v1:Ref, v2:Ref ::
+        { E_(h,v1,v2) }
+        { P_(h,v2,v1) }
+            E_(h,v1,v2) ==> !P_(h,v2,v1)
+    requires t in h
+    requires forall n: Ref :: 
+        { P_(h, n, t) }
+            n in h ==> P_(h, n, t)
+{
+
+    assert t.left != null ==> t.left in h
+    assert t.left != null ==> P_(h, t, t.left)
+
+    assert false
+}

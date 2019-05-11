@@ -1,0 +1,72 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "../../_preambles/legoFraming.vpr"
+import "../../_preambles/framing.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../../unary/_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/zopg.vpr"
+import "../../unary/_preambles/zopg.vpr"
+
+
+define UNSHARED_CONNECTED(g)
+    ( forall v1:Ref, v2:Ref, v:Ref :: { v in g, v1.next, v2.next } v1 in g && v2 in g && v in g ==> ( v1.next == v && v2.next == v ==> v1 == v2 ) )
+    && ( forall v:Ref :: { v.next } v in g ==> ( v == v.next <==> g == Set(v) ) )
+
+define RING(g)
+    ( GRAPH(g) && COMPLETE(g) )
+
+method create_node(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
+    ensures !( new_node in graph )
+    ensures new_graph == graph union Set(new_node)
+    ensures acc(new_node.next) 
+    ensures new_node.next == null
+
+method ringInsert(g: Set[Ref], pre_node: Ref, post_node: Ref)
+    returns (new_g: Set[Ref], new_node: Ref)
+
+    requires RING(g)
+    requires UNSHARED_CONNECTED(g)
+    requires pre_node in g && post_node in g
+    requires pre_node.next == post_node
+    requires forall n:Ref, m:Ref ::
+        { P_(g,n,m) }
+            n in g && m in g ==> P_(g,n,m)
+
+    ensures RING(new_g)
+    ensures UNSHARED_CONNECTED(new_g)
+    ensures !(new_node in g) && new_node in new_g
+    ensures new_g == g union Set(new_node)
+    ensures pre_node.next == new_node && new_node.next == post_node
+    ensures forall n:Ref, m:Ref ::
+        { P_(new_g,n,m) }
+            n in new_g && m in new_g
+                ==> P_(new_g,n,m)
+{
+    new_g, new_node := create_node(g)
+
+    /// An example similar to memory allocation. 
+    /// Precise reachability framing is easy here, because we allocate one node at a time. 
+    ///  1. Framing: 
+    assume apply_AtomicTCFraming(g, new_node)
+    ///  2. Synchronization of triggers from DEP and TC. 
+    assume apply_DepToTcWisdom(g, Set(new_node))
+
+    // Encoding new_node.next := post_node ...
+    link_ZOPG_next(new_g, new_node, post_node)
+
+    if ( pre_node.next != null ) {
+        unlink_ZOPG_next(new_g, pre_node)
+    }
+
+    link_ZOPG_next(new_g, pre_node, new_node)
+}
+
+

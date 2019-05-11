@@ -15,25 +15,15 @@ domain TriggerWisdoms {
             { __learn_trigger__($b$) } 
                 __learn_trigger__($b$)
     }
-
-    // axiom ax_LearnEdge { 
-    //     forall $e$: Edge :: 
-    //         { __learn_edge__($e$) }
-    //             __learn_edge__($e$)
-    // }
 }
 
 domain Edge {
-    function getnext1(no:Ref): Ref
-    function getnext2(no:Ref): Ref
-
     function edge_pred(e0: Edge): Ref
     function edge_succ(e0: Edge): Ref
 
     function create_edge(x0:Ref, y0:Ref): Edge
     function create_edge_(x0:Ref, y0:Ref): Edge
 
-    //TODO: Rename quantified variables 
     axiom edge_injectivity {
         forall x0:Ref, y0:Ref ::
             { create_edge(x0,y0) }
@@ -47,14 +37,7 @@ domain TrClo {
     function exists_path(EG:Set[Edge], from:Ref, to:Ref): Bool
     function exists_path_(EG:Set[Edge], from:Ref, to:Ref): Bool
     function exists_spath(EG:Set[Edge], from:Set[Ref], to:Ref): Bool
-
-    /// U0 is the universe
-    /// EG is the edge graph (specifies the edge relation in a particular state)
-    /// A0 is the color predicate
-    /// M0 is the marker
-    function apply_noExit(EG:Set[Edge], U0:Set[Ref], M0:Set[Ref]): Bool
-    //function apply_goOut(EG:Set[Edge], U0:Set[Ref], A0:Set[Ref], B0:Set[Ref]): Bool
-    //function apply_newStart(U0:Set[Ref], A0:Set[Ref], EG1:Set[Edge], EG2:Set[Edge]): Bool
+    function exists_paths(EG:Set[Edge], from:Ref, to:Set[Ref]): Bool
 
     /** axiomatization of the set for instantiating color axioms with unary reachability */
     function inst_uReach(EG:Set[Edge], x0:Ref): Set[Ref]
@@ -71,21 +54,18 @@ domain TrClo {
 
     function succs(EG:Set[Edge], pred:Ref): Set[Ref]
 
-    //TODO: Rename quantified variables 
     axiom ax_Succs {
         forall EG:Set[Edge], pred:Ref, succ:Ref ::
             { succ in succs(EG,pred) }
                 succ in succs(EG,pred) <==> edge_(EG,pred,succ)
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_EdgeSynonim {
         forall EG:Set[Edge], p0:Ref, s0:Ref ::
             { edge(EG,p0,s0) }
                 edge(EG,p0,s0) <==> edge_(EG,p0,s0)
     }
     
-    //TODO: Rename quantified variables 
     axiom ax_Edge {
         forall EG:Set[Edge], p0:Ref, s0:Ref ::
             { create_edge(p0,s0) in EG }
@@ -93,18 +73,6 @@ domain TrClo {
                 edge_(EG,p0,s0) <==> create_edge(p0,s0) in EG
     }
 
-    /** The first color axiom from the paper. (Via Refs) */
-    //TODO: Rename quantified variables 
-    axiom ax_NoExit {
-        forall EG:Set[Edge], U0:Set[Ref], M0:Set[Ref] :: { apply_noExit(EG,U0,M0) }
-        ( apply_noExit(EG,U0,M0) ==> (
-
-            ( forall u0:Ref, v0:Ref :: { edge(EG,u0,v0) }       /*{ u0 in M0, v0 in M0 }*/ (u0 in M0) && (v0 in U0) && !(v0 in M0) ==> !edge(EG,u0,v0) ) ==> //TODO multipattern
-            ( forall u0:Ref, v0:Ref :: { exists_path(EG,u0,v0) }/*{ u0 in M0, v0 in M0 }*/ (u0 in M0) && (v0 in U0) && !(v0 in M0) ==> !exists_path(EG,u0,v0) ) //TODO multipattern
-        ) )
-    }
-
-    //TODO: Rename quantified variables 
     axiom ax_instantiation_uReach {
         forall EG:Set[Edge], x0:Ref, v0: Ref ::
             { v0 in inst_uReach(EG,x0) }
@@ -112,7 +80,6 @@ domain TrClo {
                 v0 in inst_uReach(EG,x0) <==> exists_path(EG,x0,v0)
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_instantiation_uReach_rev {
         forall EG:Set[Edge], u0: Ref, y0:Ref ::
             { u0 in inst_uReach_rev(EG,y0) }
@@ -120,23 +87,19 @@ domain TrClo {
                 u0 in inst_uReach_rev(EG,y0) <==> exists_path(EG,u0,y0)
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_Alias {
         forall EG:Set[Edge], from:Ref, to:Ref ::
             { exists_path(EG,from,to) }
                 exists_path(EG,from,to) <==> exists_path_(EG,from,to)
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_EdgeMeansPath {
         forall EG:Set[Edge], from:Ref, to:Ref ::
             { exists_path(EG, from, to) }
-            // { edge(EG, from, to) }
                 edge(EG, from, to) ==> exists_path(EG, from, to)
     }
 
     /** T1 -- Ref-oriented encoding */
-    //TODO: Rename quantified variables 
     axiom ax_ExistsPath {
         (forall EG: Set[Edge], from: Ref, to: Ref ::
             { exists_path(EG, from, to) }
@@ -151,40 +114,14 @@ domain TrClo {
     }
 
     /** Follows from T1 && IND */
-    //TODO: Rename quantified variables 
     axiom ax_ExistsPathTrans {
         forall EG:Set[Edge], u0:Ref, v0:Ref, w0:Ref ::
             { exists_path(EG,u0,w0), exists_path(EG,w0,v0) } //TODO multipattern
             { exists_path_(EG,u0,w0), exists_path(EG,w0,v0) }
             { exists_path(EG,u0,w0), exists_path_(EG,w0,v0) }
-                // TODO: u0 != w0 && w0 != v0 &&
                 exists_path_(EG,u0,w0) && exists_path_(EG,w0,v0) ==> exists_path_(EG,u0,v0)
     }
 
-    // axiom ax_ExistsJump {
-    //     forall EG:Set[Edge], u0:Ref, v0:Ref ::
-    //         { exists_path(EG,u0,v0) }
-    //             exists_path_(EG, u0, skolem_tran(EG,u0,v0)) && exists_path_(EG, skolem_tran(EG,u0,v0), v0) ==> exists_path_(EG, u0, v0)
-    // }
-
-    // TODO: try out
-    // axiom ax_ExistsPathTrans_2 {
-    //     forall EG:Set[Edge], u0:Ref, v0:Ref, w0:Ref ::
-    //         { exists_path_(EG,u0,w0), exists_path(EG,w0,v0) } //TODO multipattern
-    //         //{ exists_path(EG,u0,w0), exists_path_(EG,w0,v0) }
-    //             u0 != w0 && w0 != v0 &&
-    //             exists_path_(EG,u0,w0) && exists_path_(EG,w0,v0) ==> exists_path_(EG,u0,v0)
-    // }
-
-    /** Edge partitioning requires legoFraming. */
-    // axiom LinearEdgePartitioning {
-    //     forall BiggerEG:Set[Edge], SmallerEG:Set[Edge], x:Ref, y:Ref ::
-    //         { exists_path(SmallerEG, x, y), exists_path(BiggerEG, x, y) }
-    //             (SmallerEG subset BiggerEG) &&
-    //                 exists_path(SmallerEG, x, y) ==> exists_path(BiggerEG, x, y)
-    // }
-
-    //TODO: Rename quantified variables 
     axiom ax_AcyclicGraph {
         forall EG:Set[Edge] ::
             { acyclic_graph(EG) }
@@ -195,7 +132,6 @@ domain TrClo {
                             !edge(EG,v1,v2) || !exists_path(EG,v2,v1)
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_UnsharedGraph {
         forall EG:Set[Edge] ::
             { unshared_graph(EG) }
@@ -205,18 +141,15 @@ domain TrClo {
                             edge(EG,v1,v0) && edge(EG,v2,v0) ==> v1 == v2
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_FuncGraph {
         forall EG:Set[Edge] ::
             { func_graph(EG) }
                 func_graph(EG) <==>
                     forall v1:Ref, v2:Ref, v0:Ref ::
-                        //{ edge(EG,v1,v0), edge(EG,v2,v0) } //TODO multipattern
                         { edge(EG,v0,v1), edge(EG,v0,v2) }
                             edge(EG,v0,v1) && edge(EG,v0,v2) ==> v1 == v2
     }
 
-    //TODO: Rename quantified variables 
     axiom ax_ExistsSetPath {
         forall EG:Set[Edge], from:Set[Ref], to:Ref ::
             { exists_spath(EG,from,to) }
@@ -225,5 +158,15 @@ domain TrClo {
                         { f0 in from }
                         { exists_path(EG, f0, to) }
                             !(f0 in from && exists_path(EG,f0,to)))
-        }
+    }
+
+    axiom ax_ExistsPathSet {
+        forall EG:Set[Edge], from:Ref, to:Set[Ref] ::
+            { exists_paths(EG,from,to) }
+                exists_paths(EG,from,to) <==>
+                    !(forall t0:Ref ::
+                        { t0 in to }
+                        { exists_path(EG, from, t0) }
+                            !(t0 in to && exists_path(EG,from,t0)))
+    }
 }

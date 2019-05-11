@@ -1,0 +1,102 @@
+import "../../_preambles/TrCloDomain.vpr"
+import "../../_preambles/TrCloZopgDomain.vpr"
+import "../../_preambles/skolems.vpr"
+
+import "../../_preambles/legoFraming.vpr"
+import "../../_preambles/framing.vpr"
+
+import "../../_preambles/macros.vpr"
+import "../../_preambles/memspecs.vpr"
+import "../../unary/_preambles/memspecs.vpr"
+
+import "../../_preambles/common/graph.vpr"
+
+import "../../_preambles/common/graph.vpr"
+import "../../_preambles/common/zopg.vpr"
+import "../../unary/_preambles/zopg.vpr"
+
+field val: Int 
+
+define UNSHARED_CONNECTED(g)
+    ( forall v1:Ref, v2:Ref, v:Ref :: { v in g, v1.next, v2.next } v1 in g && v2 in g && v in g ==> ( v1.next == v && v2.next == v ==> v1 == v2 ) )
+    && ( forall v:Ref :: { v.next } v in g ==> ( v == v.next <==> g == Set(v) ) )
+
+define RING(g)
+    ( GRAPH(g) && COMPLETE(g) )
+
+method create_node(graph: Set[Ref], init_val: Int) returns (new_graph: Set[Ref], new_node: Ref)
+    ensures !( new_node in graph )
+    ensures new_graph == graph union Set(new_node)
+    ensures acc(new_node.next) && acc(new_node.val)
+    ensures new_node.next == null
+    ensures new_node.val == init_val
+
+
+method ringInsert(g:Set[Ref], start:Ref, x:Int)
+    returns (new_g:Set[Ref], new_node:Ref, new_start:Ref)
+
+    requires RING(g) 
+    requires UNSHARED_CONNECTED(g)
+    requires start in g
+    requires forall n:Ref, m:Ref ::
+        { exists_path($$(g),n,m) }
+            n in g && m in g ==> exists_path($$(g),n,m) && exists_path($$(g),m,n)
+    requires forall n:Ref :: { n.val } n in g ==> acc(n.val)
+    requires forall n:Ref :: { n.next.val } n in g && n.next != start ==> n.val <= n.next.val
+    requires forall n:Ref :: { n.next.val } n in g && n.next == start ==> n.next.val <= n.val
+
+    ensures RING(new_g)
+    ensures UNSHARED_CONNECTED(new_g)
+    ensures new_start in new_g
+    ensures forall n:Ref :: { n.val } n in new_g ==> acc(n.val)
+    ensures !(new_node in g) && new_node in new_g
+    ensures new_node.val == x
+    ensures forall n:Ref :: { n.next.val } n in new_g && n.next != new_start ==> n.val <= n.next.val
+    ensures forall n:Ref :: { n.next.val } n in new_g && n.next == new_start ==> n.next.val <= n.val
+    ensures forall n:Ref, m:Ref ::
+        { exists_path($$(new_g),n,m) }
+            n in new_g && m in new_g
+                ==> exists_path($$(new_g),n,m) && exists_path($$(new_g),m,n)
+{
+    new_g, new_node := create_node(g, x)
+    var node:Ref := start
+    while ( !( node.val <= x && x < node.next.val
+               || node.next == start && ( node.val <= x || x < start.val ) ) )
+        invariant RING(g) 
+        invariant UNSHARED_CONNECTED(g)
+        invariant node in g
+        invariant forall n:Ref, m:Ref ::
+            { exists_path($$(g),n,m) }
+                n in g && m in g ==> exists_path($$(g),n,m) && exists_path($$(g),m,n)
+        invariant forall n:Ref :: { n.val } n in g ==> acc(n.val)
+        invariant forall n:Ref :: { n.next.val } n in g && n.next != start ==> n.val <= n.next.val
+        invariant forall n:Ref :: { n.next.val } n in g && n.next == start ==> n.next.val <= n.val
+    {
+        node := node.next
+    }
+
+    if ( node.next == start && x < start.val ) {
+        new_start := new_node
+    } else {
+        new_start := start
+    }
+
+    /// An example similar to memory allocation. 
+    /// Precise reachability framing is easy here, because we allocate one node at a time. 
+    ///  1. Framing: 
+    assume apply_AtomicTCFraming(g, new_node)
+    ///  2. Synchronization of triggers from DEP and TC. 
+    assume apply_DepToTcWisdom(g, Set(new_node))
+
+    // Encoding new_node.next := node.next ...
+    if ( new_node.next != null ) {
+        unlink_ZOPG_next(new_g, new_node) // redundant in this example
+    }   
+    link_ZOPG_next(new_g, new_node, node.next)
+
+    // Encoding node.next := new_node ...
+    if ( node.next != null ) {
+        unlink_ZOPG_next(new_g, node)
+    }
+    link_ZOPG_next(new_g, node, new_node)
+}

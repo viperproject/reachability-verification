@@ -1,0 +1,100 @@
+define SAVE_ZOPG_BEFORE_CONVEX_CALL(MOD, GLOB, FRAME) (
+    (forall x071:Ref, y071:Ref, a071:Ref, b071:Ref :: // ALPHA
+        { P_(FRAME, x071, a071), P_(MOD, b071, y071) }
+        { P_(FRAME, x071, b071), P_(MOD, a071, y071) }
+            x071 in FRAME && y071 in MOD && a071 in MOD && b071 in MOD && 
+              P_(FRAME, x071, a071) &&
+              P_(FRAME, x071, b071) &&
+              P_(MOD, a071, y071) && 
+              P_(MOD, b071, y071)
+                ==> (a071 == b071)) 
+    &&
+    (forall x072:Ref, y072:Ref, a072:Ref, b072:Ref :: // BETA
+        { P_(MOD, x072, a072), P_(FRAME, b072, y072) }
+        { P_(MOD, x072, a072), P_(FRAME, b072, y072) }
+        { P_(MOD, x072, b072), P_(FRAME, a072, y072) }
+            x072 in MOD && y072 in FRAME && a072 in FRAME && b072 in FRAME && 
+              P_(FRAME, a072, y072) &&
+              P_(FRAME, b072, y072) &&
+              P_(MOD, x072, a072) &&
+              P_(MOD, x072, b072)
+                ==> (a072 == b072)) 
+    &&
+    (forall x073:Ref, y073:Ref, a073:Ref, b073:Ref, c073:Ref, d073:Ref :: // DELTA 
+        { P_(FRAME, x073, a073), P_(MOD, b073, d073), P_(FRAME, c073, y073) } 
+        { P_(FRAME, x073, b073), P_(MOD, a073, c073), P_(FRAME, d073, y073) }
+            x073 in FRAME && y073 in FRAME && a073 in MOD && b073 in MOD && c073 in FRAME && d073 in FRAME && 
+              P_(FRAME, x073, a073) && 
+              P_(FRAME, x073, b073) && 
+              P_(FRAME, c073, y073) && 
+              P_(FRAME, d073, y073) && 
+              P_(MOD, a073, c073) && 
+              P_(MOD, b073, d073) 
+                ==> (a073 == b073 || c073 == d073)) 
+    &&
+    (forall x074:Ref, y074:Ref, a074:Ref, b074:Ref :: // GAMMA
+        { P_(FRAME, x074, y074), P_(MOD, a074, b074) } 
+        { P_(FRAME, x074, a074), P_(FRAME, b074, y074) }
+            x074 in FRAME && y074 in FRAME && b074 in FRAME && a074 in MOD ==>  
+              !(
+              P_(FRAME, x074, y074) && 
+              P_(FRAME, x074, a074) && 
+              P_(FRAME, b074, y074) && 
+              P_(MOD, a074, b074) && !P_(MOD, a074, b074))) 
+)
+
+define CHECK_ZOPG_AFTER_CONVEX_CALL(s_old, s_new, MOD, GLOB, FRAME) (
+    (forall x075:Ref, y075:Ref, a075:Ref, b075:Ref ::              // ALPHA
+        { P(s_old, FRAME, x075, a075), P(s_new, MOD, b075, y075) }
+        { P(s_old, FRAME, x075, b075), P(s_new, MOD, a075, y075) }
+        { P(s_old, FRAME, x075, b075), P(s_old, MOD, a075, y075) }
+            x075 in FRAME && y075 in MOD && a075 in MOD && b075 in MOD && 
+              P(s_old, FRAME, x075, a075) &&                       // old path via frame
+              P(s_old, FRAME, x075, b075) &&                       // old path via frame
+              P(s_new, MOD, a075, y075) && !P(s_old, MOD, a075, y075) && // new path
+              P(s_new, MOD, b075, y075) &&                         // new or preserved path
+              __learn_trigger__( P(s_old, MOD, a075, b075) ) && 
+              __learn_trigger__( P(s_new, MOD, a075, b075) )
+                ==> (a075 == b075)) 
+    &&
+    (forall x076:Ref, y076:Ref, a076:Ref, b076:Ref ::              // BETA
+        { P(s_new, MOD, x076, a076), P(s_old, FRAME, b076, y076) }
+        { P(s_old, MOD, x076, a076), P(s_old, FRAME, b076, y076) }
+        { P(s_new, MOD, x076, b076), P(s_old, FRAME, a076, y076) }
+            x076 in MOD && y076 in FRAME && a076 in FRAME && b076 in FRAME && 
+              P(s_old, FRAME, a076, y076) &&                       // old path via frame
+              P(s_old, FRAME, b076, y076) &&                       // old path via frame
+              P(s_new, MOD, x076, a076) && !P(s_old, MOD, x076, a076) && // new path
+              P(s_new, MOD, x076, b076) &&                         // new or preserved path
+              __learn_trigger__( P(s_old, MOD, a076, b076) ) && 
+              __learn_trigger__( P(s_new, MOD, a076, b076) ) 
+                ==> (a076 == b076)) 
+    &&
+    (forall x077:Ref, y077:Ref, a077:Ref, b077:Ref, c077:Ref, d077:Ref :: // DELTA
+        { P(s_old, FRAME, x077, a077), P(s_new, MOD, b077, d077), P(s_old, FRAME, c077, y077) } 
+        { P(s_old, FRAME, x077, b077), P(s_new, MOD, a077, c077), P(s_old, FRAME, d077, y077) }
+        { P(s_old, FRAME, x077, b077), P(s_old, MOD, a077, c077), P(s_old, FRAME, d077, y077) }
+            x077 in FRAME && y077 in FRAME && a077 in MOD && b077 in MOD && c077 in FRAME && d077 in FRAME && 
+              P(s_old, FRAME, x077, a077) &&                              // old path via frame
+              P(s_old, FRAME, x077, b077) &&                              // old path via frame
+              P(s_old, FRAME, c077, y077) &&                              // old path via frame
+              P(s_old, FRAME, d077, y077) &&                              // old path via frame
+              P(s_new, MOD, a077, c077) && !P(s_old, MOD, a077, c077) &&  // new path
+              P(s_new, MOD, b077, d077) &&                                // new or preserved path
+              __learn_trigger__( P(s_old, MOD, a077, b077) ) &&
+              __learn_trigger__( P(s_new, MOD, a077, b077) ) &&
+              __learn_trigger__( P(s_old, FRAME, c077, d077) ) &&
+              __learn_trigger__( P(s_new, FRAME, c077, d077) ) 
+                ==> (a077 == b077 || c077 == d077)) 
+    &&
+    (forall x078:Ref, y078:Ref, a078:Ref, b078:Ref ::                   // GAMMA
+        { P(s_old, FRAME, x078, y078), P(s_new, MOD, a078, b078) } 
+        { P(s_old, FRAME, x078, y078), P(s_old, MOD, a078, b078) } 
+        { P(s_old, FRAME, x078, a078), P(s_old, FRAME, b078, y078) }
+            x078 in FRAME && y078 in FRAME && b078 in FRAME && a078 in MOD ==>  
+              !(
+              P(s_old, FRAME, x078, y078) &&                            // old path via frame
+              P(s_old, FRAME, x078, a078) &&                            // old path via frame
+              P(s_old, FRAME, b078, y078) &&                            // old path via frame
+              P(s_new, MOD, a078, b078) && !P(s_old, MOD, a078, b078))) // new path
+)

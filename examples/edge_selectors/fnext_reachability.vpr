@@ -1,0 +1,439 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+domain Edge__fnext {
+    function edge_pred__fnext(e0: Edge__fnext): Ref
+    function edge_succ__fnext(e0: Edge__fnext): Ref
+
+    function create_edge__fnext(x0:Ref, y0:Ref): Edge__fnext
+
+    //TODO: Rename quantified variables 
+    axiom edge_injectivity__fnext {
+        forall x0:Ref, y0:Ref ::
+            { create_edge__fnext(x0,y0) }
+                edge_pred__fnext( create_edge__fnext(x0,y0) ) == x0 &&
+                edge_succ__fnext( create_edge__fnext(x0,y0) ) == y0
+    }
+}
+
+domain TrClo__fnext {
+
+    function exists_path__fnext(EG:Set[Edge__fnext], from:Ref, to:Ref): Bool
+    function exists_path_synonim__fnext(EG:Set[Edge__fnext], from:Ref, to:Ref): Bool
+    function exists_spath__fnext(EG:Set[Edge__fnext], from:Set[Ref], to:Ref): Bool
+
+    /// U0 is the universe
+    /// EG is the edge__fnext graph (specifies the edge__fnext relation in a particular state)
+    /// A0 is the color predicate
+    /// M0 is the marker
+    function apply_noExit__fnext(EG:Set[Edge__fnext], U0:Set[Ref], M0:Set[Ref]): Bool
+    //function apply_goOut(EG:Set[Edge__fnext], U0:Set[Ref], A0:Set[Ref], B0:Set[Ref]): Bool
+    //function apply_newStart(U0:Set[Ref], A0:Set[Ref], EG1:Set[Edge__fnext], EG2:Set[Edge__fnext]): Bool
+
+    /** axiomatization of the set for instantiating color axioms with unary reachability */
+    function inst_uReach__fnext(EG:Set[Edge__fnext], x0:Ref): Set[Ref]
+    function inst_uReach_rev__fnext(EG:Set[Edge__fnext], x0:Ref): Set[Ref]
+
+    /** The properties of the edge__fnext relation. */
+    function acyclic_graph__fnext(EG:Set[Edge__fnext]): Bool
+    function unshared_graph__fnext(EG:Set[Edge__fnext]): Bool
+    function func_graph__fnext(EG:Set[Edge__fnext]): Bool
+
+
+    function edge__fnext(EG:Set[Edge__fnext], p0:Ref, s0:Ref): Bool
+    function edge_synonim__fnext(EG:Set[Edge__fnext], p0:Ref, s0:Ref): Bool
+
+    function succs__fnext(EG:Set[Edge__fnext], pred:Ref): Set[Ref]
+    function skolem_w__fnext(EG: Set[Edge__fnext], from: Ref, to: Ref): Ref
+
+    //TODO: Rename quantified variables 
+    axiom ax_Succs__fnext {
+        forall EG:Set[Edge__fnext], pred:Ref, succ:Ref ::
+            { succ in succs__fnext(EG,pred) }
+                succ in succs__fnext(EG,pred) <==> edge_synonim__fnext(EG,pred,succ)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_EdgeSynonim__fnext {
+        forall EG:Set[Edge__fnext], p0:Ref, s0:Ref ::
+            { edge__fnext(EG,p0,s0) }
+                edge__fnext(EG,p0,s0) <==> edge_synonim__fnext(EG,p0,s0)
+    }
+    
+    //TODO: Rename quantified variables 
+    axiom ax_Edge__fnext {
+        forall EG:Set[Edge__fnext], p0:Ref, s0:Ref ::
+            { create_edge__fnext(p0,s0) in EG }
+            { edge__fnext(EG,p0,s0) }
+                edge_synonim__fnext(EG,p0,s0) <==> create_edge__fnext(p0,s0) in EG
+    }
+
+    /** The first color axiom from the paper. (Via Refs) */
+    //TODO: Rename quantified variables 
+    axiom ax_NoExit__fnext {
+        forall EG:Set[Edge__fnext], U0:Set[Ref], M0:Set[Ref] :: { apply_noExit__fnext(EG,U0,M0) }
+        ( apply_noExit__fnext(EG,U0,M0) ==> (
+
+            ( forall u0:Ref, v0:Ref :: { edge__fnext(EG,u0,v0) }       /*{ u0 in M0, v0 in M0 }*/ (u0 in M0) && (v0 in U0) && !(v0 in M0) ==> !edge__fnext(EG,u0,v0) ) ==> //TODO multipattern
+            ( forall u0:Ref, v0:Ref :: { exists_path__fnext(EG,u0,v0) }/*{ u0 in M0, v0 in M0 }*/ (u0 in M0) && (v0 in U0) && !(v0 in M0) ==> !exists_path__fnext(EG,u0,v0) ) //TODO multipattern
+        ) )
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_instantiation_uReach__fnext {
+        forall EG:Set[Edge__fnext], x0:Ref, v0: Ref ::
+            { v0 in inst_uReach__fnext(EG,x0) }
+            { exists_path__fnext(EG,x0,v0) }
+                v0 in inst_uReach__fnext(EG,x0) <==> exists_path__fnext(EG,x0,v0)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_instantiation_uReach_rev__fnext {
+        forall EG:Set[Edge__fnext], u0: Ref, y0:Ref ::
+            { u0 in inst_uReach_rev__fnext(EG,y0) }
+            { exists_path__fnext(EG,u0,y0) }
+                u0 in inst_uReach_rev__fnext(EG,y0) <==> exists_path__fnext(EG,u0,y0)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_Alias__fnext {
+        forall EG:Set[Edge__fnext], from:Ref, to:Ref ::
+            { exists_path__fnext(EG,from,to) }
+                exists_path__fnext(EG,from,to) <==> exists_path_synonim__fnext(EG,from,to)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_EdgeMeansPath__fnext {
+        forall EG:Set[Edge__fnext], from:Ref, to:Ref ::
+            { exists_path__fnext(EG, from, to) }
+            // { edge__fnext(EG, from, to) }
+                edge__fnext(EG, from, to) ==> exists_path__fnext(EG, from, to)
+    }
+
+    /** T1 -- Ref-oriented encoding */
+    //TODO: Rename quantified variables 
+    axiom ax_ExistsPath__fnext {
+        (forall EG: Set[Edge__fnext], from: Ref, to: Ref ::
+            { exists_path__fnext(EG, from, to) }
+            //{ edge__fnext(EG, from, to) } -- using ax_EdgeMeansPath instead
+                exists_path_synonim__fnext(EG, from, to) ==> (from == to || (edge__fnext(EG, from, skolem_w__fnext(EG,from,to)) && exists_path_synonim__fnext(EG, skolem_w__fnext(EG,from,to), to))))
+        &&
+        (forall EG: Set[Edge__fnext], from: Ref, middle: Ref, to: Ref ::
+            { edge__fnext(EG, from, middle), exists_path__fnext(EG, middle, to) }
+            { edge__fnext(EG, from, middle), exists_path__fnext(EG, from, to) }
+            { exists_path__fnext(EG, middle, to), exists_path__fnext(EG, from, to) }
+                (from == to || (edge__fnext(EG, from, middle) && exists_path_synonim__fnext(EG, middle, to))) ==> exists_path_synonim__fnext(EG, from, to) )
+    }
+
+    /** Follows from T1 && IND */
+    //TODO: Rename quantified variables 
+    axiom ax_ExistsPathTrans__fnext {
+        forall EG:Set[Edge__fnext], u0:Ref, v0:Ref, w0:Ref ::
+            { exists_path__fnext(EG,u0,w0), exists_path__fnext(EG,w0,v0) } //TODO multipattern
+                exists_path_synonim__fnext(EG,u0,w0) && exists_path_synonim__fnext(EG,w0,v0) ==> exists_path_synonim__fnext(EG,u0,v0)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_AcyclicGraph__fnext {
+        forall EG:Set[Edge__fnext] ::
+            { acyclic_graph__fnext(EG) }
+                acyclic_graph__fnext(EG) <==>
+                    forall v1:Ref, v2:Ref ::
+                        { edge__fnext(EG,v1,v2) }
+                        { exists_path__fnext(EG,v2,v1) }
+                            !edge__fnext(EG,v1,v2) || !exists_path__fnext(EG,v2,v1)
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_UnsharedGraph__fnext {
+        forall EG:Set[Edge__fnext] ::
+            { unshared_graph__fnext(EG) }
+                unshared_graph__fnext(EG) <==>
+                    forall v1:Ref, v2:Ref, v0:Ref ::
+                        { edge__fnext(EG,v1,v0), edge__fnext(EG,v2,v0) } //TODO multipattern
+                            edge__fnext(EG,v1,v0) && edge__fnext(EG,v2,v0) ==> v1 == v2
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_FuncGraph__fnext {
+        forall EG:Set[Edge__fnext] ::
+            { func_graph__fnext(EG) }
+                func_graph__fnext(EG) <==>
+                    forall v1:Ref, v2:Ref, v0:Ref ::
+                        //{ edge__fnext(EG,v1,v0), edge__fnext(EG,v2,v0) } //TODO multipattern
+                        { edge__fnext(EG,v0,v1), edge__fnext(EG,v0,v2) }
+                            edge__fnext(EG,v0,v1) && edge__fnext(EG,v0,v2) ==> v1 == v2
+    }
+
+    //TODO: Rename quantified variables 
+    axiom ax_ExistsSetPath__fnext {
+        forall EG:Set[Edge__fnext], from:Set[Ref], to:Ref ::
+            { exists_spath__fnext(EG,from,to) }
+                exists_spath__fnext(EG,from,to) <==>
+                    !(forall f0:Ref ::
+                        { f0 in from }
+                        { exists_path__fnext(EG, f0, to) }
+                            !(f0 in from && exists_path__fnext(EG,f0,to)))
+        }
+}
+
+
+function $$__fnext(nodes0: Set[Ref]): Set[Edge__fnext]
+    requires NODES_for(fnext, nodes0, 1/2)
+    ensures (forall v001: Ref, v002: Ref :: 
+        { create_edge__fnext(v001, v002) } 
+            ((v001 in nodes0) && (v002 != null) && HEAP_PARTIAL_ORDER__fnext(v001,v002)) <==> (create_edge__fnext(v001, v002) in result))
+    ensures (forall v001: Ref, v002:Ref :: 
+        { create_edge__fnext(v001, v002) }
+            (create_edge__fnext(v001, v002) in result) && CLOSED_for(fnext, nodes0) ==> v002 in nodes0)
+
+
+
+
+field fnext: Ref
+
+define HEAP_PARTIAL_ORDER__fnext(p, s)
+    (p.fnext == s)
+
+
+define PROTECTED_GRAPH__fnext(nodes, mutable_node)
+    !(null in nodes)
+    && PROTECTED_NODES_for(fnext, nodes, mutable_node, 1/2)
+
+
+
+
+define LINK__PRECISE_EDGE_UPDATE_FORMULA__fnext(g, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { edge__fnext($$__fnext(g),x0,y0) }
+        // { exists_path__fnext($$__fnext(g),x0,y0) } //-- this should come alpha a different place
+            edge__fnext($$__fnext(g),x0,y0) <==> edge__fnext(old($$__fnext(g)),x0,y0) || (x0==alpha && y0==beta))
+
+define UNLINK__PRECISE_EDGE_UPDATE_FORMULA__fnext(g, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { edge__fnext($$__fnext(g),x0,y0) }
+        // { exists_path__fnext($$__fnext(g),x0,y0) } //-- this should come alpha a different place
+            edge__fnext($$__fnext(g),x0,y0) <==> edge__fnext(old($$__fnext(g)),x0,y0) && !(x0==alpha && y0==beta))
+
+
+
+// --- This file contains the common parts of the encoding of Update Formulas for acylic graphs. --- 
+
+define TC_G_MINUS_DELTA__fnext(smaller_EG, larger_EG, alpha, beta)
+    /**
+        Notes. 
+
+        1) If x0 == alpha, then there is a path (x0, alpha), which contradicts the requirement in LHS. 
+        2) Similarly, for y0 == beta. 
+        3) This formula is particularly useful for recovering graph segments for which reachability is the 
+            same before and after the unlink operation. For example, in list-reverse-acyclic.vpr we have 
+                
+                // null <-- [ ] <-- ... <-- [y]     [x] --> [t] --> [ ] --> ... --> [ ] --> null 
+                unlink_DAG__fnext(g, x)
+                // null <-- [ ] <-- ... <-- [y]     [x]     [t] --> [ ] --> ... --> [ ] --> null
+                assert forall n:Ref :: { P(g, t, n) } P(g, t, n) <==> P0(g, t, n)
+                assert forall n:Ref :: { P(g, y, n) } P(g, y, n) <==> P0(g, y, n)
+     */
+    (forall x0:Ref, y0:Ref ::
+        { exists_path__fnext(smaller_EG,x0,y0) }
+            !(exists_path__fnext(larger_EG, x0, alpha) && exists_path__fnext(larger_EG, beta, y0))
+                ==> 
+                (exists_path__fnext(larger_EG, x0, y0) <==> exists_path__fnext(smaller_EG, x0, y0)))
+    /**
+        We currently do not have evidence that the precise update formula is ever needed. 
+     */
+    && 
+    (forall x0:Ref, y0:Ref ::
+        { exists_path__fnext(smaller_EG,x0,y0) }
+            ((x0 != alpha) && (y0 != beta) && exists_path__fnext(larger_EG, x0, alpha) && exists_path__fnext(larger_EG, beta, y0)) 
+                ==> 
+                (exists_path__fnext(smaller_EG, x0, y0) <==> (x0 == y0) ||
+                    ( exists u0:Ref :: 
+                        exists_path__fnext(larger_EG, x0, u0) && exists_path__fnext(larger_EG, u0, y0) &&
+                        (!exists_path__fnext(larger_EG, u0, beta) && !exists_path__fnext(larger_EG, beta, u0) 
+                        || !exists_path__fnext(larger_EG, u0, alpha) && !exists_path__fnext(larger_EG, alpha, u0)))
+                    ||
+                    ( exists u0:Ref :: 
+                        u0 != alpha && u0 != beta && exists_path__fnext(larger_EG, alpha, u0) && exists_path__fnext(larger_EG, u0, beta))
+                    ||
+                    ( exists u0:Ref, v0:Ref :: 
+                        (u0 != alpha || v0 != beta) && edge__fnext(larger_EG,u0,v0) 
+                        && exists_path__fnext(larger_EG,x0,u0) && exists_path__fnext(larger_EG,u0,alpha) 
+                        && exists_path__fnext(larger_EG,beta,v0) && exists_path__fnext(larger_EG,v0,y0))))
+    // The imprecise formula for exists_path__fnext may decrease performance in some cases. 
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path__fnext(smaller_EG, x0, y0) }
+    //         !exists_path__fnext(larger_EG, x0, y0) ==> !exists_path__fnext(smaller_EG, x0, y0))
+
+define TC_G_PLUS_DELTA__fnext(smaller_EG, larger_EG, alpha, beta)
+    (forall x0:Ref, y0:Ref ::
+        { exists_path__fnext(larger_EG,x0,y0) }
+            exists_path__fnext(larger_EG,x0,y0) <==> exists_path__fnext(smaller_EG,x0,y0) || (exists_path__fnext(smaller_EG,x0,alpha) && exists_path__fnext(smaller_EG,beta,y0)))
+    // The imprecise formula for exists_path__fnext may decrease performance in some cases. 
+    // && (forall x0: Ref, y0: Ref ::
+    //     { exists_path__fnext(larger_EG, x0, y0) }
+    //         exists_path__fnext(smaller_EG, x0, y0) ==> exists_path__fnext(larger_EG, x0, y0))
+
+define DAG_LINK__PRECISE_TC_UPDATE_FORMULA__fnext(g, alpha, beta)
+    TC_G_PLUS_DELTA__fnext(old($$__fnext(g)), $$__fnext(g), alpha, beta)
+    && TC_G_MINUS_DELTA__fnext(old($$__fnext(g)), $$__fnext(g), alpha, beta)
+
+define DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA__fnext(g, alpha, beta) 
+    TC_G_PLUS_DELTA__fnext($$__fnext(g), old($$__fnext(g)), alpha, beta)
+    && TC_G_MINUS_DELTA__fnext($$__fnext(g), old($$__fnext(g)), alpha, beta)
+
+
+
+
+method unlink_DAG__fnext(g: Set[Ref], node:Ref)
+    requires PROTECTED_GRAPH__fnext(g,node)
+    requires node in g
+    ensures PROTECTED_GRAPH__fnext(g,node)
+    ensures node.fnext == null
+    ensures old(node.fnext) == null ==> $$__fnext(g) == old($$__fnext(g))
+    ensures old(node.fnext) != null ==> UNLINK__PRECISE_EDGE_UPDATE_FORMULA__fnext(g, node, old(node.fnext))
+    ensures old(node.fnext) != null ==> DAG_UNLINK__PRECISE_TC_UPDATE_FORMULA__fnext(g, node, old(node.fnext))
+    ensures acyclic_graph__fnext($$__fnext(g))
+
+method link_DAG__fnext(g:Set[Ref], from:Ref, to:Ref)
+    requires PROTECTED_GRAPH__fnext(g,from) 
+    requires from in g
+    requires from.fnext == null
+    requires to != null ==> to in g 
+    ensures PROTECTED_GRAPH__fnext(g,from)
+    ensures from.fnext == to
+    ensures (to == null) ==> $$__fnext(g) == old($$__fnext(g))
+    ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA__fnext(g, from, to)
+    ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA__fnext(g, from, to)
+    
+define UNSHARED__fnext(graph_A)
+    unshared_graph__fnext($$__fnext(graph_A))
+
+define FUNCTIONAL__fnext(graph_A)
+    func_graph__fnext($$__fnext(graph_A))
+
+define ACYCLIC__fnext(graph_A)
+    acyclic_graph__fnext($$__fnext(graph_A))
+
+define ACYCLIC_LIST_SEGMENT__fnext(graph_A)
+    ACYCLIC(graph_A) 
+    && FUNCTIONAL(graph_A) 
+    && UNSHARED(graph_A)
+
+define COALIGNED_INTEREDGES__fnext(graph_A, graph_B)
+    (CLOSED__fnext(graph_A) || CLOSED__fnext(graph_B)) && DISJOINT(graph_A, graph_B)
+
+
+define Efnext(state_label, graph_A, x0, y0)
+    edge__fnext(old[state_label]($$__fnext(graph_A)), x0, y0)
+
+define E_fnext(graph_A, x0, y0)
+    edge__fnext($$__fnext(graph_A), x0, y0)
+
+define Efnext0(graph_A, x0, y0)
+    edge__fnext(old($$__fnext(graph_A)), x0, y0)
+
+define Efnext1(graph_A, x0, y0)
+    edge__fnext(old[l1]($$__fnext(graph_A)), x0, y0)
+
+define Efnext2(graph_A, x0, y0)
+    edge__fnext(old[l2]($$__fnext(graph_A)), x0, y0)
+
+define Efnext3(graph_A, x0, y0)
+    edge__fnext(old[l3]($$__fnext(graph_A)), x0, y0)
+
+define Efnext4(graph_A, x0, y0)
+    edge__fnext(old[l4]($$__fnext(graph_A)), x0, y0)
+
+define Efnext5(graph_A, x0, y0)
+    edge__fnext(old[l5]($$__fnext(graph_A)), x0, y0)
+
+define Efnext6(graph_A, x0, y0)
+    edge__fnext(old[l6]($$__fnext(graph_A)), x0, y0)
+
+define Efnext7(graph_A, x0, y0)
+    edge__fnext(old[l7]($$__fnext(graph_A)), x0, y0)
+
+define Efnext8(graph_A, x0, y0)
+    edge__fnext(old[l8]($$__fnext(graph_A)), x0, y0)
+
+
+define Pfnext(state_label, graph_A, x0, y0)
+    exists_path__fnext(old[state_label]($$__fnext(graph_A)), x0, y0)
+
+define P_fnext(graph_A, x0, y0)
+    exists_path__fnext($$__fnext(graph_A), x0, y0)
+
+define Pfnext0(graph_A, x0, y0)
+    exists_path__fnext(old($$__fnext(graph_A)), x0, y0)
+
+define Pfnext1(graph_A, x0, y0)
+    exists_path__fnext(old[l1]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext2(graph_A, x0, y0)
+    exists_path__fnext(old[l2]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext3(graph_A, x0, y0)
+    exists_path__fnext(old[l3]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext4(graph_A, x0, y0)
+    exists_path__fnext(old[l4]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext5(graph_A, x0, y0)
+    exists_path__fnext(old[l5]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext6(graph_A, x0, y0)
+    exists_path__fnext(old[l6]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext7(graph_A, x0, y0)
+    exists_path__fnext(old[l7]($$__fnext(graph_A)), x0, y0)
+
+define Pfnext8(graph_A, x0, y0)
+    exists_path__fnext(old[l8]($$__fnext(graph_A)), x0, y0)    
+
+define NODE__fnext(the_node, p)
+    (acc(the_node.fnext, p))
+
+define CLOSED_NODE__fnext(the_node, p)
+    NODE__fnext(the_node, p) 
+    && (the_node.fnext == null)
+
+/**
+ * This function is supposed to be assumed right after atomic memory allocation. 
+ */
+function apply_AtomicTCFraming__fnext(graph_A:Set[Ref], node_B:Ref): Bool
+    requires NODES_for(fnext, graph_A, 1/2)
+    requires CLOSED_NODE__fnext(node_B, 1/2)
+    requires !(node_B in graph_A)
+    requires (forall u0:Ref :: 
+        { E_fnext(graph_A, u0, node_B) }
+            u0 in graph_A ==> !E_fnext(graph_A, u0, node_B))
+
+    // Needed for triggering
+    requires graph_A union Set(node_B) == Set(node_B) union graph_A
+
+    // FIXME: Triggers in the following formulas are under question.
+    ensures (forall u0:Ref, v0:Ref :: 
+        { P_fnext(graph_A, u0, v0) }
+        { P_fnext(graph_A union Set(node_B), u0, v0) } 
+            u0 in graph_A && v0 in graph_A ==>
+                (P_fnext(graph_A, u0, v0) <==> P_fnext(graph_A union Set(node_B), u0, v0)))
+    
+    // A version of NoExit
+    // TODO: check this
+    ensures (forall u0:Ref :: 
+        { P_fnext(graph_A union Set(node_B), u0, node_B) }
+            u0 in graph_A ==> !P_fnext(graph_A union Set(node_B), u0, node_B))
+
+    ensures (forall v0:Ref :: 
+        { P_fnext(graph_A union Set(node_B), node_B, v0) }
+            (v0 != node_B) ==> !P_fnext(graph_A union Set(node_B), node_B, v0))
+
+    ensures (forall x:Ref, y:Ref :: 
+        { E_fnext(graph_A, x, y) }
+        { E_fnext(graph_A union Set(node_B), x, y) }
+            (x in graph_A) ==> 
+                (E_fnext(graph_A union Set(node_B), x, y) <==> E_fnext(graph_A, x, y)))

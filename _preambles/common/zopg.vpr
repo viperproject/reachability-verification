@@ -1,21 +1,17 @@
 // --- This file contains the common parts of the encoding of Update Formulas for 0-1-path graphs. --- 
 
-define __psi__(EG, alpha,beta, x1,y1,u1,v1,w1,z1)  
+define __psi__(EG, alpha,beta, x0,y0,u0,v0,w0,z0)  
     ((forall u_:Ref, v_:Ref :: 
-        { exists_DEP(EG,x1,y1,u_,v_) } 
-            ! exists_DEP(EG,x1,y1,u_,v_)) 
-    && ( exists_DEP(EG,x1,alpha,u1,v1) && (x1 != alpha) || ((x1 == u1)   && (u1 == alpha) && (v1 == beta)) ) 
-    && ( exists_DEP(EG,beta,y1,w1,z1)    && (beta != y1)  || ((alpha == w1) && (beta == z1)   && (z1 == y1))    ))
+        { exists_DEP(EG,x0,y0,u_,v_) } 
+            !exists_DEP(EG,x0,y0,u_,v_)) 
+    && ( exists_DEP(EG,x0,alpha,u0,v0) && (x0 != alpha) || ((x0 == u0)   && (u0 == alpha) && (v0 == beta)) ) 
+    && ( exists_DEP(EG,beta,y0,w0,z0)    && (beta != y0)  || ((alpha == w0) && (beta == z0)   && (z0 == y0))    ))
 
 define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to) 
     (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
         { exists_DEP(smaller_EG, x0, y0, u0, v0) }
         { exists_DEP(larger_EG, x0, y0, u0, v0) }
-            exists_DEP(smaller_EG, x0, y0, u0, v0) <==> exists_DEP(larger_EG, x0, y0, u0, v0) && !exists_DEP(larger_EG, x0, y0, from, to)) //&&
-    // (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-    //     { exists_DEP(smaller_EG, x0, y0, u0, v0) }
-    //     { exists_DEP(larger_EG, x0, y0, u0, v0) }
-    //         exists_DEP(larger_EG, x0, y0, u0, v0) && !exists_DEP(larger_EG, x0, y0, from, to) ==> exists_DEP(smaller_EG, x0, y0, u0, v0))
+            exists_DEP(larger_EG, x0, y0, u0, v0) && !exists_DEP(larger_EG, x0, y0, from, to) <==> exists_DEP(smaller_EG, x0, y0, u0, v0))
 
 define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
     // The trivial case also comes from the definition of exists_path. 
@@ -24,57 +20,31 @@ define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
         (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
             { exists_DEP(larger_EG, x0, y0, u0, v0) }
             { exists_DEP(smaller_EG, x0, y0, u0, v0) }
-                (u0 != v0 && x0 != y0) ==> ( exists_DEP(larger_EG, x0, y0, u0, v0) ==> 
-                    (exists_DEP(smaller_EG, x0, y0, u0, v0)
-                    || (x0==from && u0==from && y0==to && v0==to)
-                    
-                    || !( forall w0:Ref, z0:Ref :: 
-                            { exists_DEP(smaller_EG,to,y0,w0,z0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
-                            
-                    || !( forall U0:Ref, V0:Ref :: 
-                            { exists_DEP(smaller_EG,x0,from,U0,V0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
-
-                    || (u0==from) && (v0==to) && !( forall U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
-                            { exists_DEP(smaller_EG,x0,from,U0,V0), exists_DEP(smaller_EG,to,y0,w0,z0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
-                    // ==> 
-                         ))) && 
-    ((from != to) ==> 
-        (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
-            { exists_DEP(larger_EG, x0, y0, u0, v0) }
-            { exists_DEP(smaller_EG, x0, y0, u0, v0) }
                 (u0 != v0 && x0 != y0) ==> (
                     (exists_DEP(smaller_EG, x0, y0, u0, v0)
                     || (x0==from && u0==from && y0==to && v0==to)
                     
-                    || !( forall w0:Ref, z0:Ref :: 
-                            { exists_DEP(smaller_EG,to,y0,w0,z0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
+                    || ( exists w0:Ref, z0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? } 
+                            __psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
                             
-                    || !( forall U0:Ref, V0:Ref :: 
-                            { exists_DEP(smaller_EG,x0,from,U0,V0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
+                    || ( exists U0:Ref, V0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? }
+                            __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
 
-                    || (u0==from) && (v0==to) && !( forall U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
-                            { exists_DEP(smaller_EG,x0,from,U0,V0), exists_DEP(smaller_EG,to,y0,w0,z0) }
-                                !__psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
-                     ==> 
-                        exists_DEP(larger_EG, x0, y0, u0, v0))))
+                    || (\u0==from) && (v0==to) && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
+                            // TODO: add triggers
+                            // { ??? }
+                            __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
+                    <==> 
+                        exists_DEP(larger_EG, x0, y0, u0, v0) )))
 
 define ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     DEP_G_PLUS_DELTA(old($$(g)), $$(g), from, to) 
     && DEP_G_MINUS_DELTA(old($$(g)), $$(g), from, to)
-    // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path($$(g), x0, y0) }
-    //         exists_path(old($$(g)), x0, y0) ==> exists_path($$(g), x0, y0))
 
 define ZOPG_UNLINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)
     DEP_G_PLUS_DELTA($$(g), old($$(g)), from, to)
     && DEP_G_MINUS_DELTA($$(g), old($$(g)), from, to)
-    // The imprecise formula for exists_path may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path($$(g), x0, y0) }
-    //         !exists_path(old($$(g)), x0, y0) ==> !exists_path($$(g), x0, y0))
