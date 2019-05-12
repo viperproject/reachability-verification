@@ -180,32 +180,51 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
     } // end if ( MOD != GLOB ) 
 }
 
-define EnableFocus(GLOB, FRAME) {
-    
-    // assume __register_frame__($$(FRAME), $$(GLOB))
-
+define EnableFocusForConvexSubHeap(GLOB, HEAP) {
     // Soundness Checks
-    assert FRAME subset GLOB
+    assert HEAP subset GLOB
+    CHECK_CONVEXITY(HEAP, GLOB)
 
-    if ( FRAME != GLOB ) {
+    if ( HEAP != GLOB ) {
+    
+    assume (forall v001:Ref, v002:Ref :: 
+        { P_(GLOB, v001, v002) }
+        { P_(HEAP, v001, v002) } 
+            (v001 in HEAP) && (v002 in HEAP) && P_(GLOB, v001, v002) ==> P_(HEAP, v001, v002))
+    }
+}
+
+define EnableFocus(GLOB, HEAP) {
+    
+    // Soundness Checks
+    assert HEAP subset GLOB
+
+    if ( HEAP != GLOB ) {
 
     assume (forall v001:Ref, v002:Ref :: 
         // { P_(GLOB, v001, v002) }
-        { P_(FRAME, v001, v002) } 
-            (v001 in FRAME) /*&& (v002 in FRAME)*/ && P_(FRAME, v001, v002) ==> P_(GLOB, v001, v002))
+        { P_(HEAP, v001, v002) } 
+            (v001 in HEAP) /*&& (v002 in HEAP)*/ && P_(HEAP, v001, v002) ==> P_(GLOB, v001, v002))
+
+    // Seems to be more efficient to assume this property only for footprints; the frame might also be 
+    //  convex, but we do not need to duplicate this fact here. 
+    // assume (CHECK_CONVEXITY_CONDITION(HEAP, GLOB)) ==> (forall v001:Ref, v002:Ref :: 
+    //     { P_(GLOB, v001, v002) }
+    //     { P_(HEAP, v001, v002) } 
+    //         (v001 in HEAP) && (v002 in HEAP) && P_(GLOB, v001, v002) ==> P_(HEAP, v001, v002))
 
     assume (forall v001:Ref, v002:Ref :: 
-        { E_(FRAME, v001, v002) }
+        { E_(HEAP, v001, v002) }
         { E_(GLOB, v001, v002) }
-            (v001 in FRAME) ==> 
-                (E_(GLOB, v001, v002) <==> E_(FRAME, v001, v002)))
+            (v001 in HEAP) ==> 
+                (E_(GLOB, v001, v002) <==> E_(HEAP, v001, v002)))
 
     assume (forall u0:Ref, v0:Ref :: 
         { P_(GLOB, u0, v0) }
-            u0 in FRAME && !(v0 in FRAME) && CLOSED(FRAME)
+            u0 in HEAP && !(v0 in HEAP) && CLOSED(HEAP)
                 ==> !P_(GLOB, u0, v0))
 
-    } // end if ( FRAME != GLOB ) 
+    } // end if ( HEAP != GLOB ) 
 }
 
 define PARTITION_PATHS_BEFORE_METHOD_CALL(MOD, GLOB, FRAME) {
