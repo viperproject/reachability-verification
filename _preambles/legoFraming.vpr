@@ -127,20 +127,19 @@ function __trigger_conv_framing_eXits__(bla_1:Ref, bla_2:Ref, bla_3:Ref): Bool
 
 function dummy(v001:Ref, v002:Ref): Bool
 
-function sub(t: Set[Ref], sub_root: Ref): Set[Ref]
-    requires GRAPH(t)
+function subIn(footprint: Set[Ref], t: Set[Ref], sub_root: Ref): Set[Ref]
+    requires GRAPH(footprint)
     requires sub_root in t    
+    requires t subset footprint
     ensures result subset t
     ensures CLOSED_IN(result, t)
-    ensures !(null in result)
     ensures sub_root in result
-    ensures GLOBAL_ROOT(result, sub_root)
     ensures forall n:Ref :: 
-        { n in result, P_(t, sub_root, n) }
-            n in result ==> P_(t, sub_root, n)
+        { n in result, P_(footprint, sub_root, n) }
+            n in result ==> P_(footprint, sub_root, n)
     ensures forall n:Ref :: 
-        { P_(t, sub_root, n) }
-           P_(t, sub_root, n) ==> n in result 
+        { P_(footprint, sub_root, n) }
+           P_(footprint, sub_root, n) ==> n in result 
 
 define EnableFocusOnConvexSubHeap(GLOB, MOD) {
 

@@ -15,34 +15,32 @@ import "../../binary/_preambles/dag.vpr"
 define __CONVEXITY_CHECKES true 
 define __ALLOW_SHARED_NODES true // arbitrary DAG
 
-
-
-method mergeRight(g: Set[Ref], // ghost
-                ldag: Set[Ref], lr: Ref, 
-                rdag:Set[Ref],  rr: Ref) 
+method mergeRight(l: Ref, r: Ref,
+                  g: Set[Ref], ldag: Set[Ref], rdag: Set[Ref]) // ghost
     returns (link: Ref) // ghost
     
-    requires lr in ldag
-    requires rr in rdag
+    requires l in ldag
+    requires r in rdag
+
     requires DISJOINT(ldag, rdag)
     requires g == ldag union rdag
     requires __ALLOW_SHARED_NODES ? DAG(g) : TREE(g)
     
-    /// Encoding forall n:Ref :: n in ldag <==> P_(g, lr, n) ... 
+    /// Encoding forall n:Ref :: n in ldag <==> P_(g, l, n) ... 
     requires forall n:Ref :: 
-        { P_(g, lr, n) }
-            P_(g, lr, n) ==> n in ldag
+        { P_(g, l, n) }
+            P_(g, l, n) ==> n in ldag
     requires forall n:Ref :: 
-        { n in ldag, P_(g, lr, n) }
-            n in ldag ==> P_(g, lr, n)
+        { n in ldag, P_(g, l, n) }
+            n in ldag ==> P_(g, l, n)
     
-    /// Encoding forall n:Ref :: n in rdag <==> P_(g, rr, n) ... 
+    /// Encoding forall n:Ref :: n in rdag <==> P_(g, r, n) ... 
     requires forall n:Ref :: 
-        { P_(g, rr, n) }
-            P_(g, rr, n) ==> n in rdag
+        { P_(g, r, n) }
+            P_(g, r, n) ==> n in rdag
     requires forall n:Ref :: 
-        { n in rdag, P_(g, rr, n) }
-            n in rdag ==> P_(g, rr, n)
+        { n in rdag, P_(g, r, n) }
+            n in rdag ==> P_(g, r, n)
     requires CLOSED_IN(ldag, g)
 
     ensures __ALLOW_SHARED_NODES ? DAG(g) : TREE(g)
@@ -50,64 +48,51 @@ method mergeRight(g: Set[Ref], // ghost
     ensures link in ldag 
     ensures forall x:Ref, y:Ref :: 
         { E_(g, x, y) }
-            E_(g, x, y) ==> E0(g, x, y) || (x == link && y == rr) 
+            E_(g, x, y) ==> E0(g, x, y) || (x == link && y == r) 
     ensures forall x:Ref, y:Ref :: 
         { E0(g, x, y) }
         { E_(g, x, y) }
-            E0(g, x, y) || (x == link && y == rr) ==> E_(g, x, y)
+            E0(g, x, y) || (x == link && y == r) ==> E_(g, x, y)
 
-    ensures old(lr.right) == null ==> lr == link && lr.right == rr
+    ensures old(l.right) == null ==> l == link && l.right == r
 
     ensures forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
         { P0(g, x, y) }
-        { P0(g, x, link), P0(g, rr, y) }
-            x in g && y in g ==> // optional
-                ( P_(g, x, y) <==> P0(g, x, y) || P0(g, x, link) && P0(g, rr, y) )
+        { P0(g, x, link), P0(g, r, y) }
+            P_(g, x, y) <==> P0(g, x, y) || P0(g, x, link) && P0(g, r, y)
 {
-    // Partitioning paths in disjoint structures of (g): ldag, rdag
-    EnableFocusOnConvexSubHeap(g, ldag)
-    EnableFocusOnConvexSubHeap(g, rdag)
-
-    if ( lr.right == null ) { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THE BUG
-        var ch_node: Ref := lr.right
-        // assert P_(g, lr, ch_node) // traversing the heap
+    if ( l.right == null ) { // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THE BUG
         //:: ExpectedOutput(application.precondition:assertion.false)
-        var ch_dag: Set[Ref] := sub(ldag, ch_node)
+        var nldag: Set[Ref] := subIn(g, ldag, l.right)
 
         // Footprint of the sub-call: 
-        var g1: Set[Ref] := ch_dag union rdag
+        var g1: Set[Ref] := nldag union rdag
         
         // The following is applied to FOOTRPINT vs. GLOB
         //:: ExpectedOutput(assert.failed:assertion.false)
         DeduceRelationshipBetweenSubHeaps(g1, g)
         
-        var frame: Set[Ref] := g setminus g1 // ldag setminus ch_dag        
+        var frame: Set[Ref] := g setminus g1 // ldag setminus nldag        
 
-        // Partitioning paths before sub-call: (ch_dag union rdag), frame
+        // Partitioning paths before sub-call: (nldag union rdag), frame
         EnableFocusOnConvexSubHeap(g, g1)
-        EnableFocusOnFrame(g1, g, frame)
-        
-        // Partitioning paths in disjoint structures of (g1): ch_dag, rdag
-        // EnableFocusOnConvexSubHeap(g1, ch_dag)
-        EnableFocus(g1, rdag)
-        
+        EnableFocusOnFrame(g1, g, frame) 
 
     label l1
         //:: ExpectedOutput(call.precondition:assertion.false)
-        link := mergeRight(g1, ch_dag, ch_node, rdag, rr)
+        link := mergeRight(l.right, r, g1, nldag, rdag)
     label l2
 
         // Recompute the reachability in (g) after the sub-call. 
         EnableFocusOnConvexSubHeap(g, g1)
-        EnableFocus(g, frame)
         
         ApplyConvexTCFraming(l1, l2, g1, g, frame)
     
     } else {
-        // Encoding lr.right := rr ...
+        // Encoding l.right := r ...
         //:: ExpectedOutput(call.precondition:assertion.false)
-        link_DAG_right(g, lr, rr)
-        link := lr
+        link_DAG_right(g, l, r)
+        link := l
     }
 }

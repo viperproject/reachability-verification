@@ -52,7 +52,7 @@ method addChildSubtree(tree: Set[Ref], node: Ref,
 
     if ( node.child != null ) {
         var ch_node:Ref := node.child
-        var ch_tree: Set[Ref] := sub(tree, ch_node)
+        var ch_tree: Set[Ref] := subIn(tree, tree, ch_node)
         var frame: Set[Ref] := tree setminus ch_tree
 
         EnableFocusOnConvexSubHeap(tree, ch_tree)
