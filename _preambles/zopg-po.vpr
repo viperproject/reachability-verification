@@ -70,31 +70,31 @@ define CHECK_ZOPG_AFTER_CONVEX_CALL(s_old, s_new, MOD, GLOB, FRAME) (
               __learn_trigger__( P(s_new, MOD, a076, b076) ) 
                 ==> (a076 == b076)) 
     &&
-    (forall x077:Ref, y077:Ref, a077:Ref, b077:Ref, c077:Ref, d077:Ref :: // DELTA
-        { P(s_old, FRAME, x077, a077), P(s_new, MOD, b077, d077), P(s_old, FRAME, c077, y077) } 
-        { P(s_old, FRAME, x077, b077), P(s_new, MOD, a077, c077), P(s_old, FRAME, d077, y077) }
-        { P(s_old, FRAME, x077, b077), P(s_old, MOD, a077, c077), P(s_old, FRAME, d077, y077) }
-            x077 in FRAME && y077 in FRAME && a077 in MOD && b077 in MOD && c077 in FRAME && d077 in FRAME && 
-              P(s_old, FRAME, x077, a077) &&                              // old path via frame
-              P(s_old, FRAME, x077, b077) &&                              // old path via frame
-              P(s_old, FRAME, c077, y077) &&                              // old path via frame
-              P(s_old, FRAME, d077, y077) &&                              // old path via frame
-              P(s_new, MOD, a077, c077) && !P(s_old, MOD, a077, c077) &&  // new path
-              P(s_new, MOD, b077, d077) &&                                // new or preserved path
-              __learn_trigger__( P(s_old, MOD, a077, b077) ) &&
-              __learn_trigger__( P(s_new, MOD, a077, b077) ) &&
-              __learn_trigger__( P(s_old, FRAME, c077, d077) ) &&
-              __learn_trigger__( P(s_new, FRAME, c077, d077) ) 
-                ==> (a077 == b077 || c077 == d077)) 
-    &&
-    (forall x078:Ref, y078:Ref, a078:Ref, b078:Ref ::                   // GAMMA
-        { P(s_old, FRAME, x078, y078), P(s_new, MOD, a078, b078) } 
-        { P(s_old, FRAME, x078, y078), P(s_old, MOD, a078, b078) } 
-        { P(s_old, FRAME, x078, a078), P(s_old, FRAME, b078, y078) }
-            x078 in FRAME && y078 in FRAME && b078 in FRAME && a078 in MOD ==>  
+    (forall x077:Ref, y077:Ref, a077:Ref, b077:Ref ::                   // GAMMA
+        { P(s_old, FRAME, x077, y077), P(s_new, MOD, a077, b077) } 
+        { P(s_old, FRAME, x077, y077), P(s_old, MOD, a077, b077) } 
+        { P(s_old, FRAME, x077, a077), P(s_old, FRAME, b077, y077) }
+            x077 in FRAME && y077 in FRAME && b077 in FRAME && a077 in MOD ==>  
               !(
-              P(s_old, FRAME, x078, y078) &&                            // old path via frame
-              P(s_old, FRAME, x078, a078) &&                            // old path via frame
-              P(s_old, FRAME, b078, y078) &&                            // old path via frame
-              P(s_new, MOD, a078, b078) && !P(s_old, MOD, a078, b078))) // new path
+              P(s_old, FRAME, x077, y077) &&                            // old path via frame
+              P(s_old, FRAME, x077, a077) &&                            // old path via frame
+              P(s_old, FRAME, b077, y077) &&                            // old path via frame
+              P(s_new, MOD, a077, b077) && !P(s_old, MOD, a077, b077))) // new path
+    &&
+    (forall x078:Ref, y078:Ref, a078:Ref, b078:Ref, c078:Ref, d078:Ref :: // DELTA
+        { P(s_old, FRAME, x078, a078), P(s_new, MOD, b078, d078), P(s_old, FRAME, c078, y078) } 
+        { P(s_old, FRAME, x078, b078), P(s_new, MOD, a078, c078), P(s_old, FRAME, d078, y078) }
+        { P(s_old, FRAME, x078, b078), P(s_old, MOD, a078, c078), P(s_old, FRAME, d078, y078) }
+            x078 in FRAME && y078 in FRAME && a078 in MOD && b078 in MOD && c078 in FRAME && d078 in FRAME && 
+              P(s_old, FRAME, x078, a078) &&                              // old path via frame
+              P(s_old, FRAME, x078, b078) &&                              // old path via frame
+              P(s_old, FRAME, c078, y078) &&                              // old path via frame
+              P(s_old, FRAME, d078, y078) &&                              // old path via frame
+              P(s_new, MOD, a078, c078) && !P(s_old, MOD, a078, c078) &&  // new path
+              P(s_new, MOD, b078, d078) &&                                // new or preserved path
+              __learn_trigger__( P(s_old, MOD, a078, b078) ) &&
+              __learn_trigger__( P(s_new, MOD, a078, b078) ) &&
+              __learn_trigger__( P(s_old, FRAME, c078, d078) ) &&
+              __learn_trigger__( P(s_new, FRAME, c078, d078) ) 
+                ==> (a078 == b078 || c078 == d078)) 
 )

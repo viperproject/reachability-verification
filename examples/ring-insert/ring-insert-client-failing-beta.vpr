@@ -15,12 +15,10 @@ import "../../binary/_preambles/dag.vpr"
 import "../../_preambles/zopg-po.vpr"
 
 
-
 function IS_ZOPG(h: Set[Ref]): Bool
     requires GRAPH(h)
 
 define __CONVEXITY_CHECKES false
-
 
 method testZopgObligations(g: Set[Ref], R: Set[Ref], u:Ref, r: Ref)
     requires GRAPH(g)
@@ -28,7 +26,6 @@ method testZopgObligations(g: Set[Ref], R: Set[Ref], u:Ref, r: Ref)
     requires r in R
     requires R subset g
     requires !(u in R) && u in g
-
     requires forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
         { P_(g, x, u), P_(g, r, y) }
@@ -38,19 +35,14 @@ method testZopgObligations(g: Set[Ref], R: Set[Ref], u:Ref, r: Ref)
 
     // The failure is due to the attached node, u, having outgoing paths. 
     //  The following invariant fixes the failure:  
-    // requires forall n:Ref :: 
-    //     { P_(g, u, n) }
-    //         P_(g, u, n) <==> u == n 
+    // requires CLOSED_N(u)
 
     requires RING_IN(R, g)
 {
     var g1: Set[Ref] := R union Set(u)
     var frame: Set[Ref] := g setminus g1
 
-    assert !P_(g, u, r)
-
-    EnableFocusOnConvexSubHeap(g, g1)
-    
+    EnableFocusOnConvexSubHeap(g, g1)    
     EnableFocus(g, frame)
 
     assume SAVE_ZOPG_BEFORE_CONVEX_CALL(g1, g, frame)
@@ -60,11 +52,14 @@ label l2
 
     EnableFocusOnConvexSubHeap(g, g1)
 
-    assume old[l1]($$(frame)) == $$(frame)
-
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert CHECK_ZOPG_AFTER_CONVEX_CALL(l1, l2, g1, g, frame)
 }
+
+define CLOSED_N(node) 
+    (forall n:Ref :: 
+        { P_(g, node, n) }
+            P_(g, node, n) <==> node == n)
 
 define FUNC(g) (
     forall x:Ref, y:Ref, z:Ref :: 
@@ -94,7 +89,7 @@ method ringInsert(g: Set[Ref], R: Set[Ref], node: Ref, r:Ref)
     requires !(node in R)
     requires RING_IN(R, g)
     requires !P_(g, node, r) && !P_(g, r, node)
-    // requires CLOSED(Set(node))
+    // requires CLOSED_N(node)
 
     ensures GRAPH(g)
     ensures RING_IN(g, g)
