@@ -181,7 +181,6 @@ domain TrClo__next {
 }
 
 
-
 function $$__next(nodes0: Set[Ref]): Set[Edge__next]
     requires NODES_for(next, nodes0, 1/2)
     ensures (forall v001: Ref, v002: Ref :: 
@@ -311,7 +310,7 @@ method link_DAG__next(g:Set[Ref], from:Ref, to:Ref)
     ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA__next(g, from, to)
 
 
-    
+
 define UNSHARED__next(graph_A)
     unshared_graph__next($$__next(graph_A))
 

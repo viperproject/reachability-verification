@@ -308,7 +308,9 @@ method link_DAG__fnext(g:Set[Ref], from:Ref, to:Ref)
     ensures (to == null) ==> $$__fnext(g) == old($$__fnext(g))
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA__fnext(g, from, to)
     ensures (to != null) ==> DAG_LINK__PRECISE_TC_UPDATE_FORMULA__fnext(g, from, to)
-    
+
+
+
 define UNSHARED__fnext(graph_A)
     unshared_graph__fnext($$__fnext(graph_A))
 
@@ -392,7 +394,7 @@ define Pfnext7(graph_A, x0, y0)
     exists_path__fnext(old[l7]($$__fnext(graph_A)), x0, y0)
 
 define Pfnext8(graph_A, x0, y0)
-    exists_path__fnext(old[l8]($$__fnext(graph_A)), x0, y0)    
+    exists_path__fnext(old[l8]($$__fnext(graph_A)), x0, y0)
 
 define NODE__fnext(the_node, p)
     (acc(the_node.fnext, p))

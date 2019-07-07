@@ -1,7 +1,6 @@
 import "../../edge_selectors/common.vpr"
-import "../../edge_selectors/next_reachability.vpr"
-import "../../edge_selectors/fnext_reachability.vpr"
-import "../../edge_selectors/trig.vpr"
+import "../../edge_selectors/next_reach.vpr"
+import "../../edge_selectors/fnext_reach.vpr"
 
 define CONST_EDGES__fnext(graph0)
     ($$__fnext(graph0) == old($$__fnext(graph0)))
