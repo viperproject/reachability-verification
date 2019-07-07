@@ -15,8 +15,8 @@ import "../../binary/_preambles/dag.vpr"
 define __CONVEXITY_CHECKES true 
 define __ALLOW_SHARED_NODES true // arbitrary DAG
 
-method mergeRight(l: Ref, r: Ref,
-                  g: Set[Ref], ldag: Set[Ref], rdag: Set[Ref]) // ghost
+method merge(l: Ref, r: Ref,
+             g: Set[Ref], ldag: Set[Ref], rdag: Set[Ref]) // ghost
     returns (link: Ref) // ghost
     
     requires l in ldag
@@ -80,7 +80,7 @@ method mergeRight(l: Ref, r: Ref,
 
     label l1
         //:: ExpectedOutput(call.precondition:assertion.false)
-        link := mergeRight(l.right, r, g1, nldag, rdag)
+        link := merge(l.right, r, g1, nldag, rdag)
     label l2
 
         // Recompute the reachability in (g) after the sub-call. 
