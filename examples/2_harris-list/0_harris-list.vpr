@@ -5,6 +5,9 @@ import "../../edge_selectors/fnext_reach.vpr"
 define CONST_EDGES__fnext(graph0)
     ($$__fnext(graph0) == old($$__fnext(graph0)))
 
+define CONST_EDGES__next(graph0)
+    ($$__next(graph0) == old($$__next(graph0)))
+
 field mrk: Bool
 
 method havoc() returns (res: Bool)
@@ -17,9 +20,7 @@ method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
     ensures res != null ==> res in g
     ensures res != null ==> P_next(g, start, res)
     ensures res == start
-
-    // TODO: the following postcondition is redundant
-    ensures $$__next(g) == old( $$__next(g) )
+    ensures CONST_EDGES__next(g)
 
 method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
     ensures !( new_node in graph )
@@ -101,7 +102,6 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
     var r: Ref
     r := getUnmarked(g, l.next)
 
-
     var nondet: Bool 
     nondet := havoc()
 
@@ -124,14 +124,15 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
     if ( r == null || !r.mrk ) {
         var nu: Ref 
         new_g, nu := createNode(g)
+        // Make new reachability formulas available to the verifier. 
         assume apply_AtomicTCFraming__next(g, nu)
         assume apply_AtomicTCFraming__fnext(g, nu)
                 
         link_DAG__next(new_g, nu, r)
 
-        // CAS(l.next, r, nu)
+        // Encoding CAS(l.next, r, nu) ...
         // Note: to focus on the reachability aspect, we verify a single-thread version of the algorithm. 
-        //       Therefore, we already have  the lock to the (l.next) resource. 
+        //       Therefore, we already have the lock to the (l.next) resource. 
         assert acc(l.next)
         if ( l.next == r ) {
             // l.next := nu
