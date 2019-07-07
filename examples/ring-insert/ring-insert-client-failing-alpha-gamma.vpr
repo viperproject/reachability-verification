@@ -89,22 +89,22 @@ define RING_IN(R, g) (
     IS_ZOPG(R) && FUNC(R) && UNSH(R) && SCC_IN(R, g))
 
 
-method ringInsert(g: Set[Ref], R: Set[Ref], node: Ref, r:Ref)
+method ringInsert(g: Set[Ref], R: Set[Ref], u: Ref, r:Ref)
     requires GRAPH(g)
-    requires g == R union Set(node)
+    requires g == R union Set(u)
     requires r in R
-    requires !(node in R)
+    requires !(u in R)
     requires RING_IN(R, g)
-    requires !P_(g, node, r) && !P_(g, r, node)
-    // requires CLOSED_N(node)
+    requires !P_(g, u, r) && !P_(g, r, u)
+    // requires CLOSED_N(u)
 
     ensures GRAPH(g)
     ensures RING_IN(g, g)
     
     ensures forall x:Ref, y:Ref :: 
         { P_(g, x, y) }
-            x in g && x != node && y != node ==> 
+            x in g && x != u && y != u ==> 
                 ( P_(g, x, y) <==> P0(g, x, y) )
     ensures forall n:Ref :: 
-        { P_(g, node, n) }
-            !(n in g) ==> ( P_(g, node, n) <==> P0(g, r, n) || P0(g, node, n) )
+        { P_(g, u, n) }
+            !(n in g) ==> ( P_(g, u, n) <==> P0(g, r, n) || P0(g, u, n) )
