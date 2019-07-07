@@ -84,7 +84,6 @@ method mergeRight (l: Ref, r: Ref,
         // Recompute the reachability in (g) after the sub-call. 
         EnableFocusOnConvexSubHeap(g, g1)
         EnableFocus(g, frame)
-        
         ApplyConvexTCFraming(l1, l2, g1, g, frame)
     
     } else {

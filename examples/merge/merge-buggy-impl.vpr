@@ -77,7 +77,6 @@ method mergeRight(l: Ref, r: Ref,
 
         // Partitioning paths before sub-call: (nldag union rdag), frame
         EnableFocusOnConvexSubHeap(g, g1)
-        EnableFocusOnFrame(g1, g, frame) 
 
     label l1
         //:: ExpectedOutput(call.precondition:assertion.false)
@@ -86,7 +85,7 @@ method mergeRight(l: Ref, r: Ref,
 
         // Recompute the reachability in (g) after the sub-call. 
         EnableFocusOnConvexSubHeap(g, g1)
-        
+        EnableFocus(g, frame)
         ApplyConvexTCFraming(l1, l2, g1, g, frame)
     
     } else {
