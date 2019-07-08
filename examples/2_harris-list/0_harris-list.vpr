@@ -10,33 +10,6 @@ define CONST_EDGES__next(graph0)
 
 field mrk: Bool
 
-method havoc() returns (res: Bool)
-
-method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
-    requires NODES_for(next, g, 1/2)
-    requires start != null ==> start in g
-    ensures NODES_for(next, g, 1/2)
-    ensures start == null ==> res == null
-    ensures res != null ==> res in g
-    ensures res != null ==> P_next(g, start, res)
-    ensures res == start
-    ensures CONST_EDGES__next(g)
-
-method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
-    ensures !( new_node in graph )
-    ensures new_graph == graph union Set(new_node)
-    ensures acc(new_node.next) && acc(new_node.fnext) && acc(new_node.mrk)
-    ensures new_node.next == null
-    ensures new_node.fnext == null
-    ensures !new_node.mrk
-
-method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
-    requires node in graph
-    requires acc(node.next) && acc(node.fnext) && acc(node.mrk)
-    ensures new_graph == graph setminus Set(node)
-    ensures !( node in new_graph )
-
-
 define HARRIS(G)
     // Memory specs: 
     (!(null in G) && NODES_for(next, G, write) && NODES_for(fnext, G, write) &&
@@ -50,7 +23,7 @@ define HARRIS(G)
     // (a) ``The data structure consists of two (potentially overlapping) functional graphs: 
     //       a list on next edges beginning at mh and one on fnext edges beginning at fh.''
     //     Note:  
-    //         1) `n` in reachable from `mh` via `next` or from `fh` via `fnext`: 
+    //         1) `n` is reachable from `mh` via `next` or from `fh` via `fnext`: 
     (forall n:Ref :: 
         { P_next(G, mh, n) }
         { P_fnext(G, fh, n) }
@@ -82,10 +55,10 @@ define HARRIS(G)
     (forall n:Ref :: 
         { P_fnext(G, fh, n) }
         { P_next(G, mh, n) }
-            n in G && P_fnext(G, fh, n) /*&& n.next != null*/ ==> n.next in G) &&
+            n in G && P_fnext(G, fh, n) ==> n.next in G) 
     // (d) ``All nodes in the free list are marked.'' 
     //     Additionally, we strengthen the invariant by adding that ``all other nodes are unmarked.''
-    (forall n:Ref :: 
+    && (forall n:Ref :: 
         { n.mrk } 
         { P_fnext(G, fh, n) }
             n in G ==> (P_fnext(G, fh, n) <==> n.mrk))
@@ -146,3 +119,29 @@ method insert(g: Set[Ref], mh: Ref, fh: Ref, ft: Ref) returns (new_g: Set[Ref])
         }
     }
 }
+
+method havoc() returns (res: Bool)
+
+method getUnmarked(g: Set[Ref], start: Ref) returns (res: Ref)
+    requires NODES_for(next, g, 1/2)
+    requires start != null ==> start in g
+    ensures NODES_for(next, g, 1/2)
+    ensures start == null ==> res == null
+    ensures res != null ==> res in g
+    ensures res != null ==> P_next(g, start, res)
+    ensures res == start
+    ensures CONST_EDGES__next(g)
+
+method createNode(graph: Set[Ref]) returns (new_graph: Set[Ref], new_node: Ref)
+    ensures !( new_node in graph )
+    ensures new_graph == graph union Set(new_node)
+    ensures acc(new_node.next) && acc(new_node.fnext) && acc(new_node.mrk)
+    ensures new_node.next == null
+    ensures new_node.fnext == null
+    ensures !new_node.mrk
+
+method deleteNode(graph: Set[Ref], node: Ref) returns (new_graph: Set[Ref])
+    requires node in graph
+    requires acc(node.next) && acc(node.fnext) && acc(node.mrk)
+    ensures new_graph == graph setminus Set(node)
+    ensures !( node in new_graph )

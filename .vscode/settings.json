@@ -1,6 +1,65 @@
 {
+    "telemetry.enableTelemetry": false,
+    "telemetry.enableCrashReporter": false,
+    "workbench.colorTheme": "Viper-Light",
+    "viperSettings.verificationBackends": [
+        {
+            "v": "674a514867b1",
+            "name": "carbon",
+            "type": "carbon",
+            "paths": [],
+            "engine": "ViperServer",
+            "timeout": 500000,
+            "stages": [
+                {
+                    "name": "verify",
+                    "isVerification": true,
+                    "mainMethod": "viper.carbon.Carbon",
+                    "customArguments": "--z3Exe $z3Exe$ --boogieExe $boogieExe$ $disableCaching$ $fileToVerify$"
+                }
+            ],
+            "stoppingTimeout": 50000
+        }
+    ],
+    "viperSettings.preferences": {
+        "v": "674a514867b1",
+        "autoSave": true,
+        "logLevel": 5,
+        "autoVerifyAfterBackendChange": true,
+        "showProgress": true,
+        "viperToolsProvider": {
+            "windows": "http://viper.ethz.ch/downloads/ViperToolsWin-experimental.zip",
+            "linux": "http://viper.ethz.ch/downloads/ViperToolsLinux-experimental.zip",
+            "mac": "http://viper.ethz.ch/downloads/ViperToolsMac-experimental.zip"
+        }
+    },
     "viperSettings.viperServerSettings": {
         "v": "674a514867b1",
+        "serverJars": {
+            "windows": [
+                "$viperTools$/backends"
+            ],
+            "linux": [
+                "$viperTools$/backends"
+            ],
+            "mac": [
+                "$viperTools$/backends"
+            ]
+        },
+        "customArguments": " $backendSpecificCache$",
+        "backendSpecificCache": true,
         "disableCaching": true,
+        "timeout": 50000,
+        "viperServerPolicy": "create",
+        "viperServerAddress": "http://127.0.0.1",
+        "viperServerPort": 12345
+    },
+    "viperSettings.paths": {
+        "v": "674a514867b1",
+        "viperToolsPath": {
+            "windows": "..\\Viper\\ViperWin\\",
+            "linux": "../Viper/ViperLinux/",
+            "mac": "../Viper/ViperMac"
+        }
     }
-}
+}    

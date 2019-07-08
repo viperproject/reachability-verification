@@ -106,7 +106,7 @@ function __impossible_to_trigger__(a000:Ref, a001:Ref, a002:Ref): Bool
 /** 
  * Some checks (e.g., convexity cehcks) result in interemediate lemmas that we would do not need afterwards. 
  * However, if a quantified formula has an "impossible" trigger (i.e., a term that never appears), then such a formula 
- *  cannot be asserted after the it has was assumed. 
+ *  cannot be asserted after it has was assumed. 
  * One solution here is to introduce a trigger that would be unique for a given list of quantified variables and 
  *  the quantified formula under consideration. For example, for LCONVEX_, we will use the following trigger: 
  *  { __lconvex_trigger__(local_nodes, frame_nodes, v001, v002, u000) }, where the term 
@@ -153,14 +153,11 @@ define EnableFocusOnConvexSubHeap(GLOB, MOD) {
     assume (forall v001:Ref, v002:Ref :: 
         { P_(GLOB, v001, v002) }
         { P_(MOD, v001, v002) } 
-            // TRY THIS: 
-            // (v001 in MOD) && !(v002 in GLOB setminus MOD) ==> 
             (v001 in MOD) && (v002 in MOD) ==> 
                 (P_(GLOB, v001, v002) <==> P_(MOD, v001, v002)))
 
     // Outgoing local paths
     assume (forall v001:Ref, v002:Ref :: 
-        // { P_(GLOB, v001, v002) }
         { P_(MOD, v001, v002) } 
             (v001 in MOD) && !(v002 in MOD) && 
             P_(MOD, v001, v002) ==> P_(GLOB, v001, v002))
@@ -269,7 +266,6 @@ define PARTITION_PATHS_BEFORE_METHOD_CALL(MOD, GLOB, FRAME) {
     }
 }
 
-// TODO: Simplify ApplyConvexTCFraming for CLOSED(MOD) and CLOSED(FRAME) ...
 define ApplyConvexTCFraming(s_old, s_new, MOD, GLOB, FRAME) {
 
     // Soundness Checks
@@ -531,7 +527,6 @@ define Enclose(HEAP, SUPERHEAP) {
     
     assume forall v1:Ref, v2:Ref, z:Ref :: 
         { P_(SUPERHEAP, v1, z), E_(SUPERHEAP, z, v2) }
-        // { P_(HEAP, v1, z), E_(HEAP, z, v2) }
             v1 in HEAP && !(v2 in HEAP) &&  
             z in HEAP && P_(HEAP, v1, z) && E_(HEAP, z, v2) ==> P_(HEAP, v1, v2)
 }

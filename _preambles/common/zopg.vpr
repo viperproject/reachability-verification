@@ -14,7 +14,6 @@ define DEP_G_MINUS_DELTA(smaller_EG, larger_EG, from, to)
             exists_DEP(larger_EG, x0, y0, u0, v0) && !exists_DEP(larger_EG, x0, y0, from, to) <==> exists_DEP(smaller_EG, x0, y0, u0, v0))
 
 define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
-    // The trivial case also comes from the definition of exists_path. 
     ((from == to) ==> exists_path(smaller_EG, from, to) && exists_path(larger_EG, from, to)) &&
     ((from != to) ==> 
         (forall x0:Ref, y0:Ref, u0:Ref, v0:Ref ::
@@ -25,18 +24,12 @@ define DEP_G_PLUS_DELTA(smaller_EG, larger_EG, from, to)
                     || (x0==from && u0==from && y0==to && v0==to)
                     
                     || ( exists w0:Ref, z0:Ref :: 
-                            // TODO: add triggers
-                            // { ??? } 
                             __psi__(smaller_EG, from,to, x0,y0, u0,v0, w0,z0) )
                             
                     || ( exists U0:Ref, V0:Ref :: 
-                            // TODO: add triggers
-                            // { ??? }
                             __psi__(smaller_EG, from,to, x0,y0, U0,V0, u0,v0) )
 
                     || (u0==from) && (v0==to) && ( exists U0:Ref, V0:Ref, w0:Ref, z0:Ref :: 
-                            // TODO: add triggers
-                            // { ??? }
                             __psi__(smaller_EG, from,to, x0,y0, U0,V0, w0,z0) ))
                     <==> 
                         exists_DEP(larger_EG, x0, y0, u0, v0) )))

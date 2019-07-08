@@ -38,7 +38,7 @@ method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
     ensures (to != null) ==> LINK__PRECISE_EDGE_UPDATE_FORMULA(g, from, to)
     ensures (to != null) ==> ZOPG_LINK__PRECISE_TC_UPDATE_FORMULA(g, from, to)      
 
-    // // Automatic reasoning support
+    // Automatic reasoning support
     // a. Arity-independent
     ensures forall n:Ref, m:Ref :: 
         { P_(g, n, m) } 
@@ -74,7 +74,7 @@ method link_ZOPG_next(g:Set[Ref], from:Ref, to:Ref)
         { DEP_(g, from, n0, from, from.next) } 
             n0 in g ==> 
                 __learn_trigger__( P_(g, from, n0) ) && 
-                __learn_trigger__( P0(g, from, n0) ) // never helped so far
+                __learn_trigger__( P0(g, from, n0) ) 
 
     ensures (to != null) ==> forall n0:Ref :: 
         { DEP_(g, to, n0, to, to.next) }

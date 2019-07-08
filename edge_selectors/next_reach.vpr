@@ -209,13 +209,11 @@ define PROTECTED_GRAPH__next(nodes, mutable_node)
 define LINK__PRECISE_EDGE_UPDATE_FORMULA__next(g, alpha, beta)
     (forall x0:Ref, y0:Ref ::
         { edge__next($$__next(g),x0,y0) }
-        // { exists_path__next($$__next(g),x0,y0) } //-- this should come alpha a different place
             edge__next($$__next(g),x0,y0) <==> edge__next(old($$__next(g)),x0,y0) || (x0==alpha && y0==beta))
 
 define UNLINK__PRECISE_EDGE_UPDATE_FORMULA__next(g, alpha, beta)
     (forall x0:Ref, y0:Ref ::
         { edge__next($$__next(g),x0,y0) }
-        // { exists_path__next($$__next(g),x0,y0) } //-- this should come alpha a different place
             edge__next($$__next(g),x0,y0) <==> edge__next(old($$__next(g)),x0,y0) && !(x0==alpha && y0==beta))
 
 
@@ -242,9 +240,6 @@ define TC_G_MINUS_DELTA__next(smaller_EG, larger_EG, alpha, beta)
             !(exists_path__next(larger_EG, x0, alpha) && exists_path__next(larger_EG, beta, y0))
                 ==> 
                 (exists_path__next(larger_EG, x0, y0) <==> exists_path__next(smaller_EG, x0, y0)))
-    /**
-        We currently do not have evidence that the precise update formula is ever needed. 
-     */
     && 
     (forall x0:Ref, y0:Ref ::
         { exists_path__next(smaller_EG,x0,y0) }
@@ -263,19 +258,11 @@ define TC_G_MINUS_DELTA__next(smaller_EG, larger_EG, alpha, beta)
                         (u0 != alpha || v0 != beta) && edge__next(larger_EG,u0,v0) 
                         && exists_path__next(larger_EG,x0,u0) && exists_path__next(larger_EG,u0,alpha) 
                         && exists_path__next(larger_EG,beta,v0) && exists_path__next(larger_EG,v0,y0))))
-    // The imprecise formula for exists_path__next may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path__next(smaller_EG, x0, y0) }
-    //         !exists_path__next(larger_EG, x0, y0) ==> !exists_path__next(smaller_EG, x0, y0))
 
 define TC_G_PLUS_DELTA__next(smaller_EG, larger_EG, alpha, beta)
     (forall x0:Ref, y0:Ref ::
         { exists_path__next(larger_EG,x0,y0) }
             exists_path__next(larger_EG,x0,y0) <==> exists_path__next(smaller_EG,x0,y0) || (exists_path__next(smaller_EG,x0,alpha) && exists_path__next(smaller_EG,beta,y0)))
-    // The imprecise formula for exists_path__next may decrease performance in some cases. 
-    // && (forall x0: Ref, y0: Ref ::
-    //     { exists_path__next(larger_EG, x0, y0) }
-    //         exists_path__next(smaller_EG, x0, y0) ==> exists_path__next(larger_EG, x0, y0))
 
 define DAG_LINK__PRECISE_TC_UPDATE_FORMULA__next(g, alpha, beta)
     TC_G_PLUS_DELTA__next(old($$__next(g)), $$__next(g), alpha, beta)
@@ -417,7 +404,6 @@ function apply_AtomicTCFraming__next(graph_A:Set[Ref], node_B:Ref): Bool
     // Needed for triggering
     requires graph_A union Set(node_B) == Set(node_B) union graph_A
 
-    // FIXME: Triggers in the following formulas are under question.
     ensures (forall u0:Ref, v0:Ref :: 
         { P_next(graph_A, u0, v0) }
         { P_next(graph_A union Set(node_B), u0, v0) } 
@@ -425,7 +411,6 @@ function apply_AtomicTCFraming__next(graph_A:Set[Ref], node_B:Ref): Bool
                 (P_next(graph_A, u0, v0) <==> P_next(graph_A union Set(node_B), u0, v0)))
     
     // A version of NoExit
-    // TODO: check this
     ensures (forall u0:Ref :: 
         { P_next(graph_A union Set(node_B), u0, node_B) }
             u0 in graph_A ==> !P_next(graph_A union Set(node_B), u0, node_B))

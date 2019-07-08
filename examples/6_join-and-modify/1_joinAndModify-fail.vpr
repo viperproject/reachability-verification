@@ -11,7 +11,7 @@ import "../../_preambles/common/graph.vpr"
 import "../../_preambles/common/dag.vpr"
 import "../../binary/_preambles/dag.vpr"
 
-// TODO: verify convexity check
+// This experiment is too abstract to verify convexity
 define __CONVEXITY_CHECKES false
 
 method disconnectAll(h: Set[Ref])

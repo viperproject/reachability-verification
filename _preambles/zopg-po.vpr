@@ -20,27 +20,27 @@ define SAVE_ZOPG_BEFORE_CONVEX_CALL(MOD, GLOB, FRAME) (
               P_(MOD, x072, b072)
                 ==> (a072 == b072)) 
     &&
-    (forall x073:Ref, y073:Ref, a073:Ref, b073:Ref, c073:Ref, d073:Ref :: // DELTA 
-        { P_(FRAME, x073, a073), P_(MOD, b073, d073), P_(FRAME, c073, y073) } 
-        { P_(FRAME, x073, b073), P_(MOD, a073, c073), P_(FRAME, d073, y073) }
-            x073 in FRAME && y073 in FRAME && a073 in MOD && b073 in MOD && c073 in FRAME && d073 in FRAME && 
-              P_(FRAME, x073, a073) && 
-              P_(FRAME, x073, b073) && 
-              P_(FRAME, c073, y073) && 
-              P_(FRAME, d073, y073) && 
-              P_(MOD, a073, c073) && 
-              P_(MOD, b073, d073) 
-                ==> (a073 == b073 || c073 == d073)) 
-    &&
-    (forall x074:Ref, y074:Ref, a074:Ref, b074:Ref :: // GAMMA
-        { P_(FRAME, x074, y074), P_(MOD, a074, b074) } 
-        { P_(FRAME, x074, a074), P_(FRAME, b074, y074) }
-            x074 in FRAME && y074 in FRAME && b074 in FRAME && a074 in MOD ==>  
+    (forall x073:Ref, y073:Ref, a073:Ref, b073:Ref :: // GAMMA
+        { P_(FRAME, x073, y073), P_(MOD, a073, b073) } 
+        { P_(FRAME, x073, a073), P_(FRAME, b073, y073) }
+            x073 in FRAME && y073 in FRAME && b073 in FRAME && a073 in MOD ==>  
               !(
-              P_(FRAME, x074, y074) && 
+              P_(FRAME, x073, y073) && 
+              P_(FRAME, x073, a073) && 
+              P_(FRAME, b073, y073) && 
+              P_(MOD, a073, b073) && !P_(MOD, a073, b073))) 
+    &&
+    (forall x074:Ref, y074:Ref, a074:Ref, b074:Ref, c074:Ref, d074:Ref :: // DELTA 
+        { P_(FRAME, x074, a074), P_(MOD, b074, d074), P_(FRAME, c074, y074) } 
+        { P_(FRAME, x074, b074), P_(MOD, a074, c074), P_(FRAME, d074, y074) }
+            x074 in FRAME && y074 in FRAME && a074 in MOD && b074 in MOD && c074 in FRAME && d074 in FRAME && 
               P_(FRAME, x074, a074) && 
-              P_(FRAME, b074, y074) && 
-              P_(MOD, a074, b074) && !P_(MOD, a074, b074))) 
+              P_(FRAME, x074, b074) && 
+              P_(FRAME, c074, y074) && 
+              P_(FRAME, d074, y074) && 
+              P_(MOD, a074, c074) && 
+              P_(MOD, b074, d074) 
+                ==> (a074 == b074 || c074 == d074)) 
 )
 
 define CHECK_ZOPG_AFTER_CONVEX_CALL(s_old, s_new, MOD, GLOB, FRAME) (

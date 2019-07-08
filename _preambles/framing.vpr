@@ -1,68 +1,5 @@
 // Used for memory allocation
 
-function apply_TCFraming(graph_A:Set[Ref], graph_B:Set[Ref]): Bool
-    requires READONLY_NODES(graph_A)
-    requires READONLY_NODES(graph_B)
-
-    requires graph_B intersection graph_A == Set()
-
-    // needed for triggering
-    ensures graph_A union graph_B == graph_B union graph_A
-
-    // FIXME: Triggers in the following formulas are under question.
-    ensures (forall u0:Ref, v0:Ref :: 
-        { P_(graph_A, u0, v0) }
-        { P_(graph_A union graph_B, u0, v0) } 
-            u0 in graph_A && v0 in graph_A && P_(graph_A, u0, v0) ==> 
-                P_(graph_A union graph_B, u0, v0))
-    
-    ensures (forall u0:Ref, v0:Ref :: 
-        { P_(graph_B, u0, v0) }
-        { P_(graph_B union graph_A, u0, v0) } 
-            u0 in graph_B && v0 in graph_B && P_(graph_B, u0, v0) ==> 
-                P_(graph_B union graph_A, u0, v0))
-
-    ensures (forall u0:Ref, v0:Ref ::
-        { P_(graph_A, u0, v0) }
-        { P_(graph_A union graph_B, u0, v0) }
-            (u0 in graph_A) && /*(v0 in graph_A) &&*/ !P_(graph_A, u0, v0) &&
-            COALIGNED_INTEREDGES(graph_A, graph_B)
-                ==> !P_(graph_A union graph_B, u0, v0))
-
-    ensures (forall u0:Ref, v0:Ref ::
-        { P_(graph_B, u0, v0) }
-        { P_(graph_B union graph_A, u0, v0) }
-            (u0 in graph_B) && /*(v0 in graph_B) &&*/ !P_(graph_B, u0, v0) &&
-            COALIGNED_INTEREDGES(graph_B, graph_A)
-                ==> !P_(graph_B union graph_A, u0, v0))
-
-    // A version of NoExit
-    ensures (forall u0:Ref, v0:Ref :: 
-        { P_(graph_A union graph_B, u0, v0), u0 in graph_A, v0 in graph_A }
-        { P_(graph_A union graph_B, u0, v0), u0 in graph_A, v0 in graph_B }
-            u0 in graph_A && !(v0 in graph_A) && CLOSED(graph_A)
-                ==> !P_(graph_A union graph_B, u0, v0))
-
-    // A version of NoExit
-    ensures (forall u0:Ref, v0:Ref :: 
-        { P_(graph_A union graph_B,u0,v0), u0 in graph_B, v0 in graph_B }
-        { P_(graph_A union graph_B,u0,v0), u0 in graph_B, v0 in graph_A }
-            u0 in graph_B && !(v0 in graph_B) && CLOSED(graph_B)
-                ==> !P_(graph_A union graph_B, u0, v0))
-
-    ensures (forall x:Ref, y:Ref :: 
-        { E_(graph_A, x, y) }
-        { E_(graph_A union graph_B, x, y) }
-            x in graph_A ==> 
-                (E_(graph_A union graph_B, x, y) <==> E_(graph_A, x, y)))
-
-    ensures (forall x:Ref, y:Ref :: 
-        { E_(graph_B, x, y) }
-        { E_(graph_B union graph_A, x, y) }
-            x in graph_B ==> 
-                (E_(graph_B union graph_A, x, y) <==> E_(graph_B, x, y)))
-
-
 /**
  * This function is supposed to be assumed right after atomic memory allocation. 
  */
@@ -77,7 +14,6 @@ function apply_AtomicTCFraming(graph_A:Set[Ref], node_B:Ref): Bool
     // Needed for triggering
     requires graph_A union Set(node_B) == Set(node_B) union graph_A
 
-    // FIXME: Triggers in the following formulas are under question.
     ensures (forall u0:Ref, v0:Ref :: 
         { P_(graph_A, u0, v0) }
         { P_(graph_A union Set(node_B), u0, v0) } 
@@ -85,7 +21,6 @@ function apply_AtomicTCFraming(graph_A:Set[Ref], node_B:Ref): Bool
                 (P_(graph_A, u0, v0) <==> P_(graph_A union Set(node_B), u0, v0)))
     
     // A version of NoExit
-    // TODO: check this
     ensures (forall u0:Ref :: 
         { P_(graph_A union Set(node_B), u0, node_B) }
             u0 in graph_A ==> !P_(graph_A union Set(node_B), u0, node_B))

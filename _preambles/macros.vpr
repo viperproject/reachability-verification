@@ -1,6 +1,5 @@
 /**
  * This file contains the macro definitions that are used for convenience. 
- * Basically, syntactic sugar. 
  */
 
 define TREE(tr000) 
